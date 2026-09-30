@@ -1,0 +1,49 @@
+# Backend
+
+Django + Django REST Framework API.
+
+## Requirements
+
+- Python 3.11
+
+## Setup
+
+```bash
+cd backend
+python3.11 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+Fill in `SECRET_KEY` in `.env`. See [Database](#database) below.
+
+## Database
+
+By default (empty `DB_NAME`) the project uses SQLite — no setup needed.
+
+To use PostgreSQL locally, create a user and a database (pick any names and password):
+
+```bash
+sudo -u postgres psql -c "CREATE USER <db_user> WITH PASSWORD '<db_password>';"
+sudo -u postgres psql -c "CREATE DATABASE <db_name> OWNER <db_user>;"
+```
+
+Then set the same values in `.env`:
+
+```
+DB_NAME=<db_name>
+DB_USER=<db_user>
+DB_PASSWORD=<db_password>
+DB_HOST=localhost
+DB_PORT=5432
+```
+
+## Commands
+
+```bash
+python manage.py migrate     # apply migrations
+python manage.py runserver   # start dev server at http://127.0.0.1:8000
+```
+
+Health check: `GET /api/health/` returns `{"status": "ok"}`.
