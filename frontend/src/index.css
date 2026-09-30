@@ -1,0 +1,45 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  color: #1f2328;
+  background: #ffffff;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 24px;
+  border-bottom: 1px solid #d0d7de;
+}
+
+.logo {
+  font-weight: 700;
+}
+
+.header nav {
+  display: flex;
+  gap: 16px;
+}
+
+.header a {
+  color: #57606a;
+  text-decoration: none;
+}
+
+.header a.active {
+  color: #0969da;
+  font-weight: 600;
+}
+
+.page {
+  padding: 24px;
+}
+
+.muted {
+  color: #57606a;
+}
