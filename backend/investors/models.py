@@ -7,7 +7,7 @@ class InvestorProfile(models.Model):
         COMPANY = "company", "Company"
 
     investor_id = models.AutoField(primary_key=True)
-    user = models.OneToOneField("User", on_delete=models.RESTRICT, related_name="investor_profile")
+    user = models.OneToOneField("users.User", on_delete=models.RESTRICT, related_name="investor_profile")
     investor_name = models.CharField(max_length=255)
     edrpou_or_ipn = models.CharField(max_length=20, unique=True, null=True, blank=True)
     investor_description = models.TextField(blank=True)
