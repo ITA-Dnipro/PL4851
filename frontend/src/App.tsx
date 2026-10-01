@@ -18,6 +18,7 @@ function App() {
         <Route path="/startups/:id" element={<StartupView />} />
         <Route path="/dashboard" element={<InvestorDashboard />} />
         <Route path="/messages" element={<Inbox />} />
+        <Route path="/search" element={<div>Search</div>} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
