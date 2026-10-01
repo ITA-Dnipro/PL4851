@@ -21,6 +21,8 @@ services:
       dockerfile: Dockerfile.backend
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend:/app
     environment:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
@@ -37,6 +39,9 @@ services:
       dockerfile: Dockerfile.frontend
     ports:
       - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
 
