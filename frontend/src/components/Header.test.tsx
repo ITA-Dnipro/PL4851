@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Header from './Header';
 import { useAuth } from '../hooks/useAuth';
+import type { AuthUser } from '../hooks/useAuth'
 
 const navigate = vi.fn();
 
@@ -13,6 +14,11 @@ vi.mock('react-router-dom', async (importOriginal) => {
 });
 
 vi.mock('../hooks/useAuth');
+
+const mockUser: AuthUser = {
+  id: 1,
+  email: 'test@example.com',
+}
 
 function renderHeader() {
   return render(
@@ -28,23 +34,23 @@ describe('Header', () => {
     useAuth.mockReturnValue({ user: null, isAuthenticated: false });
   });
 
-  it('веде логотип на головну сторінку', () => {
+  it('The logo links to the homepage', () => {
     renderHeader();
     expect(screen.getByRole('link', { name: /forum/i })).toHaveAttribute('href', '/');
   });
 
-  it('показує поле пошуку', () => {
+  it('shows the search field', () => {
     renderHeader();
     expect(screen.getByRole('searchbox', { name: 'Пошук' })).toBeInTheDocument();
   });
 
-  it('показує Увійти та Зареєструватися для гостя', () => {
+  it('displays "Log In" and "Sign Up" for guests', () => {
     renderHeader();
     expect(screen.getByRole('link', { name: 'Увійти' })).toHaveAttribute('href', '/login');
     expect(screen.getByRole('link', { name: 'Зареєструватися' })).toHaveAttribute('href', '/register');
   });
 
-  it('перекидає на /search?q=... при відправці пошуку', async () => {
+  it('redirects to /search?q=... when submitting a search', async () => {
     const user = userEvent.setup();
     renderHeader();
 
@@ -53,7 +59,7 @@ describe('Header', () => {
     expect(navigate).toHaveBeenCalledWith('/search?q=%D1%81%D0%B8%D1%80');
   });
 
-  it('не навігує, якщо запит порожній', async () => {
+  it('does not navigate if the query is empty', async () => {
     const user = userEvent.setup();
     renderHeader();
 
@@ -62,7 +68,7 @@ describe('Header', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it('ховає кнопки входу, коли користувач авторизований', () => {
+  it('hides the login buttons when the user is logged in', () => {
     useAuth.mockReturnValue({ user: { id: 1 }, isAuthenticated: true });
     renderHeader();
 
