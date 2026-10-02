@@ -31,7 +31,7 @@ function renderHeader() {
 describe('Header', () => {
   beforeEach(() => {
     navigate.mockClear();
-    useAuth.mockReturnValue({ user: null, isAuthenticated: false });
+    vi.mocked(useAuth).mockReturnValue({ user: null, isAuthenticated: false })
   });
 
   it('The logo links to the homepage', () => {
@@ -69,7 +69,7 @@ describe('Header', () => {
   });
 
   it('hides the login buttons when the user is logged in', () => {
-    useAuth.mockReturnValue({ user: { id: 1 }, isAuthenticated: true });
+    vi.mocked(useAuth).mockReturnValue({ user: mockUser, isAuthenticated: true })
     renderHeader();
 
     expect(screen.queryByRole('link', { name: 'Увійти' })).not.toBeInTheDocument();
