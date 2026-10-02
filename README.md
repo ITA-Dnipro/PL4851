@@ -131,3 +131,26 @@ cd frontend && npm run lint
 ```
 
 If a hook modifies files (black, isort, end-of-file-fixer), the commit is stopped: review the changes, `git add` them and commit again.
+
+### Continuous Integration
+
+GitHub Actions workflow `.github/workflows/ci.yml` runs on every pull request and push to `develop` and `main`. It has two jobs that run in parallel:
+
+| Job | Steps |
+|---|---|
+| Backend (lint + tests) | black, isort, flake8, missing migrations check, pytest (against PostgreSQL 17) |
+| Frontend (lint + build) | ESLint, `npm run build` (TypeScript check + Vite build) |
+
+A PR can be merged only when both jobs are green.
+
+#### Reading CI logs
+
+1. Open the PR and scroll to the checks block at the bottom (or open the **Checks** tab).
+2. A failed job is marked with a red ❌. Click **Details** next to it.
+3. The job page lists its steps; the failed one is expanded. Its name tells what failed (e.g. `flake8`, `pytest`, `Build`).
+4. Read the step output: linters print the file, line and rule; black and isort print a diff of what they would change; pytest prints the failing test and traceback.
+5. Reproduce locally with the same command, fix, push again. CI reruns automatically, and an older run of the same branch is cancelled.
+
+Most lint failures are fixed locally by `pre-commit run --all-files`. Tests: `cd backend && pytest`.
+
+To rerun a job without a new commit (e.g. a flaky network error), use **Re-run jobs** on the workflow run page.
