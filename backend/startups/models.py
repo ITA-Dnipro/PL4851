@@ -13,6 +13,21 @@ NON_DIGIT_PATTERN = re.compile(r"\D")
 
 
 class StartupProfile(models.Model):
+    class IndustryType(models.TextChoices):
+        IT = "it", "Інформаційні технології / IT"
+        FINANCE = "finance", "Фінанси та FinTech"
+        HEALTHCARE = "healthcare", "Медицина та охорона здоров'я"
+        EDUCATION = "education", "Освіта"
+        AGRICULTURE = "agriculture", "Сільське господарство"
+        E_COMMERCE = "e_commerce", "Електронна торгівля"
+        GREEN_ENERGY = "green_energy", "Зелена енергетика / Екологія"
+        FOOD = "food", "Їжа / Харчова промисловість"
+        BEVERAGES = "beverages", "Напої"
+        PACKAGING = "packaging", "Пакування та тара"
+        CATERING = "catering", "Кейтеринг / Ресторанний бізнес"
+        WINEMAKING = "winemaking", "Виноробство"
+        OTHER = "other", "Інше"
+
     startup_id = models.AutoField(primary_key=True)
     user = models.OneToOneField(
         User,
@@ -31,7 +46,11 @@ class StartupProfile(models.Model):
     website = models.URLField(max_length=MAX_LENGTH_WEBSITE, blank=True)
     startup_phone = models.CharField(max_length=MAX_LENGTH_STARTUP_PHONE)
     address = models.TextField(blank=True)
-    industry = models.CharField(max_length=MAX_LENGTH_INDUSTRY)
+    industry = models.CharField(
+        max_length=MAX_LENGTH_INDUSTRY,
+        choices=IndustryType.choices,
+        default=IndustryType.OTHER
+    )
     founded_at = models.DateField(blank=True, null=True)
     employees = models.IntegerField(default=DEFAULT_EMPLOYEES)
     is_verified = models.BooleanField(default=False)
