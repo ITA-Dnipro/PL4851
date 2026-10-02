@@ -83,7 +83,71 @@ We are committed to delivering a platform that is not just a marketplace for ide
 - Each user story can be broken down into smaller tasks and developed in sprints.
 - Regular feedback from both user groups (startups and investors) should be incorporated.
 
+
+## Local Development with Docker
+
+### Prerequisites
+
+- Docker Desktop
+- Docker Compose
+
+### Environment Setup
+
+Create a local `.env` file from `.env.example`:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Update the values in `.env` if necessary.
+
+### Run the Project
+
+Build and start all services:
+
+```powershell
+docker compose up --build
+```
+
+This starts:
+
+- Frontend: http://localhost:5173
+- Backend: http://localhost:8000
+- PostgreSQL: localhost:5432
+
+### Database Migrations
+
+After the containers are running, open another terminal and run:
+
+```powershell
+docker compose exec backend python manage.py migrate
+```
+
+### Backend Health Check
+
+Open:
+
+http://localhost:8000/api/health/
+
+A working backend should return:
+
+```json
+{
+  "status": "ok"
+}
+```
+
+### Stop the Project
+
+To stop all containers:
+
+```powershell
+docker compose down
+```
+
+
 ### Code Style & Linting
+
 
 Checks run automatically on `git commit` via [pre-commit](https://pre-commit.com/) hooks (config: `.pre-commit-config.yaml`).
 
