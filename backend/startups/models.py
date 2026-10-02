@@ -59,6 +59,12 @@ class StartupProfile(models.Model):
         indexes = [
             models.Index(fields=["industry"], name="startup_industry_idx"),
         ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(employees__gte=1), 
+                name='startup_employees_gte_one'
+            ),
+        ]
 
     def save(self, *args, **kwargs):
         if self.startup_phone:

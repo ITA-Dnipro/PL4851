@@ -36,6 +36,18 @@ class Project(models.Model):
         indexes = [
             models.Index(fields=["project_stage"], name="project_stage_idx"),
         ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(investment_sum__gt=0),
+                name='project_investment_sum_gt_zero'
+            ),
+            models.CheckConstraint(
+                check=models.Q(raised_amount__gte=0),
+                name='project_raised_amount_gte_zero'
+            ),
+        ]
+
+
 
     def __str__(self):
         return self.project_title
