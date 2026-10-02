@@ -12,11 +12,13 @@ Django + Django REST Framework API.
 cd backend
 python3.11 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt   # app deps + linters/formatters
 cp .env.example .env
 ```
 
 Fill in `SECRET_KEY` in `.env`. See [Database](#database) below.
+
+Code style and pre-commit hooks are described in the [root README](../README.md#code-style--linting).
 
 ## Database
 
