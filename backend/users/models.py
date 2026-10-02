@@ -21,6 +21,11 @@ class User(AbstractUser):
 
     REQUIRED_FIELDS = ["email", "first_name", "last_name", "role"]
 
+    class Meta(AbstractUser.Meta):
+        indexes = [
+            models.Index(fields=["role"], name="user_role_idx"),
+        ]
+
     def can_have_startup_profile(self):
         return self.role == self.Role.STARTUP
 

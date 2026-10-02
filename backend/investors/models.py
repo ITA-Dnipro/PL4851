@@ -45,5 +45,19 @@ class InvestorProfile(models.Model):
         blank=True,
     )
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["investor_type"], name="investor_type_idx"),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(investment_min__isnull=True)
+                    | models.Q(investment_min__gte=0)
+                ),
+                name="investor_investment_min_non_negative",
+            ),
+        ]
+
     def __str__(self):
         return self.investor_name
