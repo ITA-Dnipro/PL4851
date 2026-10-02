@@ -9,8 +9,8 @@ MAX_LENGTH_ROLE = 20
 
 class User(AbstractUser):
     class Role(models.TextChoices):
-        STARTUP = "startup", "Startup"
-        INVESTOR = "investor", "Investor"
+        STARTUP = "startup", "Стартап"
+        INVESTOR = "investor", "Інвестор"
 
     user_id = models.AutoField(primary_key=True)
     first_name = models.CharField(max_length=MAX_LENGTH_NAME)
