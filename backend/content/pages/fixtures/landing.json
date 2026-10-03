@@ -1,0 +1,233 @@
+[
+  {
+    "model": "content_sections.landinghero",
+    "pk": 1,
+    "fields": {
+      "title": "FORUM",
+      "subtitle": "Об’єднуємо крафтових виробників та інноваторів",
+      "cta_text": "Детальніше про нас",
+      "cta_url": "/about"
+    }
+  },
+  {
+    "model": "content_sections.landingheroimage",
+    "pk": 1,
+    "fields": {
+      "hero": 1,
+      "title": "Виноробство",
+      "url": "/images/hero/winemaking.jpg",
+      "order": 1
+    }
+  },
+  {
+    "model": "content_sections.landingheroimage",
+    "pk": 2,
+    "fields": {
+      "hero": 1,
+      "title": "Доставка",
+      "url": "/images/hero/delivery.jpg",
+      "order": 2
+    }
+  },
+  {
+    "model": "content_sections.landingheroimage",
+    "pk": 3,
+    "fields": {
+      "hero": 1,
+      "title": "Сироварня",
+      "url": "/images/hero/cheesemaking.jpg",
+      "order": 3
+    }
+  },
+  {
+    "model": "content_sections.landingheroimage",
+    "pk": 4,
+    "fields": {
+      "hero": 1,
+      "title": "Упаковка",
+      "url": "/images/hero/packaging.jpg",
+      "order": 4
+    }
+  },
+  {
+    "model": "content_sections.landingbanner",
+    "pk": 1,
+    "fields": {
+      "title": "Майданчик для тих, хто втілює свої ідеї в життя",
+      "cta_text": "Долучитися",
+      "cta_url": "/register"
+    }
+  },
+  {
+    "model": "content_sections.landingforwhomsection",
+    "pk": 1,
+    "fields": {
+      "title": "Для кого"
+    }
+  },
+  {
+    "model": "content_sections.landingforwhomcard",
+    "pk": 1,
+    "fields": {
+      "section": 1,
+      "title": "Виробники крафтової продукції",
+      "icon": "bread-slice",
+      "description": "",
+      "order": 1
+    }
+  },
+  {
+    "model": "content_sections.landingforwhomcard",
+    "pk": 2,
+    "fields": {
+      "section": 1,
+      "title": "Сомельє та ресторатори",
+      "icon": "wine-glass",
+      "description": "",
+      "order": 2
+    }
+  },
+  {
+    "model": "content_sections.landingforwhomcard",
+    "pk": 3,
+    "fields": {
+      "section": 1,
+      "title": "Представники готельно-ресторанного бізнесу",
+      "icon": "hotel",
+      "description": "",
+      "order": 3
+    }
+  },
+  {
+    "model": "content_sections.landingforwhomcard",
+    "pk": 4,
+    "fields": {
+      "section": 1,
+      "title": "Представники роздрібних та гуртових торгових мереж",
+      "icon": "cart-shopping",
+      "description": "",
+      "order": 4
+    }
+  },
+  {
+    "model": "content_sections.landingforwhomcard",
+    "pk": 5,
+    "fields": {
+      "section": 1,
+      "title": "Представники пакувальної індустрії",
+      "icon": "box-archive",
+      "description": "",
+      "order": 5
+    }
+  },
+  {
+    "model": "content_sections.landingforwhomcard",
+    "pk": 6,
+    "fields": {
+      "section": 1,
+      "title": "Представники логістичних компаній та служб доставки",
+      "icon": "truck",
+      "description": "",
+      "order": 6
+    }
+  },
+  {
+    "model": "content_sections.landingforwhomcard",
+    "pk": 7,
+    "fields": {
+      "section": 1,
+      "title": "Стартапери",
+      "icon": "rocket",
+      "description": "",
+      "order": 7
+    }
+  },
+  {
+    "model": "content_sections.landingforwhomcard",
+    "pk": 8,
+    "fields": {
+      "section": 1,
+      "title": "Інші фахівці галузі",
+      "icon": "people-group",
+      "description": "",
+      "order": 8
+    }
+  },
+  {
+    "model": "content_sections.landingwhyworthsection",
+    "pk": 1,
+    "fields": {
+      "title": "Чому варто"
+    }
+  },
+  {
+    "model": "content_sections.landingwhyworthitem",
+    "pk": 1,
+    "fields": {
+      "section": 1,
+      "title": "Прямий зв’язок з виробниками",
+      "description": "Знайомтеся з історією та цінностями брендів",
+      "order": 1
+    }
+  },
+  {
+    "model": "content_sections.landingwhyworthitem",
+    "pk": 2,
+    "fields": {
+      "section": 1,
+      "title": "Ексклюзивні пропозиції",
+      "description": "Знаходьте унікальні продукти, недоступні в масовому продажі",
+      "order": 2
+    }
+  },
+  {
+    "model": "content_sections.landingwhyworthitem",
+    "pk": 3,
+    "fields": {
+      "section": 1,
+      "title": "Інновації та тренди",
+      "description": "Будьте в курсі останніх новинок та технологій галузі",
+      "order": 3
+    }
+  },
+  {
+    "model": "content_sections.landingwhyworthitem",
+    "pk": 4,
+    "fields": {
+      "section": 1,
+      "title": "Співпраця та синергія",
+      "description": "Об’єднуйтесь, щоб творити нове та ділитися досвідом",
+      "order": 4
+    }
+  },
+  {
+    "model": "content_sections.landingwhyworthitem",
+    "pk": 5,
+    "fields": {
+      "section": 1,
+      "title": "Розвиток та масштабування",
+      "description": "Знаходьте нових партнерів, клієнтів та ринки збуту",
+      "order": 5
+    }
+  },
+  {
+    "model": "content_sections.landingwhyworthitem",
+    "pk": 6,
+    "fields": {
+      "section": 1,
+      "title": "Підтримка та знання",
+      "description": "Отримуйте консультації, експертну допомогу та доступ до освітніх ресурсів",
+      "order": 6
+    }
+  },
+  {
+    "model": "content_pages.landingpage",
+    "pk": 1,
+    "fields": {
+      "show_hero": true,
+      "show_banner": true,
+      "show_for_whom": true,
+      "show_why_worth": true
+    }
+  }
+]
