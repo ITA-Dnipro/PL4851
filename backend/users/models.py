@@ -19,8 +19,7 @@ class User(AbstractUser):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name', 'role']
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name', 'role']
 
     class Meta(AbstractUser.Meta):
         indexes = [

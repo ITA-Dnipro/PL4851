@@ -1,6 +1,5 @@
 from django.db import models
 
-
 MAX_LENGTH_INVESTOR_NAME = 255
 MAX_LENGTH_EDRPOU_OR_IPN = 20
 MAX_LENGTH_INVESTOR_PHONE = 20
@@ -11,15 +10,15 @@ INVESTMENT_MIN_DECIMAL_PLACES = 2
 
 class InvestorProfile(models.Model):
     class InvestorType(models.TextChoices):
-        PRIVATE = "private", "Приватна особа"
-        FUND = "fund", "Фонд"
-        COMPANY = "company", "Компанія"
+        PRIVATE = 'private', 'Приватна особа'
+        FUND = 'fund', 'Фонд'
+        COMPANY = 'company', 'Компанія'
 
     investor_id = models.AutoField(primary_key=True)
     user = models.OneToOneField(
-        "users.User",
+        'users.User',
         on_delete=models.RESTRICT,
-        related_name="investor_profile",
+        related_name='investor_profile',
     )
     investor_name = models.CharField(max_length=MAX_LENGTH_INVESTOR_NAME)
     edrpou_or_ipn = models.CharField(
@@ -47,7 +46,7 @@ class InvestorProfile(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=["investor_type"], name="investor_type_idx"),
+            models.Index(fields=['investor_type'], name='investor_type_idx'),
         ]
         constraints = [
             models.CheckConstraint(
@@ -55,7 +54,7 @@ class InvestorProfile(models.Model):
                     models.Q(investment_min__isnull=True)
                     | models.Q(investment_min__gte=0)
                 ),
-                name="investor_investment_min_non_negative",
+                name='investor_investment_min_non_negative',
             ),
         ]
 

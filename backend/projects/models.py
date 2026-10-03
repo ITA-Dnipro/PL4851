@@ -1,6 +1,6 @@
 from django.db import models
-from startups.models import StartupProfile
 
+from startups.models import StartupProfile
 
 MAX_LENGTH_PROJECT_TITLE = 255
 MAX_LENGTH_PROJECT_STAGE = 100
@@ -15,7 +15,7 @@ class Project(models.Model):
     startup = models.ForeignKey(
         StartupProfile,
         on_delete=models.RESTRICT,
-        related_name="projects",
+        related_name='projects',
     )
     project_title = models.CharField(max_length=MAX_LENGTH_PROJECT_TITLE)
     project_description = models.TextField()
@@ -34,20 +34,18 @@ class Project(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=["project_stage"], name="project_stage_idx"),
+            models.Index(fields=['project_stage'], name='project_stage_idx'),
         ]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(investment_sum__gt=0),
-                name='project_investment_sum_gt_zero'
+                condition=models.Q(investment_sum__gt=0),
+                name='project_investment_sum_gt_zero',
             ),
             models.CheckConstraint(
-                check=models.Q(raised_amount__gte=0),
-                name='project_raised_amount_gte_zero'
+                condition=models.Q(raised_amount__gte=0),
+                name='project_raised_amount_gte_zero',
             ),
         ]
-
-
 
     def __str__(self):
         return self.project_title
