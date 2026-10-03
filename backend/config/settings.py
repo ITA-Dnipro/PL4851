@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'investors',
     'projects',
     'dashboard',
+    'content.sections',
+    'content.pages',
 ]
 
 MIDDLEWARE = [

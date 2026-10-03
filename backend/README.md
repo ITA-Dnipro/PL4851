@@ -49,3 +49,20 @@ python manage.py runserver   # start dev server at http://127.0.0.1:8000
 ```
 
 Health check: `GET /api/health/` returns `{"status": "ok"}`.
+
+## Landing content
+
+`GET /api/content/landing/` returns the landing page content: hero, banner, "for whom" and "why worth" blocks.
+
+Content is edited in the admin:
+
+- **Content: sections** — the blocks themselves (texts, images, cards);
+- **Content: pages → Landing Page** — which blocks are shown on the page.
+
+Load the initial content after `migrate`:
+
+```bash
+python manage.py loaddata landing
+```
+
+The fixture lives in `content/pages/fixtures/landing.json`. Loading it again overwrites the landing records with the fixture data, so changes made in the admin will be lost.
