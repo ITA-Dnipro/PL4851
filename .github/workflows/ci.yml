@@ -71,7 +71,7 @@ jobs:
         run: pytest
 
   frontend:
-    name: Frontend (lint + build)
+    name: Frontend (lint + tests + build)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -91,6 +91,10 @@ jobs:
 
       - name: ESLint
         run: npm run lint
+
+      # Skipped until the frontend has a test:run script
+      - name: Tests
+        run: npm run test:run --if-present
 
       - name: Build
         run: npm run build

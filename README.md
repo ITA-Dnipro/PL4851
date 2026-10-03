@@ -139,9 +139,9 @@ GitHub Actions workflow `.github/workflows/ci.yml` runs on every pull request an
 | Job | Steps |
 |---|---|
 | Backend (lint + tests) | black, isort, flake8, missing migrations check, pytest (against PostgreSQL 17) |
-| Frontend (lint + build) | ESLint, `npm run build` (TypeScript check + Vite build) |
+| Frontend (lint + tests + build) | ESLint, Vitest (`npm run test:run`, once the frontend has tests), `npm run build` (TypeScript check + Vite build) |
 
-A PR can be merged only when both jobs are green.
+Both checks must be green before merging.
 
 #### Reading CI logs
 
