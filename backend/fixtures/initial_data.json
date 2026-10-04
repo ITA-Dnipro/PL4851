@@ -55,7 +55,7 @@
       "startup_description": "Автоматизація збору врожаю за допомогою дронів та ШІ.",
       "website": "https://cyberagro.ua",
       "startup_phone": "380991234567",
-      "address": "Київ, вул. Польова 4",
+      "location": "kyiv_city",
       "industries": [
         1
       ],

@@ -9,6 +9,7 @@ MAX_LENGTH_EDRPOU_OR_IPN = 20
 MAX_LENGTH_WEBSITE = 200
 MAX_LENGTH_STARTUP_PHONE = 20
 MAX_LENGTH_INDUSTRY = 100
+MAX_LENGTH_LOCATION = 50
 DEFAULT_EMPLOYEES = 1
 NON_DIGIT_PATTERN = re.compile(r'\D')
 
@@ -30,20 +31,43 @@ class Industry(models.Model):
         OTHER = 'other', 'Інше'
 
     industry_id = models.AutoField(primary_key=True)
-    slug = models.SlugField(
-        max_length=MAX_LENGTH_INDUSTRY, 
-        unique=True
-    )
-    industry_name = models.CharField(
-        max_length=MAX_LENGTH_INDUSTRY, 
-        unique=True
-    )
+    slug = models.SlugField(max_length=MAX_LENGTH_INDUSTRY, unique=True)
+    industry_name = models.CharField(max_length=MAX_LENGTH_INDUSTRY, unique=True)
 
     class Meta:
         ordering = ['industry_name']
 
     def __str__(self):
         return self.industry_name
+
+
+class LocationType(models.TextChoices):
+    CHERNIVTSI = 'chernivtsi', 'Чернівецька область'
+    CHERKASY = 'cherkasy', 'Черкаська область'
+    CHERNIHIV = 'chernihiv', 'Чернігівська область'
+    DNIPRO = 'dnipro', 'Дніпропетровська область'
+    DONETSK = 'donetsk', 'Донецька область'
+    IVANO_FRANKIVSK = 'ivano_frankivsk', 'Івано-Франківська область'
+    KHARKIV = 'kharkiv', 'Харківська область'
+    KHERSON = 'kherson', 'Херсонська область'
+    KHMELNYTSKYI = 'khmelnytskyi', 'Хмельницька область'
+    KYIV_CITY = 'kyiv_city', 'м. Київ'
+    KYIV = 'kyiv', 'Київська область'
+    KIROVOHRAD = 'kirovohrad', 'Кіровоградська область'
+    LUHANSK = 'luhansk', 'Луганська область'
+    LVIV = 'lviv', 'Львівська область'
+    MYKOLAIV = 'mykolaiv', 'Миколаївська область'
+    ODESA = 'odesa', 'Одеська область'
+    POLTAVA = 'poltava', 'Полтавська область'
+    RIVNE = 'rivne', 'Рівненська область'
+    SUMY = 'sumy', 'Сумська область'
+    TERNOPIL = 'ternopil', 'Тернопільська область'
+    VINNYTSIA = 'vinnytsia', 'Вінницька область'
+    VOLYN = 'volyn', 'Волинська область'
+    ZAKARPATTIA = 'zakarpattia', 'Закарпатська область'
+    ZAPORIZHZHIA = 'zaporizhzhia', 'Запорізька область'
+    ZHYTOMYR = 'zhytomyr', 'Житомирська область'
+    CRIMEA = 'crimea', 'Автономна Республіка Крим'
 
 
 class StartupProfile(models.Model):
@@ -64,13 +88,20 @@ class StartupProfile(models.Model):
     startup_description = models.TextField()
     website = models.URLField(max_length=MAX_LENGTH_WEBSITE, blank=True)
     startup_phone = models.CharField(max_length=MAX_LENGTH_STARTUP_PHONE)
-    address = models.TextField(blank=True)
+    location = models.CharField(
+        max_length=MAX_LENGTH_LOCATION,
+        choices=LocationType.choices,
+        default=LocationType.KYIV_CITY,
+    )
     industries = models.ManyToManyField(Industry, related_name='startup_profiles')
     founded_at = models.DateField(blank=True, null=True)
     employees = models.IntegerField(default=DEFAULT_EMPLOYEES)
     is_verified = models.BooleanField(default=False)
 
     class Meta:
+        indexes = [
+            models.Index(fields=['location'], name='startup_location_idx'),
+        ]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(employees__gte=1),
