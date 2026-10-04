@@ -10,9 +10,9 @@ class StartupProfileAdmin(admin.ModelAdmin):
         'startup_description',
         'website',
         'startup_phone',
-        'address',
-        'industry', 
+        'address', 
         'founded_at',
         'employees',
         'is_verified' 
     )
+    filter_horizontal = ('industries',)

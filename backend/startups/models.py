@@ -13,7 +13,7 @@ DEFAULT_EMPLOYEES = 1
 NON_DIGIT_PATTERN = re.compile(r'\D')
 
 
-class StartupProfile(models.Model):
+class Industry(models.Model):
     class IndustryType(models.TextChoices):
         IT = 'it', 'Інформаційні технології / IT'
         FINANCE = 'finance', 'Фінанси та FinTech'
@@ -29,6 +29,24 @@ class StartupProfile(models.Model):
         WINEMAKING = 'winemaking', 'Виноробство'
         OTHER = 'other', 'Інше'
 
+    industry_id = models.AutoField(primary_key=True)
+    slug = models.SlugField(
+        max_length=MAX_LENGTH_INDUSTRY, 
+        unique=True
+    )
+    industry_name = models.CharField(
+        max_length=MAX_LENGTH_INDUSTRY, 
+        unique=True
+    )
+
+    class Meta:
+        ordering = ['industry_name']
+
+    def __str__(self):
+        return self.industry_name
+
+
+class StartupProfile(models.Model):
     startup_id = models.AutoField(primary_key=True)
     user = models.OneToOneField(
         User,
@@ -47,19 +65,12 @@ class StartupProfile(models.Model):
     website = models.URLField(max_length=MAX_LENGTH_WEBSITE, blank=True)
     startup_phone = models.CharField(max_length=MAX_LENGTH_STARTUP_PHONE)
     address = models.TextField(blank=True)
-    industry = models.CharField(
-        max_length=MAX_LENGTH_INDUSTRY,
-        choices=IndustryType.choices,
-        default=IndustryType.OTHER,
-    )
+    industries = models.ManyToManyField(Industry, related_name='startup_profiles')
     founded_at = models.DateField(blank=True, null=True)
     employees = models.IntegerField(default=DEFAULT_EMPLOYEES)
     is_verified = models.BooleanField(default=False)
 
     class Meta:
-        indexes = [
-            models.Index(fields=['industry'], name='startup_industry_idx'),
-        ]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(employees__gte=1),
