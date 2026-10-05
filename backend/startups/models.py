@@ -10,6 +10,7 @@ MAX_LENGTH_WEBSITE = 200
 MAX_LENGTH_STARTUP_PHONE = 20
 MAX_LENGTH_INDUSTRY = 100
 MAX_LENGTH_LOCATION = 50
+MAX_LENGTH_LOGO = 255
 DEFAULT_EMPLOYEES = 1
 NON_DIGIT_PATTERN = re.compile(r'\D')
 
@@ -95,6 +96,9 @@ class StartupProfile(models.Model):
     )
     industries = models.ManyToManyField(Industry, related_name='startup_profiles')
     founded_at = models.DateField(blank=True, null=True)
+    logo = models.ImageField(
+        upload_to='thumbs/', blank=True, null=True, max_length=MAX_LENGTH_LOGO
+    )
     employees = models.IntegerField(default=DEFAULT_EMPLOYEES)
     is_verified = models.BooleanField(default=False)
 
