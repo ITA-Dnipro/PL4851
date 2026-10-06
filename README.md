@@ -123,6 +123,26 @@ After the containers are running, open another terminal and run:
 docker compose exec backend python manage.py migrate
 ```
 
+### Initial Content
+
+Load the initial landing content (see [backend/README.md](backend/README.md#landing-content)):
+
+```powershell
+docker compose exec backend python manage.py loaddata landing
+```
+
+This is enough for the frontend to get data from `GET /api/content/landing/`.
+
+### Admin Panel (optional)
+
+To edit content in the admin, create an admin user:
+
+```powershell
+docker compose exec backend python manage.py createsuperuser
+```
+
+Then open http://localhost:8000/admin/
+
 ### Backend Health Check
 
 Open:
