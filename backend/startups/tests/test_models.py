@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.test import TestCase
 
-from .models import Industry, LocationType, StartupProfile
+from startups.models import Industry, LocationType, StartupProfile
 
 User = get_user_model()
 
