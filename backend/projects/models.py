@@ -1,7 +1,5 @@
 from django.db import models
 
-from startups.models import StartupProfile
-
 MAX_LENGTH_PROJECT_TITLE = 255
 MAX_LENGTH_PROJECT_STAGE = 100
 INVESTMENT_SUM_MAX_DIGITS = 12
@@ -13,7 +11,7 @@ RAISED_AMOUNT_DECIMAL_PLACES = 2
 class Project(models.Model):
     project_id = models.AutoField(primary_key=True)
     startup = models.ForeignKey(
-        StartupProfile,
+        'startups.StartupProfile',
         on_delete=models.RESTRICT,
         related_name='projects',
     )

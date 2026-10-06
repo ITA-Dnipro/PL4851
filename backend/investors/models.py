@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 MAX_LENGTH_INVESTOR_NAME = 255
@@ -16,7 +17,7 @@ class InvestorProfile(models.Model):
 
     investor_id = models.AutoField(primary_key=True)
     user = models.OneToOneField(
-        'users.User',
+        settings.AUTH_USER_MODEL,
         on_delete=models.RESTRICT,
         related_name='investor_profile',
     )

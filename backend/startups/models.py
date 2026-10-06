@@ -1,8 +1,7 @@
 import re
 
+from django.conf import settings
 from django.db import models
-
-from users.models import User
 
 MAX_LENGTH_STARTUP_NAME = 255
 MAX_LENGTH_EDRPOU_OR_IPN = 20
@@ -31,9 +30,8 @@ class StartupProfile(models.Model):
 
     startup_id = models.AutoField(primary_key=True)
     user = models.OneToOneField(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.RESTRICT,
-        to_field='user_id',
         related_name='startup_profile',
     )
     startup_name = models.CharField(max_length=MAX_LENGTH_STARTUP_NAME)

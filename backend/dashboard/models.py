@@ -1,18 +1,15 @@
 from django.db import models
 
-from investors.models import InvestorProfile
-from projects.models import Project
-
 
 class SavedProject(models.Model):
     saved_project_id = models.AutoField(primary_key=True)
     investor = models.ForeignKey(
-        InvestorProfile,
+        'investors.InvestorProfile',
         on_delete=models.RESTRICT,
         related_name='saved_projects',
     )
     project = models.ForeignKey(
-        Project,
+        'projects.Project',
         on_delete=models.RESTRICT,
         related_name='saved_by_investors',
     )
