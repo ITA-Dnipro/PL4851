@@ -13,11 +13,9 @@ User = get_user_model()
 
 class SavedProjectModelTest(TestCase):
     def setUp(self):
-        self.user_startup = User.objects.create_user(
-            username='s@test.com', email='s@test.com', role='startup'
-        )
+        self.user_startup = User.objects.create_user(email='s@test.com', role='startup')
         self.user_investor = User.objects.create_user(
-            username='i@test.com', email='i@test.com', role='investor'
+            email='i@test.com', role='investor'
         )
         self.startup = StartupProfile.objects.create(
             user=self.user_startup, startup_name='S1', industry='it'

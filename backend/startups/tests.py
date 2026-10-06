@@ -10,14 +10,12 @@ User = get_user_model()
 class StartupProfileModelTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username='founder@test.com',
             email='founder@test.com',
             first_name='Ivan',
             last_name='Petrov',
             role='startup',
         )
         self.other_user = User.objects.create_user(
-            username='other@test.com',
             email='other@test.com',
             first_name='Petro',
             last_name='Ivanov',

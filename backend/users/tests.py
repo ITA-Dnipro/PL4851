@@ -8,7 +8,6 @@ User = get_user_model()
 class UserModelTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username='test_user@example.com',
             email='test_user@example.com',
             first_name='Oleh',
             last_name='Test',
@@ -19,7 +18,6 @@ class UserModelTest(TestCase):
     def test_user_field_presence_and_values(self):
         """Verify presence and correctness of User model fields."""
         self.assertEqual(self.user.email, 'test_user@example.com')
-        self.assertEqual(self.user.username, 'test_user@example.com')
         self.assertEqual(self.user.first_name, 'Oleh')
         self.assertEqual(self.user.last_name, 'Test')
         self.assertEqual(self.user.role, 'startup')
@@ -33,9 +31,13 @@ class UserModelTest(TestCase):
         """Verify email must be unique."""
         with self.assertRaises(IntegrityError):
             User.objects.create_user(
-                username='x',
                 email='test_user@example.com',
                 first_name='A',
                 last_name='B',
                 role='investor',
             )
+
+    def test_password_is_hashed(self):
+        """Verify the login identity is email."""
+        self.assertTrue(self.user.check_password('securepassword123'))
+        self.assertEqual(User.USERNAME_FIELD, 'email')
