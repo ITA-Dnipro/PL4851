@@ -5,7 +5,6 @@
     "fields": {
       "password": "pbkdf2_sha256$600000$encryptedpasswordhere$",
       "is_superuser": false,
-      "username": "founder@startup.com",
       "first_name": "Ім'я-Тест",
       "last_name": "Прізвище-Тест",
       "email": "test@startup.com",
@@ -24,7 +23,6 @@
     "fields": {
       "password": "pbkdf2_sha256$600000$anotherencryptedpassword$",
       "is_superuser": false,
-      "username": "investor@capital.com",
       "first_name": "Джон-Тест",
       "last_name": "Рокфеллер-Тест",
       "email": "investor-test@capital.com",
