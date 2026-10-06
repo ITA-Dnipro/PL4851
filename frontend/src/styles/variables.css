@@ -1,0 +1,20 @@
+:root {
+  --font-main: 'Geologica', Arial, sans-serif;
+
+  --color-green: #B4D27A;
+  --color-dark: #222423;
+  --color-white: #ffffff;
+  --color-text: #232424;
+  --color-black: #000000;
+  --color-black-90: #292E32;
+  --color-gray: #A3AAB0;
+  --color-primary-hover: #292929;
+  --color-beige: #F9F5EC;
+  --color-dim-gray: #707070;
+
+  --container-width: 1352px;
+  --radius-4: 4px;
+  --radius-8: 8px;
+  --radius-50: 50px;
+  --radius-100: 100px;
+}
