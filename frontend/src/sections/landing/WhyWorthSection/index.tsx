@@ -1,5 +1,5 @@
 import type { WhyWorthSectionData, WhyWorthItemData } from './types'
-import styles from './WhyWorthSection.module.css'
+import styles from './styles.module.css'
 
 interface WhyWorthSectionProps {
   data: WhyWorthSectionData | null

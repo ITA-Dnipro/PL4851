@@ -1,6 +1,6 @@
 import Icon from '../../../components/Icon'
 
-import styles from './ForWhomSection.module.css'
+import styles from './styles.module.css'
 import { getForWhomIcon } from './icons'
 import type { ForWhomItemData, ForWhomSectionData } from './types'
 
