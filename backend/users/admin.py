@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import User
+from .models import PasswordResetToken, User
 
 
 @admin.register(User)
@@ -56,3 +56,22 @@ class UserAdmin(BaseUserAdmin):
             },
         ),
     )
+
+
+@admin.register(PasswordResetToken)
+class PasswordResetTokenAdmin(admin.ModelAdmin):
+    list_display = (
+        'user',
+        'token_hash',
+        'created_at',
+        'expires_at',
+        'used_at',
+        'revoked',
+    )
+    list_filter = ('revoked', 'used_at', 'created_at', 'expires_at')
+    search_fields = ('user__email', 'token_hash')
+    actions = ('revoke_tokens',)
+
+    @admin.action(description='Revoke selected tokens')
+    def revoke_tokens(self, request, queryset):
+        queryset.update(revoked=True)
