@@ -1,10 +1,10 @@
-from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
 from content.pages.models import LandingPage
 from content.sections.models import LandingBanner
+from content.testing import create_admin_user
 
 LANDING_URL = reverse('landing-content')
 
@@ -67,10 +67,7 @@ class LandingPageAdminTests(TestCase):
     fixtures = ['landing']
 
     def setUp(self):
-        user = get_user_model().objects.create_superuser(
-            username='admin', email='admin@example.com', password='admin'
-        )
-        self.client.force_login(user)
+        self.client.force_login(create_admin_user())
 
     def test_shows_visibility_flags_with_edit_links(self):
         response = self.client.get(
