@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
@@ -17,6 +16,7 @@ from content.sections.serializers import (
     LandingHeroSerializer,
     LandingWhyWorthSectionSerializer,
 )
+from content.testing import create_admin_user
 
 
 class LandingHeroSerializerTests(TestCase):
@@ -138,10 +138,7 @@ class LandingWhyWorthSerializerTests(TestCase):
 
 class SectionSingletonAdminTests(TestCase):
     def setUp(self):
-        user = get_user_model().objects.create_superuser(
-            username='admin', email='admin@example.com', password='admin'
-        )
-        self.client.force_login(user)
+        self.client.force_login(create_admin_user())
 
     def test_changelist_redirects_to_the_only_record(self):
         hero = LandingHero.objects.create(title='Hero')
