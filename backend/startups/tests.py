@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.test import TestCase
 
-from .models import StartupProfile
+from startups.models import Industry, LocationType, StartupProfile
 
 User = get_user_model()
 
@@ -21,19 +21,24 @@ class StartupProfileModelTest(TestCase):
             last_name='Ivanov',
             role='startup',
         )
+        self.industry = Industry.objects.get_or_create(
+            slug='agriculture', defaults={'industry_name': 'Сільське господарство'}
+        )[0]
         self.startup = StartupProfile.objects.create(
             user=self.user,
             startup_name='TechAgro',
             startup_description='AI for agriculture',
             startup_phone='+38 (099) 123-45-67',
-            industry='agriculture',
+            location=LocationType.KYIV_CITY,
         )
+        self.startup.industries.add(self.industry)
 
     def test_startup_field_presence(self):
         """Verify presence of StartupProfile fields and their default values."""
         self.assertEqual(self.startup.startup_name, 'TechAgro')
-        self.assertEqual(self.startup.industry, 'agriculture')
+        self.assertTrue(self.startup.industries.filter(slug='agriculture').exists())
         self.assertEqual(self.startup.employees, 1)
+        self.assertEqual(self.startup.location, LocationType.KYIV_CITY)
 
     def test_startup_phone_cleaning(self):
         """Verify save() strips non-digit characters from the phone number."""
