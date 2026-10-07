@@ -1,0 +1,92 @@
+[
+  {
+    "model": "users.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$600000$encryptedpasswordhere$",
+      "is_superuser": false,
+      "first_name": "Ім'я-Тест",
+      "last_name": "Прізвище-Тест",
+      "email": "test@startup.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-10-02T12:00:00Z",
+      "role": "startup",
+      "created_at": "2026-10-02T12:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$600000$anotherencryptedpassword$",
+      "is_superuser": false,
+      "first_name": "Джон-Тест",
+      "last_name": "Рокфеллер-Тест",
+      "email": "investor-test@capital.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-10-02T12:05:00Z",
+      "role": "investor",
+      "created_at": "2026-10-02T12:05:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "startups.startupprofile",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "startup_name": "CyberAgro",
+      "edrpou_or_ipn": "12345678",
+      "startup_description": "Автоматизація збору врожаю за допомогою дронів та ШІ.",
+      "website": "https://cyberagro.ua",
+      "startup_phone": "380991234567",
+      "address": "Київ, вул. Польова 4",
+      "industry": "agriculture",
+      "founded_at": "2025-01-15",
+      "employees": 12,
+      "is_verified": true
+    }
+  },
+  {
+    "model": "investors.investorprofile",
+    "pk": 1,
+    "fields": {
+      "user": 2,
+      "investor_name": "Rockefeller & Co",
+      "edrpou_or_ipn": "87654321",
+      "investor_description": "Вкладаємо в перспективні технологічні стартапи.",
+      "investor_phone": "380671112233",
+      "is_verified": true,
+      "investor_type": "company",
+      "investment_min": "50000.00"
+    }
+  },
+  {
+    "model": "projects.project",
+    "pk": 1,
+    "fields": {
+      "startup": 1,
+      "project_title": "AgroDrone V2",
+      "project_description": "Розробка нової моделі дрона з тепловізором.",
+      "investment_sum": "150000.00",
+      "project_stage": "MVP",
+      "raised_amount": "25000.00",
+      "created_at": "2026-10-02T12:10:00Z",
+      "updated_at": "2026-10-02T12:10:00Z"
+    }
+  },
+  {
+    "model": "dashboard.savedproject",
+    "pk": 1,
+    "fields": {
+      "investor": 1,
+      "project": 1,
+      "saved_at": "2026-10-02T12:15:00Z"
+    }
+  }
+]
