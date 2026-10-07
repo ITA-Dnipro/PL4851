@@ -1,0 +1,12 @@
+# Codecov settings, see README "Code Coverage (Codecov)".
+# Validate after editing: curl --data-binary @codecov.yml https://codecov.io/validate
+coverage:
+  status:
+    # Report project and patch coverage on every PR, but never fail it: there is
+    # no agreed coverage target yet. Remove `informational` to start enforcing one.
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true
