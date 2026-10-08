@@ -1,5 +1,8 @@
+import pytest
 from django.urls import reverse
 from rest_framework.test import APITestCase
+
+pytestmark = pytest.mark.api
 
 
 class HealthViewTests(APITestCase):
