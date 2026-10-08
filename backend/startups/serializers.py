@@ -9,6 +9,7 @@ class StartupProfileSerializer(serializers.ModelSerializer):
     )
 
     logo = serializers.SerializerMethodField()
+    location = serializers.CharField(source='get_location_display', read_only=True)
 
     def get_logo(self, obj):
         """Returns the URL of the startup's logo or a default placeholder."""
