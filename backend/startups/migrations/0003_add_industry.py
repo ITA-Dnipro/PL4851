@@ -3,6 +3,19 @@
 from django.conf import settings
 from django.db import migrations, models
 
+def copy_industry_to_industries(apps, schema_editor):
+    StartupProfile = apps.get_model('startups', 'StartupProfile')
+    Industry = apps.get_model('startups', 'Industry')
+    
+    for profile in StartupProfile.objects.all():
+        old_industry_value = getattr(profile, 'industry', None)
+        if old_industry_value:
+            clean_slug = old_industry_value.lower().replace(' ', '_')
+            industry_obj, _ = Industry.objects.get_or_create(
+                slug=clean_slug,
+                defaults={'industry_name': old_industry_value}
+            )
+            profile.industries.add(industry_obj)
 
 class Migration(migrations.Migration):
 
@@ -27,18 +40,46 @@ class Migration(migrations.Migration):
             model_name='startupprofile',
             name='startup_industry_idx',
         ),
-        migrations.RemoveField(
+        migrations.RenameField(
             model_name='startupprofile',
-            name='address',
+            old_name='address',
+            new_name='location',
         ),
-        migrations.RemoveField(
-            model_name='startupprofile',
-            name='industry',
-        ),
-        migrations.AddField(
+
+        migrations.AlterField(
             model_name='startupprofile',
             name='location',
-            field=models.CharField(choices=[('chernivtsi', 'Чернівецька область'), ('cherkasy', 'Черкаська область'), ('chernihiv', 'Чернігівська область'), ('dnipro', 'Дніпропетровська область'), ('donetsk', 'Донецька область'), ('ivano_frankivsk', 'Івано-Франківська область'), ('kharkiv', 'Харківська область'), ('kherson', 'Херсонська область'), ('khmelnytskyi', 'Хмельницька область'), ('kyiv_city', 'м. Київ'), ('kyiv', 'Київська область'), ('kirovohrad', 'Кіровоградська область'), ('luhansk', 'Луганська область'), ('lviv', 'Львівська область'), ('mykolaiv', 'Миколаївська область'), ('odesa', 'Одеська область'), ('poltava', 'Полтавська область'), ('rivne', 'Рівненська область'), ('sumy', 'Сумська область'), ('ternopil', 'Тернопільська область'), ('vinnytsia', 'Вінницька область'), ('volyn', 'Волинська область'), ('zakarpattia', 'Закарпатська область'), ('zaporizhzhia', 'Запорізька область'), ('zhytomyr', 'Житомирська область'), ('crimea', 'Автономна Республіка Крим')], default='kyiv_city', max_length=50),
+            field=models.CharField(
+                choices=[
+                    ('chernivtsi', 'Чернівецька область'), 
+                    ('cherkasy', 'Черкаська область'), 
+                    ('chernihiv', 'Чернігівська область'), 
+                    ('dnipro', 'Дніпропетровська область'), 
+                    ('donetsk', 'Донецька область'), 
+                    ('ivano_frankivsk', 'Івано-Франківська область'), 
+                    ('kharkiv', 'Харківська область'), 
+                    ('kherson', 'Херсонська область'), 
+                    ('khmelnytskyi', 'Хмельницька область'), 
+                    ('kyiv_city', 'м. Київ'), 
+                    ('kyiv', 'Київська область'), 
+                    ('kirovohrad', 'Кіровоградська область'), 
+                    ('luhansk', 'Луганська область'), 
+                    ('lviv', 'Львівська область'), 
+                    ('mykolaiv', 'Миколаївська область'), 
+                    ('odesa', 'Одеська область'), 
+                    ('poltava', 'Полтавська область'), 
+                    ('rivne', 'Рівненська область'), 
+                    ('sumy', 'Сумська область'), 
+                    ('ternopil', 'Тернопільська область'), 
+                    ('vinnytsia', 'Вінницька область'), 
+                    ('volyn', 'Волинська область'), 
+                    ('zakarpattia', 'Закарпатська область'), 
+                    ('zaporizhzhia', 'Запорізька область'), 
+                    ('zhytomyr', 'Житомирська область'), 
+                    ('crimea', 'Автономна Республіка Крим')
+                ], 
+                default='kyiv_city', 
+                max_length=50),
         ),
         migrations.AddField(
             model_name='startupprofile',
@@ -50,6 +91,14 @@ class Migration(migrations.Migration):
             name='industries',
             field=models.ManyToManyField(related_name='startup_profiles', to='startups.industry'),
         ),
+
+        migrations.RunPython(copy_industry_to_industries),
+        
+        migrations.RemoveField(
+            model_name='startupprofile',
+            name='industry',
+        ),
+
         migrations.AddIndex(
             model_name='startupprofile',
             index=models.Index(fields=['location'], name='startup_location_idx'),
