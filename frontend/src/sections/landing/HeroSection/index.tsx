@@ -1,11 +1,10 @@
 import { Link } from 'react-router-dom'
 import styles from './styles.module.css'
-import type { HeroSectionProps } from './types'
+import type { HeroSectionData } from './types'
 
 interface HeroSectionProps {
   data: HeroSectionData | null
 }
-
 
 const imagePositions = [styles.wine, styles.delivery, styles.cheese, styles.packaging]
 
