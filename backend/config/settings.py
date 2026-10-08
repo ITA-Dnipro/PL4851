@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -159,4 +160,21 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'login': '5/min',
+    },
 }
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'USER_ID_FIELD': 'user_id',
+}
+
+LOGIN_MAX_FAILED_ATTEMPTS = 5
+LOGIN_LOCKOUT_SECONDS = 15 * 60
+LOGIN_REMEMBER_REFRESH_LIFETIME = timedelta(days=30)

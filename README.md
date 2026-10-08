@@ -241,7 +241,7 @@ Most lint failures are fixed locally by `pre-commit run --all-files`. Tests: `cd
 
 ### Testing & Coverage (Backend)
 
-Tests are written using `pytest` and `pytest-django`. All tests are centralized inside the `backend/tests/` directory.
+Tests are written using `pytest` and `pytest-django`. Each app keeps its tests in its own `tests/` package, one file per feature (e.g. `users/tests/test_models.py`, `users/tests/test_login.py`).
 
 #### Running Tests
 
@@ -253,6 +253,9 @@ cd backend
 
 Run all tests:
 `pytest`
+
+Run tests of one app:
+`pytest users`
 
 Run tests by marker:
 `pytest -m api`
