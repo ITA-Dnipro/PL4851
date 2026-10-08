@@ -91,6 +91,11 @@ class Migration(migrations.Migration):
             name='industries',
             field=models.ManyToManyField(related_name='startup_profiles', to='startups.industry'),
         ),
+        migrations.AddField(
+            model_name='startupprofile',
+            name='short_description',
+            field=models.CharField(blank=True, default='', max_length=255),
+        ),
 
         migrations.RunPython(copy_industry_to_industries),
         

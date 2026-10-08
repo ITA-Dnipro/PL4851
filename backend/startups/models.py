@@ -8,6 +8,7 @@ MAX_LENGTH_STARTUP_NAME = 255
 MAX_LENGTH_EDRPOU_OR_IPN = 20
 MAX_LENGTH_WEBSITE = 200
 MAX_LENGTH_STARTUP_PHONE = 20
+MAX_LENGTH_SHORT_DESCRIPTION = 255
 MAX_LENGTH_INDUSTRY = 100
 MAX_LENGTH_LOCATION = 50
 MAX_LENGTH_LOGO = 255
@@ -87,6 +88,9 @@ class StartupProfile(models.Model):
         unique=True,
         blank=True,
         null=True,
+    )
+    short_description = models.CharField(
+        max_length=MAX_LENGTH_SHORT_DESCRIPTION, blank=True, default=''
     )
     startup_description = models.TextField()
     website = models.URLField(max_length=MAX_LENGTH_WEBSITE, blank=True)

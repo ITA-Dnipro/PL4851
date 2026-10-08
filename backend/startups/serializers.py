@@ -5,7 +5,7 @@ from startups.models import StartupProfile
 
 class StartupProfileSerializer(serializers.ModelSerializer):
     industries = serializers.SlugRelatedField(
-        many=True, read_only=True, slug_field='slug'
+        many=True, read_only=True, slug_field='industry_name'
     )
 
     logo = serializers.SerializerMethodField()
@@ -21,7 +21,7 @@ class StartupProfileSerializer(serializers.ModelSerializer):
         fields = [
             'startup_id',
             'startup_name',
-            'startup_description',
+            'short_description',
             'logo',
             'location',
             'industries',
