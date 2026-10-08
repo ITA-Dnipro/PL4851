@@ -1,4 +1,5 @@
-import Hero from '../components/home/Hero'
+import HeroSection from '../sections/landing/HeroSection'
+import { heroMock } from '../sections/landing/HeroSection/mocks'
 import BannerSection from '../sections/landing/BannerSection'
 import { bannerSectionMock } from '../sections/landing/BannerSection/mocks'
 import ForWhomSection from '../sections/landing/ForWhomSection'
@@ -9,7 +10,7 @@ import { whyWorthSectionMock } from '../sections/landing/WhyWorthSection/mocks'
 function Home() {
   return (
     <>
-      <Hero />
+      <HeroSection data={heroMock} />
       <BannerSection data={bannerSectionMock} />
       <ForWhomSection data={forWhomSectionMock} />
       <WhyWorthSection data={whyWorthSectionMock} />
