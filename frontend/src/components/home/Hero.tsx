@@ -11,7 +11,7 @@ export default function Hero() {
         <div className={styles.text}>
           <h1 className={styles.title}>{title}</h1>
           <p className={styles.subtitle}>{subtitle}</p>
-          <a href="#" className={`button ${styles.button}`}>
+          <a href="/register" className={`button ${styles.button}`}>
             {buttonLabel}
           </a>
         </div>
@@ -19,7 +19,7 @@ export default function Hero() {
         <div className={styles.collage}>
           {collage.map((item) => (
             <figure key={item.key} className={`${styles.card} ${styles[item.key]}`}>
-              <img src={item.imageUrl} alt={item.alt ?? item.label} decoding="async" />
+              <img src={item.imageUrl} alt={item.alt ?? item.label} loading="lazy" />
               <figcaption className={styles.label}>{item.label}</figcaption>
             </figure>
           ))}
