@@ -276,14 +276,11 @@ To rerun a job without a new commit (e.g. a flaky network error), use **Re-run j
 
 The backend CI job runs pytest with coverage and uploads the report (`backend/coverage.xml`) to [Codecov](https://app.codecov.io/gh/ITA-Dnipro/PL4851). On every PR Codecov posts a comment with the coverage change and adds two checks, `codecov/project` and `codecov/patch`. For now they are informational: they never fail a PR (see `codecov.yml`).
 
-#### Adding the Codecov token (repo admin, once)
+#### Codecov token
 
-1. Sign in to https://app.codecov.io with GitHub and give the Codecov GitHub App access to `ITA-Dnipro/PL4851`.
-2. Open the repository in Codecov and copy its upload token (shown on the setup page, or under **Configuration → General**).
-3. In GitHub: **Settings → Secrets and variables → Actions → New repository secret**, name `CODECOV_TOKEN`, value: the token.
-4. Add the same secret under **Settings → Secrets and variables → Dependabot**: CI runs started by Dependabot can't read Actions secrets.
+The upload token is stored as the repository secret `CODECOV_TOKEN` (**Settings → Secrets and variables → Actions**). To replace it (repo admin): copy the upload token from the repository's page on Codecov (**Configuration → General**) and update the secret.
 
-Until the token is added, the **Upload coverage to Codecov** step logs an error but doesn't fail the job (`fail_ci_if_error: false`), and the Codecov badge shows *unknown*.
+If an upload fails (e.g. Codecov is down), the **Upload coverage to Codecov** step logs an error but doesn't fail the job (`fail_ci_if_error: false`). PRs opened by Dependabot can't read the secret, so their coverage isn't uploaded.
 
 ### Dependency Updates (Dependabot)
 

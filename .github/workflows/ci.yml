@@ -80,10 +80,13 @@ jobs:
             backend/htmlcov
 
       - name: Upload coverage to Codecov
+        if: ${{ !cancelled() }}
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          slug: ITA-Dnipro/PL4851
           files: backend/coverage.xml
+          flags: backend
           fail_ci_if_error: false
 
   frontend:
