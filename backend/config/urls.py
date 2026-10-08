@@ -23,5 +23,6 @@ from config.views import HealthView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/health/', HealthView.as_view(), name='health'),
+    path('api/auth/', include('users.urls')),
     path('api/content/', include('content.urls')),
 ]

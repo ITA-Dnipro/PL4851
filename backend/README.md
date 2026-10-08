@@ -66,3 +66,21 @@ python manage.py loaddata landing
 ```
 
 The fixture lives in `content/pages/fixtures/landing.json`. Loading it again overwrites the landing records with the fixture data, so changes made in the admin will be lost.
+
+## Authentication
+
+`POST /api/auth/login/` — log in with email and password.
+
+```json
+{ "email": "user@example.com", "password": "P@ssw0rd", "remember": true }
+```
+
+Response `200`:
+
+```json
+{ "access": "<jwt>", "refresh": "<jwt>", "user": { "id": 1, "email": "user@example.com", "role": "startup" } }
+```
+
+- Access token lives 15 minutes, refresh token 1 day (30 days with `"remember": true`).
+- Send the access token as `Authorization: Bearer <access>`.
+- Errors: `400` invalid data, `401` wrong email or password, `429` too many requests or account locked for 15 minutes after 5 failed attempts.
