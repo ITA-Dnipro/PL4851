@@ -4,7 +4,7 @@ import cheese from '../../../assets/hero/cheese.png'
 import packaging from '../../../assets/hero/packaging.png'
 import type { HeroSectionData } from './types'
 
-export const heroMock: HeroSectionData = {
+export const heroSectionMock: HeroSectionData = {
   title: 'FORUM',
   subtitle: 'Об’єднуємо крафтових виробників та інноваторів',
   cta_text: 'Детальніше про нас',

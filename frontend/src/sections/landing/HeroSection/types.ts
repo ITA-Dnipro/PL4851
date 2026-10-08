@@ -10,7 +10,3 @@ export interface HeroSectionData {
   cta_url: string
   hero_images: HeroImage[]
 }
-
-export interface HeroSectionProps {
-  data: HeroSectionData
-}

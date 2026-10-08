@@ -2,9 +2,17 @@ import { Link } from 'react-router-dom'
 import styles from './styles.module.css'
 import type { HeroSectionProps } from './types'
 
+interface HeroSectionProps {
+  data: HeroSectionData | null
+}
+
+
 const imagePositions = [styles.wine, styles.delivery, styles.cheese, styles.packaging]
 
 export default function HeroSection({ data }: HeroSectionProps) {
+
+  if (!data) return null
+
   const { title, subtitle, cta_text, cta_url, hero_images } = data
 
   return (
