@@ -1,0 +1,17 @@
+[run]
+branch = True
+source =
+    config
+    users
+    startups
+    investors
+    projects
+    dashboard
+omit =
+    */migrations/*
+    */tests/*
+    config/wsgi.py
+    config/asgi.py
+
+[report]
+show_missing = True

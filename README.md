@@ -26,6 +26,8 @@ We are committed to delivering a platform that is not just a marketplace for ide
 ![image](https://github.com/mehalyna/Forum-Project-Stage-CC/assets/39273210/54b0de76-f6e3-4bf3-bf38-fb5bf1d1d63d)
 
 
+![schema_db](db.png)
+
 
 ### Basic Epics
 
@@ -123,6 +125,26 @@ After the containers are running, open another terminal and run:
 docker compose exec backend python manage.py migrate
 ```
 
+### Initial Content
+
+Load the initial landing content (see [backend/README.md](backend/README.md#landing-content)):
+
+```powershell
+docker compose exec backend python manage.py loaddata landing
+```
+
+This is enough for the frontend to get data from `GET /api/content/landing/`.
+
+### Admin Panel (optional)
+
+To edit content in the admin, create an admin user:
+
+```powershell
+docker compose exec backend python manage.py createsuperuser
+```
+
+Then open http://localhost:8000/admin/
+
 ### Backend Health Check
 
 Open:
@@ -195,3 +217,50 @@ cd frontend && npm run lint
 ```
 
 If a hook modifies files (black, isort, end-of-file-fixer), the commit is stopped: review the changes, `git add` them and commit again.
+
+### Continuous Integration
+
+GitHub Actions workflow `.github/workflows/ci.yml` runs on every pull request and push to `develop` and `main`. It has two jobs that run in parallel:
+
+| Job | Steps |
+|---|---|
+| Backend (lint + tests) | black, isort, flake8, missing migrations check, pytest (against PostgreSQL 17) |
+| Frontend (lint + tests + build) | ESLint, Vitest (`npm run test:run`, once the frontend has tests), `npm run build` (TypeScript check + Vite build) |
+
+Both checks must be green before merging.
+
+#### Reading CI logs
+
+1. Open the PR and scroll to the checks block at the bottom (or open the **Checks** tab).
+2. A failed job is marked with a red ❌. Click **Details** next to it.
+3. The job page lists its steps; the failed one is expanded. Its name tells what failed (e.g. `flake8`, `pytest`, `Build`).
+4. Read the step output: linters print the file, line and rule; black and isort print a diff of what they would change; pytest prints the failing test and traceback.
+5. Reproduce locally with the same command, fix, push again. CI reruns automatically, and an older run of the same branch is cancelled.
+
+Most lint failures are fixed locally by `pre-commit run --all-files`. Tests: `cd backend && pytest`.
+
+### Testing & Coverage (Backend)
+
+Tests are written using `pytest` and `pytest-django`. All tests are centralized inside the `backend/tests/` directory.
+
+#### Running Tests
+
+Make sure you are in the `backend` directory:
+
+```bash
+cd backend
+```
+
+Run all tests:
+`pytest`
+
+Run tests by marker:
+`pytest -m api`
+
+`pytest -m models`
+
+#### Coverage Reports
+
+`./scripts/run_coverage.sh`
+
+To rerun a job without a new commit (e.g. a flaky network error), use **Re-run jobs** on the workflow run page.
