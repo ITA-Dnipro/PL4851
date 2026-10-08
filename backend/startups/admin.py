@@ -18,5 +18,4 @@ class StartupProfileAdmin(admin.ModelAdmin):
         'is_verified',
     )
 
-
-filter_horizontal = ('industries',)
+    filter_horizontal = ('industries',)

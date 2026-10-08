@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 
 from startups.models import StartupProfile
@@ -14,7 +15,10 @@ class StartupProfileSerializer(serializers.ModelSerializer):
     def get_logo(self, obj):
         """Returns the URL of the startup's logo or a default placeholder."""
 
-        return obj.logo.url if obj.logo else '/media/thumbs/placeholder.jpg'
+        if obj.logo:
+            return obj.logo.url
+
+        return f'{settings.MEDIA_URL}thumbs/placeholder.jpg'
 
     class Meta:
         model = StartupProfile
