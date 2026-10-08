@@ -1,14 +1,16 @@
+import pytest
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.test import TestCase
 
+from dashboard.models import SavedProject
 from investors.models import InvestorProfile
 from projects.models import Project
 from startups.models import Industry, LocationType, StartupProfile
 
-from .models import SavedProject
-
 User = get_user_model()
+
+pytestmark = pytest.mark.models
 
 
 class SavedProjectModelTest(TestCase):

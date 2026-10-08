@@ -1,3 +1,4 @@
+import pytest
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.test import TestCase
@@ -5,6 +6,8 @@ from django.test import TestCase
 from startups.models import Industry, LocationType, StartupProfile
 
 User = get_user_model()
+
+pytestmark = pytest.mark.models
 
 
 class StartupProfileModelTest(TestCase):

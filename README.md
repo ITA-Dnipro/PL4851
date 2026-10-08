@@ -239,4 +239,28 @@ Both checks must be green before merging.
 
 Most lint failures are fixed locally by `pre-commit run --all-files`. Tests: `cd backend && pytest`.
 
+### Testing & Coverage (Backend)
+
+Tests are written using `pytest` and `pytest-django`. All tests are centralized inside the `backend/tests/` directory.
+
+#### Running Tests
+
+Make sure you are in the `backend` directory:
+
+```bash
+cd backend
+```
+
+Run all tests:
+`pytest`
+
+Run tests by marker:
+`pytest -m api`
+
+`pytest -m models`
+
+#### Coverage Reports
+
+`./scripts/run_coverage.sh`
+
 To rerun a job without a new commit (e.g. a flaky network error), use **Re-run jobs** on the workflow run page.
