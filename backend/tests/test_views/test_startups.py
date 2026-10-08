@@ -27,7 +27,7 @@ class StartupProfileAPIViewTest(APITestCase):
         first_startup = response.data['results'][0]
         self.assertIn('startup_id', first_startup)
         self.assertIn('startup_name', first_startup)
-        self.assertIn('startup_description', first_startup)
+        self.assertIn('short_description', first_startup)
         self.assertIn('logo', first_startup)
         self.assertIn('location', first_startup)
         self.assertIn('industries', first_startup)
@@ -46,7 +46,7 @@ class StartupProfileAPIViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         for startup in response.data['results']:
-            self.assertIn('craft', startup['industries'])
+            self.assertIn('Ремесла', startup['industries'])
 
     def test_search_by_startup_name(self):
         """Verify that searching filters records accurately by startup name."""
