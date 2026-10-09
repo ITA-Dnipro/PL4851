@@ -1,5 +1,7 @@
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, get_object_or_404
 from rest_framework.pagination import PageNumberPagination
+
+from startups.models import StartupProfile
 
 from .models import Project
 from .serializers import ProjectSerializer
@@ -21,9 +23,12 @@ class StartupProjectListView(ListAPIView):
 
     def get_queryset(self):
         startup_id = self.kwargs.get('startup_id')
-        queryset = Project.objects.filter(startup_id=startup_id).order_by('-created_at')
-        status = self.request.query_params.get('status')
-        if status:
-            queryset = queryset.filter(status=status)
+        startup = get_object_or_404(StartupProfile, pk=startup_id)
+        queryset = Project.objects.filter(startup=startup).order_by('-created_at')
+        status_param = self.request.query_params.get('status')
+        if status_param:
+            queryset = queryset.filter(status=status_param)
+        else:
+            queryset = queryset.exclude(status=Project.ProjectStatus.DRAFT)
 
         return queryset
