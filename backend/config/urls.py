@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/health/', HealthView.as_view(), name='health'),
     path('api/content/', include('content.urls')),
     path('api/startups/', include('startups.urls', namespace='startups')),
+    path('api/', include('projects.urls', namespace='projects')),
 ]
 
 if settings.DEBUG:
