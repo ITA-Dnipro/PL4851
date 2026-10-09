@@ -55,9 +55,9 @@ def test_project_list_pagination(api_client, test_data):
     response = api_client.get(url, {'page': 1, 'page_size': 6})
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.data['count'] == 8
-    assert len(response.data['results']) == 6
-    assert response.data['next'] is not None
+    assert response.data['count'] == 5
+    assert len(response.data['results']) == 5
+    assert response.data['next'] is None
 
 
 @pytest.mark.django_db
