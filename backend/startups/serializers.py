@@ -1,0 +1,32 @@
+from django.conf import settings
+from rest_framework import serializers
+
+from startups.models import StartupProfile
+
+
+class StartupProfileSerializer(serializers.ModelSerializer):
+    industries = serializers.SlugRelatedField(
+        many=True, read_only=True, slug_field='industry_name'
+    )
+
+    logo = serializers.SerializerMethodField()
+    location = serializers.CharField(source='get_location_display', read_only=True)
+
+    def get_logo(self, obj):
+        """Returns the URL of the startup's logo or a default placeholder."""
+
+        if obj.logo:
+            return obj.logo.url
+
+        return f'{settings.MEDIA_URL}thumbs/placeholder.jpg'
+
+    class Meta:
+        model = StartupProfile
+        fields = [
+            'startup_id',
+            'startup_name',
+            'short_description',
+            'logo',
+            'location',
+            'industries',
+        ]
