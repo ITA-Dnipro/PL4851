@@ -7,7 +7,8 @@ from django.test import TestCase
 from django.utils import timezone
 
 from .admin import PasswordResetTokenAdmin
-from .models import PasswordResetToken
+from .metrics import increment_metric
+from .models import PasswordResetMetrics, PasswordResetToken
 from .services import (
     consume_password_reset_token,
     create_password_reset_token,
@@ -119,3 +120,32 @@ class PasswordResetTokenTest(TestCase):
 
         self.assertTrue(self.token.revoked)
         self.assertFalse(self.token.is_valid())
+
+    def test_successful_token_consumption_increments_confirms(self):
+        raw_token = create_password_reset_token(self.user)
+
+        result = consume_password_reset_token(raw_token)
+
+        metrics = PasswordResetMetrics.objects.get(pk=1)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(metrics.confirms, 1)
+
+
+class PasswordResetMetricsTest(TestCase):
+    def test_increment_requests(self):
+        increment_metric('requests')
+
+        metrics = PasswordResetMetrics.objects.get(pk=1)
+
+        self.assertEqual(metrics.requests, 1)
+
+    def test_increment_requests_multiple_times(self):
+        increment_metric('requests')
+        increment_metric('requests')
+        increment_metric('requests')
+
+        metrics = PasswordResetMetrics.objects.get(pk=1)
+
+        self.assertEqual(metrics.requests, 3)
+        self.assertEqual(PasswordResetMetrics.objects.count(), 1)

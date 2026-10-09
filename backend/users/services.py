@@ -6,6 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.utils import timezone
 
+from .metrics import increment_metric
 from .models import PasswordResetToken
 
 
@@ -39,8 +40,17 @@ def consume_password_reset_token(raw_token):
     except ObjectDoesNotExist:
         return None
 
+    if token.used_at is not None:
+        increment_metric('reused_attempts')
+        return None
+
+    if token.expires_at <= timezone.now():
+        increment_metric('expired_attempts')
+        return None
+
     if not token.is_valid():
         return None
 
     token.mark_as_used()
+    increment_metric('confirms')
     return token

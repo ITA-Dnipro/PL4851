@@ -86,3 +86,10 @@ class PasswordResetToken(models.Model):
 
     def __str__(self):
         return f'Password reset token for {self.user.email}'
+
+
+class PasswordResetMetrics(models.Model):
+    requests = models.PositiveBigIntegerField(default=0)
+    confirms = models.PositiveBigIntegerField(default=0)
+    expired_attempts = models.PositiveBigIntegerField(default=0)
+    reused_attempts = models.PositiveBigIntegerField(default=0)
