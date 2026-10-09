@@ -1,0 +1,58 @@
+# Dependabot version updates, see README "Dependency Updates (Dependabot)".
+# Every Monday it checks for new versions and opens PRs into develop.
+version: 2
+
+updates:
+  # Actions used in .github/workflows/; one PR for all of them
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: ci
+    groups:
+      github-actions:
+        patterns: ['*']
+
+  # backend/requirements.txt and backend/requirements-dev.txt
+  - package-ecosystem: pip
+    directory: /backend
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    # Skip releases younger than 5 days: broken or compromised ones are usually
+    # withdrawn by then. Security updates are not delayed.
+    cooldown:
+      default-days: 5
+    commit-message:
+      prefix: deps
+    # Minor and patch updates in one PR, each major update in its own PR
+    groups:
+      backend-minor-patch:
+        update-types: [minor, patch]
+    # Also pinned in .pre-commit-config.yaml: update them by hand in both files
+    # at once, otherwise CI and the git hooks run different versions
+    ignore:
+      - dependency-name: black
+      - dependency-name: isort
+      - dependency-name: flake8
+      - dependency-name: flake8-quotes
+
+  # frontend/package.json and frontend/package-lock.json
+  - package-ecosystem: npm
+    directory: /frontend
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 5
+    commit-message:
+      prefix: deps
+      prefix-development: deps-dev
+    groups:
+      frontend-minor-patch:
+        update-types: [minor, patch]
