@@ -21,7 +21,7 @@ class StartupProjectListView(ListAPIView):
 
     def get_queryset(self):
         startup_id = self.kwargs.get('startup_id')
-        queryset = Project.objects.filter(startup_id=startup_id)
+        queryset = Project.objects.filter(startup_id=startup_id).order_by('-created_at')
         status = self.request.query_params.get('status')
         if status:
             queryset = queryset.filter(status=status)
