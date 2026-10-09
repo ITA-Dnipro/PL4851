@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from rest_framework.exceptions import AuthenticationFailed, Throttled
 from rest_framework.response import Response
@@ -13,7 +14,9 @@ LOCKOUT_MESSAGE = 'Too many failed login attempts. Try again later.'
 
 
 def failed_attempts_key(email):
-    return f'login-failed:{email.strip().lower()}'
+    # Same normalization as for stored emails, so the key matches the account
+    email = get_user_model().objects.normalize_email(email.strip())
+    return f'login-failed:{email}'
 
 
 class LoginView(APIView):

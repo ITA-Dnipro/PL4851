@@ -131,12 +131,20 @@ class LoginLockoutTests(LoginTestCase):
         self.assertTrue(response.json()['detail'].startswith(LOCKOUT_MESSAGE))
         self.assertEqual(response['Retry-After'], str(settings.LOGIN_LOCKOUT_SECONDS))
 
-    def test_lockout_ignores_email_case(self):
+    def test_lockout_ignores_domain_case(self):
         self.fail_max_attempts()
 
-        response = self.login(email=EMAIL.upper())
+        response = self.login(email='founder@EXAMPLE.COM')
 
         self.assertEqual(response.status_code, 429)
+
+    def test_lockout_respects_local_part_case(self):
+        # Emails are stored with the local part as typed, so this is another account
+        self.fail_max_attempts()
+
+        response = self.login(email='Founder@example.com')
+
+        self.assertEqual(response.status_code, 401)
 
     def test_successful_login_resets_failed_attempts(self):
         for _ in range(settings.LOGIN_MAX_FAILED_ATTEMPTS - 1):
