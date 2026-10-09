@@ -1,6 +1,7 @@
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -102,31 +103,43 @@ def test_project_list_keys_match_spec(api_client, test_data):
 
 
 @pytest.mark.django_db
-def test_project_list_returns_real_logo_url(api_client, test_data):
+def test_project_list_returns_real_logo_url(api_client, test_data, tmp_path):
     """Check that the serializer returns the actual logo URL if an image exists."""
-    startup = test_data['startup']
-    fake_image = SimpleUploadedFile(
-        name='test_logo.jpg', content=b'fake_image_bytes', content_type='image/jpeg'
-    )
-    project_with_logo = Project.objects.create(
-        startup=startup,
-        project_title='Project with Logo',
-        short_description='Short desc',
-        project_description='Full description',
-        investment_sum=5000.00,
-        project_stage='MVP',
-        status=Project.ProjectStatus.ACTIVE,
-        logo=fake_image,
-    )
-    url = reverse('projects:startup-projects-list', kwargs={'startup_id': startup.pk})
+    with override_settings(MEDIA_ROOT=tmp_path):
+        startup = test_data['startup']
+        fake_image = SimpleUploadedFile(
+            name='test_logo.jpg', content=b'fake_image_bytes', content_type='image/jpeg'
+        )
+        project_with_logo = Project.objects.create(
+            startup=startup,
+            project_title='Project with Logo',
+            short_description='Short desc',
+            project_description='Full description',
+            investment_sum=5000.00,
+            project_stage='MVP',
+            status=Project.ProjectStatus.ACTIVE,
+            logo=fake_image,
+        )
+        url = reverse(
+            'projects:startup-projects-list', kwargs={'startup_id': startup.pk}
+        )
+        response = api_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+
+        results = response.data['results']
+        project_data = next(
+            p for p in results if p['project_id'] == project_with_logo.pk
+        )
+
+        assert 'test_logo' in project_data['logo']
+        assert 'placeholder.jpg' not in project_data['logo']
+
+
+@pytest.mark.django_db
+def test_projects_startup_not_found(api_client):
+    url = reverse('projects:startup-projects-list', kwargs={'startup_id': 999999})
+
     response = api_client.get(url)
 
-    assert response.status_code == status.HTTP_200_OK
-
-    results = response.data['results']
-    project_data = next(p for p in results if p['project_id'] == project_with_logo.pk)
-
-    assert 'test_logo' in project_data['logo']
-    assert 'placeholder.jpg' not in project_data['logo']
-
-    project_with_logo.logo.delete(save=False)
+    assert response.status_code == 404

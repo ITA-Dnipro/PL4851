@@ -24,11 +24,13 @@ class StartupProjectListView(ListAPIView):
     def get_queryset(self):
         startup_id = self.kwargs.get('startup_id')
         startup = get_object_or_404(StartupProfile, pk=startup_id)
-        queryset = Project.objects.filter(startup=startup).order_by('-created_at')
+        queryset = (
+            Project.objects.filter(startup=startup)
+            .exclude(status=Project.ProjectStatus.DRAFT)
+            .order_by('-created_at')
+        )
         status_param = self.request.query_params.get('status')
         if status_param:
             queryset = queryset.filter(status=status_param)
-        else:
-            queryset = queryset.exclude(status=Project.ProjectStatus.DRAFT)
 
         return queryset
