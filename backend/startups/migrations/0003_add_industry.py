@@ -84,7 +84,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='startupprofile',
             name='logo',
-            field=models.ImageField(blank=True, max_length=255, null=True, upload_to='thumbs/'),
+            field=models.ImageField(blank=True, max_length=255, null=True, upload_to='startups/logos/%Y/%m/'),
         ),
         migrations.AddField(
             model_name='startupprofile',

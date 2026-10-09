@@ -396,5 +396,141 @@
       "employees": 3,
       "is_verified": true
     }
+  },
+  {
+    "model": "projects.project",
+    "pk": 101,
+    "fields": {
+      "startup": 11,
+      "project_title": "Крафтові стільці з дубу",
+      "short_description": "Ергономічні стільці з дубу",
+      "project_description": "Преміальні ергономічні стільці з екологічно чистого дубу та металевого каркаса.",
+      "investment_sum": "50000.00",
+      "project_stage": "MVP",
+      "raised_amount": "12500.00",
+      "status": "active",
+      "logo": null,
+      "created_at": "2026-10-01T12:00:00Z",
+      "updated_at": "2026-10-09T12:25:00Z"
+    }
+  },
+  {
+    "model": "projects.project",
+    "pk": 102,
+    "fields": {
+      "startup": 11,
+      "project_title": "Набір глибоких тарілок",
+      "short_description": "Набір глибоких тарілок",
+      "project_description": "Набір автентичних глибоких тарілок із подвійним випалом для ресторанів етнічної кухні.",
+      "investment_sum": "15000.00",
+      "project_stage": "Idea",
+      "raised_amount": "0.00",
+      "status": "draft",
+      "logo": null,
+      "created_at": "2026-10-02T09:00:00Z",
+      "updated_at": "2026-10-02T09:00:00Z"
+    }
+  },
+  {
+    "model": "projects.project",
+    "pk": 103,
+    "fields": {
+      "startup": 11,
+      "project_title": "Дубові кавові столики",
+      "short_description": "Журнальні столики з дубу",
+      "project_description": "Мінімалістичні журнальні столики з масиву дуба з водостійким еко-покриттям.",
+      "investment_sum": "35000.00",
+      "project_stage": "MVP",
+      "raised_amount": "35000.00",
+      "status": "closed",
+      "logo": null,
+      "created_at": "2026-10-03T14:00:00Z",
+      "updated_at": "2026-10-08T11:00:00Z"
+    }
+  },
+  {
+    "model": "projects.project",
+    "pk": 104,
+    "fields": {
+      "startup": 11,
+      "project_title": "Глиняні чайні сервізи",
+      "short_description": "Глиняні чайні сервізи",
+      "project_description": "Чайні сервізи ручної роботи, створені за традиційними карпатськими технологіями.",
+      "investment_sum": "20000.00",
+      "project_stage": "Pre-launch",
+      "raised_amount": "5000.00",
+      "status": "active",
+      "logo": null,
+      "created_at": "2026-10-04T10:30:00Z",
+      "updated_at": "2026-10-05T16:45:00Z"
+    }
+  },
+  {
+    "model": "projects.project",
+    "pk": 105,
+    "fields": {
+      "startup": 11,
+      "project_title": "Дерев'яні кухонні приладдя",
+      "short_description": "Кухонне приладдя з горіха",
+      "project_description": "Кухонне приладдя (лопатки, дошки для нарізки) з горіхового дерева з антибактеріальним захистом.",
+      "investment_sum": "10000.00",
+      "project_stage": "Production",
+      "raised_amount": "9500.00",
+      "status": "active",
+      "logo": null,
+      "created_at": "2026-10-05T08:00:00Z",
+      "updated_at": "2026-10-09T10:00:00Z"
+    }
+  },
+  {
+    "model": "projects.project",
+    "pk": 106,
+    "fields": {
+      "startup": 11,
+      "project_title": "Підставки для фруктів та випічки",
+      "short_description": "Дерев'яні підставки для їжі",
+      "project_description": "Дерев'яні підставки для фруктів та випічки, що трансформуються під будь-яку вітрину.",
+      "investment_sum": "25000.00",
+      "project_stage": "Idea",
+      "raised_amount": "1200.00",
+      "status": "active",
+      "logo": null,
+      "created_at": "2026-10-06T11:15:00Z",
+      "updated_at": "2026-10-06T11:15:00Z"
+    }
+  },
+  {
+    "model": "projects.project",
+    "pk": 107,
+    "fields": {
+      "startup": 11,
+      "project_title": "Мінімалістичні вази з глини",
+      "short_description": "Інтер'єрні мінімалістичні вази",
+      "project_description": "Серія підлогових інтер'єрних ваз у скандинавському стилі з необпаленої фактурної глини.",
+      "investment_sum": "18000.00",
+      "project_stage": "MVP",
+      "raised_amount": "0.00",
+      "status": "paused",
+      "logo": null,
+      "created_at": "2026-10-07T15:20:00Z",
+      "updated_at": "2026-10-07T15:20:00Z"
+    }
+  },
+  {
+    "model": "projects.project",
+    "pk": 108,
+    "fields": {
+      "startup": 11,
+      "project_title": "Крафтові винні полиці",
+      "short_description": "Ексклюзивні полиці для вина",
+      "project_description": "Ексклюзивні полиці та стійки для зберігання винних пляшок із ясеня та шкіряних елементів.",
+      "investment_sum": "40000.00",
+      "project_stage": "MVP",
+      "raised_amount": "40000.00",
+      "status": "closed",
+      "logo": null,
+      "created_at": "2026-10-08T09:00:00Z",
+      "updated_at": "2026-10-09T11:30:00Z"
+    }
   }
 ]
