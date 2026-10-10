@@ -83,4 +83,4 @@ Response `200`:
 
 - Access token lives 15 minutes, refresh token 1 day (30 days with `"remember": true`).
 - Send the access token as `Authorization: Bearer <access>`.
-- Errors: `400` invalid data, `401` wrong email or password, `429` too many requests or account locked for 15 minutes after 5 failed attempts.
+- Errors: `400` invalid data, `401` wrong email or password, `429` too many requests or too many failed attempts: 5 for this email from one client (IP) → that client is locked for 15 minutes; 20 for this email from any clients → the email is locked for 1 hour.

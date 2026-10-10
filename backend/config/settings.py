@@ -175,6 +175,10 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'user_id',
 }
 
+# Lockout per email + client IP
 LOGIN_MAX_FAILED_ATTEMPTS = 5
 LOGIN_LOCKOUT_SECONDS = 15 * 60
+# Lockout per email from any client (brute force via many IPs)
+LOGIN_MAX_FAILED_ATTEMPTS_PER_EMAIL = 20
+LOGIN_EMAIL_LOCKOUT_SECONDS = 60 * 60
 LOGIN_REMEMBER_REFRESH_LIFETIME = timedelta(days=30)

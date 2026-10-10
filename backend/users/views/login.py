@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from rest_framework.exceptions import AuthenticationFailed, Throttled
 from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle
+from rest_framework.throttling import BaseThrottle, ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -13,10 +13,27 @@ from users.serializers.login import LoginSerializer, LoginUserSerializer
 LOCKOUT_MESSAGE = 'Too many failed login attempts. Try again later.'
 
 
-def failed_attempts_key(email):
+def get_lockouts(request):
+    """Failed-attempt counters checked on login: (cache key, max attempts, seconds)."""
     # Same normalization as for stored emails, so the key matches the account
-    email = get_user_model().objects.normalize_email(email.strip())
-    return f'login-failed:{email}'
+    email = str(request.data.get('email', '')).strip()
+    email = get_user_model().objects.normalize_email(email)
+    client = BaseThrottle().get_ident(request)
+
+    return [
+        # Strict limit per client: someone else's attempts can't lock the owner out
+        (
+            f'login-failed:{email}:{client}',
+            settings.LOGIN_MAX_FAILED_ATTEMPTS,
+            settings.LOGIN_LOCKOUT_SECONDS,
+        ),
+        # Higher limit per email from any client: stops brute force via many IPs
+        (
+            f'login-failed:{email}',
+            settings.LOGIN_MAX_FAILED_ATTEMPTS_PER_EMAIL,
+            settings.LOGIN_EMAIL_LOCKOUT_SECONDS,
+        ),
+    ]
 
 
 class LoginView(APIView):
@@ -26,18 +43,22 @@ class LoginView(APIView):
     throttle_scope = 'login'
 
     def post(self, request):
-        key = failed_attempts_key(str(request.data.get('email', '')))
-        if cache.get(key, 0) >= settings.LOGIN_MAX_FAILED_ATTEMPTS:
-            raise Throttled(wait=settings.LOGIN_LOCKOUT_SECONDS, detail=LOCKOUT_MESSAGE)
+        lockouts = get_lockouts(request)
+        for key, max_attempts, seconds in lockouts:
+            if cache.get(key, 0) >= max_attempts:
+                raise Throttled(wait=seconds, detail=LOCKOUT_MESSAGE)
 
         serializer = LoginSerializer(data=request.data, context={'request': request})
         try:
             serializer.is_valid(raise_exception=True)
         except AuthenticationFailed:
-            register_failed_attempt(key)
+            for key, _, seconds in lockouts:
+                register_failed_attempt(key, seconds)
             raise
 
-        cache.delete(key)
+        # Reset only this client's counter: the per-email one counts other clients too
+        client_key = lockouts[0][0]
+        cache.delete(client_key)
         user = serializer.validated_data['user']
 
         refresh = RefreshToken.for_user(user)
@@ -53,7 +74,12 @@ class LoginView(APIView):
         )
 
 
-def register_failed_attempt(key):
-    # The counter lives for the lockout period from the first failure
-    cache.add(key, 0, timeout=settings.LOGIN_LOCKOUT_SECONDS)
-    cache.incr(key)
+def register_failed_attempt(key, seconds):
+    # The counter lives for the lockout period from the first failure.
+    # add() creates it only if it's missing; incr() needs an existing key.
+    if not cache.add(key, 1, timeout=seconds):
+        try:
+            cache.incr(key)
+        except ValueError:
+            # The key expired or was reset by a successful login in between
+            cache.add(key, 1, timeout=seconds)

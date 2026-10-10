@@ -1,3 +1,4 @@
+import math
 from datetime import timedelta
 from unittest import mock
 
@@ -41,9 +42,12 @@ class LoginTestCase(APITestCase):
             role=User.Role.STARTUP,
         )
 
-    def login(self, email=EMAIL, password=PASSWORD, **extra):
+    def login(self, email=EMAIL, password=PASSWORD, ip='127.0.0.1', **extra):
         return self.client.post(
-            LOGIN_URL, {'email': email, 'password': password, **extra}, format='json'
+            LOGIN_URL,
+            {'email': email, 'password': password, **extra},
+            format='json',
+            REMOTE_ADDR=ip,
         )
 
 
@@ -101,6 +105,15 @@ class LoginFailureTests(LoginTestCase):
 
         self.assertEqual(response.status_code, 401)
 
+    def test_counter_disappearing_between_operations_returns_401(self):
+        self.login(password='wrong-password')  # the counters exist now
+
+        # incr() fails as if the key expired or was reset by a concurrent login
+        with mock.patch.object(cache, 'incr', side_effect=ValueError):
+            response = self.login(password='wrong-password')
+
+        self.assertEqual(response.status_code, 401)
+
     def test_invalid_payload_returns_400(self):
         cases = {
             'missing password': {'email': EMAIL},
@@ -145,6 +158,43 @@ class LoginLockoutTests(LoginTestCase):
         response = self.login(email='Founder@example.com')
 
         self.assertEqual(response.status_code, 401)
+
+    def test_lockout_does_not_affect_other_clients(self):
+        # Someone else's failed attempts don't lock the owner out
+        self.fail_max_attempts()
+
+        response = self.login(ip='10.0.0.2')
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_locks_email_after_too_many_failed_attempts_from_many_clients(self):
+        # Each client stays under its own limit, but together they exceed the email one
+        per_client = settings.LOGIN_MAX_FAILED_ATTEMPTS
+        clients = math.ceil(settings.LOGIN_MAX_FAILED_ATTEMPTS_PER_EMAIL / per_client)
+        for i in range(clients):
+            for _ in range(per_client):
+                self.login(password='wrong-password', ip=f'10.0.1.{i}')
+
+        response = self.login(ip='10.0.2.1')
+
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(
+            response['Retry-After'], str(settings.LOGIN_EMAIL_LOCKOUT_SECONDS)
+        )
+
+    def test_successful_login_keeps_per_email_counter(self):
+        # The owner logging in during an attack doesn't give the attacker new attempts
+        per_client = settings.LOGIN_MAX_FAILED_ATTEMPTS
+        clients = math.ceil(settings.LOGIN_MAX_FAILED_ATTEMPTS_PER_EMAIL / per_client)
+        for i in range(clients - 1):
+            for _ in range(per_client):
+                self.login(password='wrong-password', ip=f'10.0.1.{i}')
+
+        self.assertEqual(self.login(ip='10.0.2.1').status_code, 200)
+
+        for _ in range(per_client):
+            self.login(password='wrong-password', ip='10.0.3.1')
+        self.assertEqual(self.login(ip='10.0.2.1').status_code, 429)
 
     def test_successful_login_resets_failed_attempts(self):
         for _ in range(settings.LOGIN_MAX_FAILED_ATTEMPTS - 1):
