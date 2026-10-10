@@ -7,6 +7,7 @@ import { forWhomSectionMock } from '../sections/landing/ForWhomSection/mocks'
 import WhyWorthSection from '../sections/landing/WhyWorthSection'
 import { whyWorthSectionMock } from '../sections/landing/WhyWorthSection/mocks'
 
+// TODO: fetch section data from GET /api/content/landing/ instead of mocks
 function Home() {
   return (
     <>
