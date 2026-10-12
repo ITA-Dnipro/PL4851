@@ -1,15 +1,11 @@
 [run]
 branch = True
-source =
-    config
-    users
-    startups
-    investors
-    projects
-    dashboard
+source = .
 omit =
     */migrations/*
-    */tests/*
+    tests/*
+    */tests.py
+    manage.py
     config/wsgi.py
     config/asgi.py
 

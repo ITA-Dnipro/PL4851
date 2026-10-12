@@ -5,6 +5,7 @@
     "fields": {
       "password": "pbkdf2_sha256$600000$encryptedpasswordhere$",
       "is_superuser": false,
+      "username": "founder@startup.com",
       "first_name": "Ім'я-Тест",
       "last_name": "Прізвище-Тест",
       "email": "test@startup.com",
@@ -23,6 +24,7 @@
     "fields": {
       "password": "pbkdf2_sha256$600000$anotherencryptedpassword$",
       "is_superuser": false,
+      "username": "investor@capital.com",
       "first_name": "Джон-Тест",
       "last_name": "Рокфеллер-Тест",
       "email": "investor-test@capital.com",
@@ -36,6 +38,14 @@
     }
   },
   {
+    "model": "startups.industry",
+    "pk": 1,
+    "fields": {
+      "slug": "agriculture",
+      "industry_name": "Сільське господарство"
+    }
+  },
+  {
     "model": "startups.startupprofile",
     "pk": 1,
     "fields": {
@@ -45,8 +55,10 @@
       "startup_description": "Автоматизація збору врожаю за допомогою дронів та ШІ.",
       "website": "https://cyberagro.ua",
       "startup_phone": "380991234567",
-      "address": "Київ, вул. Польова 4",
-      "industry": "agriculture",
+      "location": "kyiv_city",
+      "industries": [
+        1
+      ],
       "founded_at": "2025-01-15",
       "employees": 12,
       "is_verified": true
@@ -72,7 +84,7 @@
     "fields": {
       "startup": 1,
       "project_title": "AgroDrone V2",
-      "project_description": "Розробка нової моделі дрона з тепловізором.",
+      "project_description": "Розробка нової модели дрона з тепловізором.",
       "investment_sum": "150000.00",
       "project_stage": "MVP",
       "raised_amount": "25000.00",

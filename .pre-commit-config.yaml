@@ -11,6 +11,13 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
 
+  # GitHub config files: validate against their JSON schemas
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.38.2
+    hooks:
+      - id: check-dependabot
+      - id: check-github-workflows
+
   # Backend (configs live in backend/, hooks run from the repo root)
   - repo: https://github.com/PyCQA/isort
     rev: 9.0.2

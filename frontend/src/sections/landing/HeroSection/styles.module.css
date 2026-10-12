@@ -1,0 +1,151 @@
+.hero {
+  background: var(--color-green);
+  overflow: hidden;
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 63px;
+  padding-top: 63px;
+  padding-bottom: 32px;
+}
+
+.text {
+  max-width: 557px;
+}
+
+.title {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 1%;
+  margin-bottom: 14px;
+}
+
+.subtitle {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 1%;
+  margin-bottom: 30px;
+}
+
+.button {
+    height: 46px;
+}
+
+.collage {
+  position: relative;
+  flex-shrink: 0;
+  width: 684px;
+  height: 485px;
+}
+
+.card {
+  position: absolute;
+  margin: 0;
+  border-radius: 8px;
+  isolation: isolate;
+}
+
+.card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.label {
+  position: absolute;
+  left: 5px;
+  bottom: 5px;
+  padding: 6px 16px;
+  background: var(--color-white);
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--color-black-90);
+  text-transform: uppercase;
+}
+
+.wine      { left: 0;     top: 0;    width: 196px; height: 296px; }
+.delivery  { left: 270px; top: 0;    width: 209px; height: 162px; }
+.cheese    { left: 229px; bottom: 0; width: 209px; height: 270px; }
+.packaging { right: 0;    top: 213px; width: 183px; height: 209px; }
+
+.wine .label {
+    left: auto;
+    right: -12px;
+}
+
+.wine::before {
+   content: '';
+   position: absolute;
+   left: -10px;
+   top: -15px;
+   max-width: 199px;
+   width: 100%;
+   height: 258px;
+   border: 1px solid var(--color-white);
+   border-radius: 8px;
+   transform: rotate(-9deg);
+   z-index: -1;
+}
+
+.wine::after {
+   content: '';
+   position: absolute;
+   left: 15px;
+   top: -18px;
+   max-width: 199px;
+   width: 100%;
+   height: 258px;
+   border: 1px solid rgba(255, 255, 255, 0.3);
+   border-radius: 8px;
+   transform: rotate(-3deg);
+   z-index: -1;
+}
+
+.delivery::before {
+   content: '';
+   position: absolute;
+   left: -15px;
+   top: 4px;
+   width: 100%;
+   height: 100%;
+   border: 1px solid var(--color-white);
+   border-radius: 8px;
+   transform: rotate(-3deg);
+   z-index: -1;
+}
+
+.cheese::before {
+   content: '';
+   position: absolute;
+   left: 15px;
+   top: 20px;
+   width: 100%;
+   height: 244px;
+   border: 1px solid var(--color-white);
+   border-radius: 8px;
+   transform: rotate(-3deg);
+   z-index: -1;
+}
+
+.packaging::before {
+   content: '';
+   position: absolute;
+   left: -15px;
+   top: -20px;
+   max-width: 153px;
+   width: 100%;
+   height: 100%;
+   border: 1px solid var(--color-white);
+   border-radius: 8px;
+   transform: rotate(-178deg);
+   z-index: -1;
+}

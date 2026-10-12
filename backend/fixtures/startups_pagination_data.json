@@ -1,0 +1,400 @@
+[
+  {
+    "model": "startups.industry",
+    "pk": 1,
+    "fields": {
+      "slug": "craft",
+      "industry_name": "Ремесла"
+    }
+  },
+  {
+    "model": "startups.industry",
+    "pk": 2,
+    "fields": {
+      "slug": "packaging",
+      "industry_name": "Пакування та тара"
+    }
+  },
+  {
+    "model": "startups.industry",
+    "pk": 3,
+    "fields": {
+      "slug": "green_energy",
+      "industry_name": "Зелена енергетика / Екологія"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 11,
+    "fields": {
+      "user_id": 11,
+      "password": "pbkdf2_sha256$600000$encryptedpasswordhere$",
+      "email": "f11@test.com",
+      "role": "startup",
+      "is_active": true,
+      "date_joined": "2026-10-05T09:00:00Z",
+      "created_at": "2026-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 12, "fields": {
+      "user_id": 12,
+      "password": "pbkdf2_sha256$600000$encryptedpasswordhere$",
+      "email": "f12@test.com",
+      "role": "startup",
+      "is_active": true,
+      "date_joined": "2026-10-05T09:00:00Z",
+      "created_at": "2026-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 13, "fields": {
+      "user_id": 13,
+      "password": "pbkdf2_sha256$600000$encryptedpasswordhere$",
+      "email": "f13@test.com",
+      "role": "startup",
+      "is_active": true,
+      "date_joined": "2026-10-05T09:00:00Z",
+      "created_at": "2026-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 14, "fields": {
+      "user_id": 14,
+      "password": "pbkdf2_sha256$600000$encryptedpasswordhere$",
+      "email": "f14@test.com",
+      "role": "startup",
+      "is_active": true,
+      "date_joined": "2026-10-05T09:00:00Z",
+      "created_at": "2026-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 15, "fields": {
+      "user_id": 15,
+      "password": "pbkdf2_sha256$600000$encryptedpasswordhere$",
+      "email": "f15@test.com",
+      "role": "startup",
+      "is_active": true,
+      "date_joined": "2026-10-05T09:00:00Z",
+      "created_at": "2026-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 16, "fields": {
+      "user_id": 16,
+      "password": "pbkdf2_sha256$600000$encryptedpasswordhere$",
+      "email": "f16@test.com",
+      "role": "startup",
+      "is_active": true,
+      "date_joined": "2026-10-05T09:00:00Z",
+      "created_at": "2026-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 17, "fields": {
+      "user_id": 17,
+      "password": "pbkdf2_sha256$600000$encryptedpasswordhere$",
+      "email": "f17@test.com",
+      "role": "startup",
+      "is_active": true,
+      "date_joined": "2026-10-05T09:00:00Z",
+      "created_at": "2026-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 18, "fields": {
+      "user_id": 18,
+      "password": "pbkdf2_sha256$600000$encryptedpasswordhere$",
+      "email": "f18@test.com",
+      "role": "startup",
+      "is_active": true,
+      "date_joined": "2026-10-05T09:00:00Z",
+      "created_at": "2026-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 19, "fields": {
+      "user_id": 19,
+      "password": "pbkdf2_sha256$600000$encryptedpasswordhere$",
+      "email": "f19@test.com",
+      "role": "startup",
+      "is_active": true,
+      "date_joined": "2026-10-05T09:00:00Z",
+      "created_at": "2026-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 20, "fields": {
+      "user_id": 20,
+      "password": "pbkdf2_sha256$600000$encryptedpasswordhere$",
+      "email": "f20@test.com",
+      "role": "startup",
+      "is_active": true,
+      "date_joined": "2026-10-05T09:00:00Z",
+      "created_at": "2026-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 21, "fields": {
+      "user_id": 21,
+      "password": "pbkdf2_sha256$600000$encryptedpasswordhere$",
+      "email": "f21@test.com",
+      "role": "startup",
+      "is_active": true,
+      "date_joined": "2026-10-05T09:00:00Z",
+      "created_at": "2026-10-05T09:00:00Z"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 22, "fields": {
+      "user_id": 22,
+      "password": "pbkdf2_sha256$600000$encryptedpasswordhere$",
+      "email": "f22@test.com",
+      "role": "startup",
+      "is_active": true,
+      "date_joined": "2026-10-05T09:00:00Z",
+      "created_at": "2026-10-05T09:00:00Z"
+    }
+  },
+
+  {
+    "model": "startups.startupprofile",
+    "pk": 11,
+    "fields": {
+      "user_id": 11,
+      "startup_name": "Handmade Co",
+      "edrpou_or_ipn": "11111111",
+      "startup_description": "Дизайнерський посуд із глини та натурального дерева.",
+      "short_description": "Дерев'яний та керамічний посуд",
+      "website": "https://handmade.ua",
+      "startup_phone": "380990000011",
+      "logo": null,
+      "location": "chernivtsi",
+      "industries": [1],
+      "founded_at": "2024-05-12",
+      "employees": 4,
+      "is_verified": true
+    }
+  },
+  {
+    "model": "startups.startupprofile",
+    "pk": 12,
+    "fields": {
+      "user_id": 12,
+      "startup_name": "EcoPack Studio",
+      "edrpou_or_ipn": "22222222",
+      "startup_description": "Екологічні крафтові коробки, що маркуються через розумні QR-коди.",
+      "short_description": "Екопакування та розумне маркування",
+      "website": "https://ecopack.ua",
+      "startup_phone": "380990000012",
+      "logo": null,
+      "location": "lviv",
+      "industries": [1, 2],
+      "founded_at": "2025-01-20",
+      "employees": 12,
+      "is_verified": true
+    }
+  },
+  {
+    "model": "startups.startupprofile",
+    "pk": 13,
+    "fields": {
+      "user_id": 13,
+      "startup_name": "ClayStudio",
+      "edrpou_or_ipn": "33333333",
+      "startup_description": "Авторська кераміка ручної роботи за давніми технологіями.",
+      "short_description": "Авторська кераміка ручної роботи",
+      "website": "https://claystudio.ua",
+      "startup_phone": "380990000013",
+      "logo": null,
+      "location": "kyiv_city",
+      "industries": [1],
+      "founded_at": "2023-11-01",
+      "employees": 3,
+      "is_verified": true
+    }
+  },
+  {
+    "model": "startups.startupprofile",
+    "pk": 14,
+    "fields": {
+      "user_id": 14,
+      "startup_name": "CyberTech AI",
+      "edrpou_or_ipn": "44444444",
+      "startup_description": "Платформа автоматизації логістики за допомогою ШІ.",
+      "short_description": "Логістики за допомогою ШІ",
+      "website": "https://cybertech.ua",
+      "startup_phone": "380990000014",
+      "logo": null,
+      "location": "kharkiv",
+      "industries": [2],
+      "founded_at": "2026-02-15",
+      "employees": 45,
+      "is_verified": true
+    }
+  },
+  {
+    "model": "startups.startupprofile",
+    "pk": 15,
+    "fields": {
+      "user_id": 15,
+      "startup_name": "SolarWind",
+      "edrpou_or_ipn": "55555555",
+      "startup_description": "Розумні автономні сонячні станції із власним софтом контролю.",
+      "short_description": "Розумні сонячні станції.",
+      "website": "https://solarwind.ua",
+      "startup_phone": "380990000015",
+      "logo": null,
+      "location": "odesa",
+      "industries": [2, 3],
+      "founded_at": "2025-08-10",
+      "employees": 8,
+      "is_verified": true
+    }
+  },
+  {
+    "model": "startups.startupprofile",
+    "pk": 16,
+    "fields": {
+      "user_id": 16,
+      "startup_name": "CraftWood",
+      "edrpou_or_ipn": "66666666",
+      "startup_description": "Ексклюзивні меблі з масиву дерева за кастомними замовленнями.",
+      "short_description": "Ексклюзивні меблі з дерева",
+      "website": "https://craftwood.ua",
+      "startup_phone": "380990000016",
+      "logo": null,
+      "location": "chernivtsi",
+      "industries": [1],
+      "founded_at": "2024-03-22",
+      "employees": 5,
+      "is_verified": true
+    }
+  },
+  {
+    "model": "startups.startupprofile",
+    "pk": 17,
+    "fields": {
+      "user_id": 17,
+      "startup_name": "DevGlow Lab",
+      "edrpou_or_ipn": "77777777",
+      "startup_description": "Розробка мобільних додатків для фінтех-стартапів.",
+      "short_description": "Мобільні додатки для фінтех-стартапів",
+      "website": "https://devglow.ua",
+      "startup_phone": "380990000017",
+      "logo": null,
+      "location": "dnipro",
+      "industries": [2],
+      "founded_at": "2025-06-01",
+      "employees": 22,
+      "is_verified": true
+    }
+  },
+  {
+    "model": "startups.startupprofile",
+    "pk": 18,
+    "fields": {
+      "user_id": 18,
+      "startup_name": "KnittedComfort",
+      "edrpou_or_ipn": "88888888",
+      "startup_description": "Органічний плетений одяг із натуральної вовни.",
+      "short_description": "Органічний плетений одяг",
+      "website": "https://knitted.ua",
+      "startup_phone": "380990000018",
+      "logo": null,
+      "location": "ivano_frankivsk",
+      "industries": [1],
+      "founded_at": "2024-10-05",
+      "employees": 2,
+      "is_verified": true
+    }
+  },
+  {
+    "model": "startups.startupprofile",
+    "pk": 19,
+    "fields": {
+      "user_id": 19,
+      "startup_name": "SmartGrid UA",
+      "edrpou_or_ipn": "99999999",
+      "startup_description": "Інтелектуальні екологічні системи енергоменеджменту для оселі.",
+      "short_description": "Інтелектуальні системи енергоменеджменту",
+      "website": "https://smartgrid.ua",
+      "startup_phone": "380990000019",
+      "logo": null,
+      "location": "kyiv_city",
+      "industries": [2, 3],
+      "founded_at": "2026-01-11",
+      "employees": 14,
+      "is_verified": true
+    }
+  },
+  {
+    "model": "startups.startupprofile",
+    "pk": 20,
+    "fields": {
+      "user_id": 20,
+      "startup_name": "ArtGlass Studio",
+      "edrpou_or_ipn": "12345670",
+      "startup_description": "Елементи декору з переробленого еко-скла, створені вручну.",
+      "short_description": "Декор з переробленого скла",
+      "website": "https://artglass.ua",
+      "startup_phone": "380990000020",
+      "logo": null,
+      "location": "lviv",
+      "industries": [1, 3],
+      "founded_at": "2025-02-28",
+      "employees": 6,
+      "is_verified": true
+    }
+  },
+  {
+    "model": "startups.startupprofile",
+    "pk": 21,
+    "fields": {
+      "user_id": 21,
+      "startup_name": "DataCrunch",
+      "edrpou_or_ipn": "76543210",
+      "startup_description": "B2B SaaS рішення для аналітики великих об'ємів екологічних даних.",
+      "short_description": "Аналітика великих об'ємів екологічних даних",
+      "website": "https://datacrunch.ua",
+      "startup_phone": "380990000021",
+      "logo": null,
+      "location": "kyiv_city",
+      "industries": [2, 3],
+      "founded_at": "2024-09-17",
+      "employees": 31,
+      "is_verified": true
+    }
+  },
+  {
+    "model": "startups.startupprofile",
+    "pk": 22,
+    "fields": {
+      "user_id": 22,
+      "startup_name": "LeatherForge",
+      "edrpou_or_ipn": "98765432",
+      "startup_description": "Аксесуари з преміальної шкіри крафтової обробки, розроблені через 3D-моделювання.",
+      "short_description": "Аксесуари із шкіри крафтової обробки",
+      "website": "https://leatherforge.ua",
+      "startup_phone": "380990000022",
+      "logo": null,
+      "location": "ternopil",
+      "industries": [1, 2, 3],
+      "founded_at": "2024-11-20",
+      "employees": 3,
+      "is_verified": true
+    }
+  }
+]
