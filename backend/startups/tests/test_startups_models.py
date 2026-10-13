@@ -144,6 +144,71 @@ class StartupProfileModelTest(TestCase):
         with self.assertRaises(ValidationError):
             invalid_startup.full_clean()
 
+    def test_startup_str_method(self):
+        """Verify the __str__ method returns the startup name."""
+        str_user = User.objects.create_user(
+            email='str_user@test.com', first_name='S', last_name='U', role='startup'
+        )
+        startup = StartupProfile.objects.create(
+            user=str_user,
+            startup_name='Тестовий Стартап',
+            startup_email='test_str@test.com',
+        )
+        self.assertEqual(str(startup), 'Тестовий Стартап')
+
+    def test_exclude_pk_before_while_loop(self):
+        """Verify works when updating an existing startup with empty slug."""
+        update_user = User.objects.create_user(
+            email='update_user@test.com', first_name='U', last_name='P', role='startup'
+        )
+        startup = StartupProfile.objects.create(
+            user=update_user,
+            startup_name='Оригінальний Назва',
+            startup_email='orig@test.com',
+        )
+        startup.slug = ''
+        startup.save()
+
+        self.assertEqual(startup.slug, 'oryhinalnyy-nazva')
+
+    def test_exclude_pk_inside_while_loop(self):
+        """Verify works inside the while loop during collisions on update."""
+        extra_user0 = User.objects.create_user(
+            email='extra0@test.com', first_name='E0', last_name='L0', role='startup'
+        )
+        StartupProfile.objects.create(
+            user=extra_user0, startup_name='Колізія', startup_email='first@test.com'
+        )
+
+        extra_user1 = User.objects.create_user(
+            email='extra1@test.com', first_name='E1', last_name='L1', role='startup'
+        )
+        StartupProfile.objects.create(
+            user=extra_user1, startup_name='Колізія', startup_email='second@test.com'
+        )
+
+        extra_user2 = User.objects.create_user(
+            email='extra2@test.com', first_name='E2', last_name='L2', role='startup'
+        )
+        startup3 = StartupProfile.objects.create(
+            user=extra_user2, startup_name='Інший', startup_email='third@test.com'
+        )
+        startup3.startup_name = 'Колізія'
+        startup3.slug = ''
+        startup3.save()
+
+        self.assertEqual(startup3.slug, 'koliziya-2')
+
+    def test_custom_slugify_empty_text_coverage(self):
+        """Covers inside custom_slugify via empty startup_name."""
+        extra_user3 = User.objects.create_user(
+            email='extra3@test.com', first_name='E3', last_name='L3', role='startup'
+        )
+        startup_empty = StartupProfile.objects.create(
+            user=extra_user3, startup_name='', startup_email='empty@test.com'
+        )
+        self.assertEqual(startup_empty.slug, 'startup')
+
 
 class StartupFollowerModelTest(TestCase):
     def setUp(self):
