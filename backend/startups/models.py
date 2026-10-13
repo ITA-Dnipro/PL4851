@@ -187,8 +187,8 @@ class StartupProfile(models.Model):
             self.startup_phone = NON_DIGIT_PATTERN.sub('', self.startup_phone)
 
         if self.startup_email:
-            self.startup_email.strip()
-            self.startup_email = BaseUserManager.normalize_email(self.startup_email)
+            clean_email = self.startup_email.strip()
+            self.startup_email = BaseUserManager.normalize_email(clean_email)
 
         if not self.slug:
             base_slug = custom_slugify(self.startup_name)
