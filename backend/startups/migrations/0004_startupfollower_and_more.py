@@ -96,7 +96,7 @@ class Migration(migrations.Migration):
             name='user',
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.RESTRICT, 
-                related_name='followers', 
+                related_name='following_startups', 
                 to=settings.AUTH_USER_MODEL
             ),
         ),
