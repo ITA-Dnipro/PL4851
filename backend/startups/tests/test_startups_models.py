@@ -56,7 +56,7 @@ class StartupProfileModelTest(TestCase):
 
     def test_employees_must_be_at_least_one(self):
         """Verify CheckConstraint blocks employees < 1."""
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(IntegrityError):
             StartupProfile.objects.create(
                 user=self.other_user,
                 startup_name='Zero',
@@ -132,6 +132,18 @@ class StartupProfileModelTest(TestCase):
         )
         self.assertEqual(special_startup.slug, 'startup')
 
+    def test_invalid_email_raises_validation_error(self):
+        """Verify that full_clean() rejects an invalid email format."""
+        invalid_startup = StartupProfile(
+            user=self.other_user,
+            startup_name='BadEmail',
+            startup_description='Desc',
+            startup_phone='123',
+            startup_email='not-an-email-at-all',
+        )
+        with self.assertRaises(ValidationError):
+            invalid_startup.full_clean()
+
 
 class StartupFollowerModelTest(TestCase):
     def setUp(self):
@@ -172,15 +184,3 @@ class StartupFollowerModelTest(TestCase):
             StartupFollower.objects.create(
                 user=self.investor_user, startup=self.startup
             )
-
-    def test_invalid_email_raises_validation_error(self):
-        """Verify that full_clean() rejects an invalid email format."""
-        invalid_startup = StartupProfile(
-            user=self.other_user,
-            startup_name='BadEmail',
-            startup_description='Desc',
-            startup_phone='123',
-            startup_email='not-an-email-at-all',
-        )
-        with self.assertRaises(ValidationError):
-            invalid_startup.full_clean()
