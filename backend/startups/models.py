@@ -211,8 +211,6 @@ class StartupProfile(models.Model):
 
             self.slug = unique_slug
 
-        self.full_clean()
-
         super().save(*args, **kwargs)
 
     def __str__(self):
