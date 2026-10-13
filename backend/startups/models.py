@@ -103,7 +103,10 @@ class StartupProfile(models.Model):
     industries = models.ManyToManyField(Industry, related_name='startup_profiles')
     founded_at = models.DateField(blank=True, null=True)
     logo = models.ImageField(
-        upload_to='thumbs/', blank=True, null=True, max_length=MAX_LENGTH_LOGO
+        upload_to='startups/logos/%Y/%m/',
+        blank=True,
+        null=True,
+        max_length=MAX_LENGTH_LOGO,
     )
     employees = models.IntegerField(default=DEFAULT_EMPLOYEES)
     is_verified = models.BooleanField(default=False)

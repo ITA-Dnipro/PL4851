@@ -4,7 +4,7 @@ from rest_framework.test import APITestCase
 
 
 class StartupProfileAPIViewTest(APITestCase):
-    fixtures = ['fixtures/startups_pagination_data.json']
+    fixtures = ['fixtures/startups_projects_pagination_data.json']
 
     def setUp(self):
         self.url = reverse('startups:startup-list')
