@@ -6,12 +6,13 @@ from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 
-from .admin import PasswordResetTokenAdmin
+from .admin import PasswordResetMetricsAdmin, PasswordResetTokenAdmin
 from .metrics import increment_metric
 from .models import PasswordResetMetrics, PasswordResetToken
 from .services import (
     consume_password_reset_token,
     create_password_reset_token,
+    hash_token,
 )
 
 User = get_user_model()
@@ -131,6 +132,32 @@ class PasswordResetTokenTest(TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(metrics.confirms, 1)
 
+    def test_expired_token_increments_metric(self):
+        raw_token = create_password_reset_token(self.user)
+
+        token = PasswordResetToken.objects.get(token_hash=hash_token(raw_token))
+        token.expires_at = timezone.now() - timedelta(minutes=1)
+        token.save(update_fields=['expires_at'])
+
+        result = consume_password_reset_token(raw_token)
+
+        metrics = PasswordResetMetrics.objects.get(pk=1)
+
+        self.assertIsNone(result)
+        self.assertEqual(metrics.expired_attempts, 1)
+
+    def test_reused_token_increments_metric(self):
+        raw_token = create_password_reset_token(self.user)
+
+        first_result = consume_password_reset_token(raw_token)
+        second_result = consume_password_reset_token(raw_token)
+
+        metrics = PasswordResetMetrics.objects.get(pk=1)
+
+        self.assertIsNotNone(first_result)
+        self.assertIsNone(second_result)
+        self.assertEqual(metrics.reused_attempts, 1)
+
 
 class PasswordResetMetricsTest(TestCase):
     def test_increment_requests(self):
@@ -149,3 +176,12 @@ class PasswordResetMetricsTest(TestCase):
 
         self.assertEqual(metrics.requests, 3)
         self.assertEqual(PasswordResetMetrics.objects.count(), 1)
+
+    def test_metrics_admin_permissions(self):
+        metrics_admin = PasswordResetMetricsAdmin(
+            PasswordResetMetrics,
+            admin.site,
+        )
+
+        self.assertFalse(metrics_admin.has_add_permission(None))
+        self.assertFalse(metrics_admin.has_delete_permission(None))

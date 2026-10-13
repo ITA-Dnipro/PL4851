@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import PasswordResetToken, User
+from .models import PasswordResetMetrics, PasswordResetToken, User
 
 
 @admin.register(User)
@@ -75,3 +75,25 @@ class PasswordResetTokenAdmin(admin.ModelAdmin):
     @admin.action(description='Revoke selected tokens')
     def revoke_tokens(self, request, queryset):
         queryset.update(revoked=True)
+
+
+@admin.register(PasswordResetMetrics)
+class PasswordResetMetricsAdmin(admin.ModelAdmin):
+    list_display = (
+        'requests',
+        'confirms',
+        'expired_attempts',
+        'reused_attempts',
+    )
+    readonly_fields = (
+        'requests',
+        'confirms',
+        'expired_attempts',
+        'reused_attempts',
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
