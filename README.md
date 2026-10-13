@@ -292,18 +292,19 @@ If an upload fails (e.g. Codecov is down), the **Upload coverage to Codecov** st
 | Ecosystem | Files | PRs |
 |---|---|---|
 | GitHub Actions | `.github/workflows/*.yml` | one PR for all actions |
-| pip | `backend/requirements*.txt` | one PR with all minor and patch updates, a separate PR per major update |
+| pip | `backend/requirements*.txt` | one PR with all minor and patch updates; major updates are skipped |
 | npm | `frontend/package.json`, `frontend/package-lock.json` | same as pip |
 
+- Major updates of pip and npm packages (e.g. Django 5 → 6) are not proposed: they can break the project, so we upgrade them by hand when the team decides to. To see what's available: `docker compose exec backend pip list --outdated` and `docker compose exec frontend npm outdated`.
 - pip and npm releases are proposed only when they are at least 5 days old (`cooldown`): broken or compromised releases are usually withdrawn by then.
 - black, isort, flake8 and flake8-quotes are excluded because they are also pinned in `.pre-commit-config.yaml`. Update them by hand in both files at once, so CI and the git hooks run the same versions.
 
 Reviewing a Dependabot PR:
 
 1. Wait for CI. Green CI means the project still installs, builds and passes tests with the new versions.
-2. For a major update, read the release notes in the PR description and check that the app still works locally.
+2. For a major update (only GitHub Actions get those now), read the release notes in the PR description and check that CI still passes.
 3. Merge it like any other PR. If it has conflicts with `develop`, comment `@dependabot rebase`.
-4. Not ready for a major version yet (e.g. a new Django)? Comment `@dependabot ignore this major version` and close the PR.
+4. Don't want an update? Comment `@dependabot ignore this major version` (or `@dependabot ignore this dependency`) and close the PR.
 
 After pulling a change to `frontend/package*.json`, reinstall dependencies: `npm --prefix frontend install`, or with Docker `docker compose up --build -V` (`-V` recreates the container's `node_modules`).
 

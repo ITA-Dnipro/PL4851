@@ -29,13 +29,16 @@ updates:
       default-days: 5
     commit-message:
       prefix: deps
-    # Minor and patch updates in one PR, each major update in its own PR
+    # Minor and patch updates in one PR
     groups:
       backend-minor-patch:
         update-types: [minor, patch]
-    # Also pinned in .pre-commit-config.yaml: update them by hand in both files
-    # at once, otherwise CI and the git hooks run different versions
     ignore:
+      # Major versions can break things: we upgrade those by hand
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+      # Also pinned in .pre-commit-config.yaml: update them by hand in both files
+      # at once, otherwise CI and the git hooks run different versions
       - dependency-name: black
       - dependency-name: isort
       - dependency-name: flake8
@@ -56,3 +59,7 @@ updates:
     groups:
       frontend-minor-patch:
         update-types: [minor, patch]
+    # Major versions can break things: we upgrade those by hand
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
