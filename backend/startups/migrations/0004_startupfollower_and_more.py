@@ -13,12 +13,14 @@ def generate_slugs(apps, schema_editor):
         base_slug = custom_slugify(startup.startup_name)
         if not base_slug:
             base_slug = "startup"
-            
+        base_slug = base_slug[:255].rstrip('-')    
         unique_slug = base_slug
         counter = 1
 
         while StartupProfile.objects.filter(slug=unique_slug).exclude(pk=startup.startup_id).exists():
-            unique_slug = f"{base_slug}-{counter}"
+            suffix = f'-{counter}'
+            allowed_base_len = 255 - len(suffix)
+            unique_slug = f"{base_slug[:allowed_base_len].rstrip('-')}{suffix}"
             counter += 1
             
         startup.slug = unique_slug

@@ -194,6 +194,7 @@ class StartupProfile(models.Model):
             base_slug = custom_slugify(self.startup_name)
             if not base_slug:
                 base_slug = 'startup'
+            base_slug = base_slug[:MAX_LENGTH_SLUG].rstrip('-')
             unique_slug = base_slug
             counter = 1
 
@@ -202,7 +203,9 @@ class StartupProfile(models.Model):
                 queryset = queryset.exclude(pk=self.pk)
 
             while queryset.exists():
-                unique_slug = f'{base_slug}-{counter}'
+                suffix = f'-{counter}'
+                allowed_base_len = MAX_LENGTH_SLUG - len(suffix)
+                unique_slug = f"{base_slug[:allowed_base_len].rstrip('-')}{suffix}"
                 counter += 1
 
                 queryset = StartupProfile.objects.filter(slug=unique_slug)
@@ -223,7 +226,7 @@ class StartupFollower(models.Model):
         User,
         on_delete=models.RESTRICT,
         to_field='user_id',
-        related_name='followers',
+        related_name='following_startups',
     )
     startup = models.ForeignKey(
         StartupProfile,
