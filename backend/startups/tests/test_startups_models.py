@@ -32,6 +32,7 @@ class StartupProfileModelTest(TestCase):
             startup_name='TechAgro',
             startup_description='AI for agriculture',
             startup_phone='+38 (099) 123-45-67',
+            startup_email='info@techagro.co',
             location=LocationType.KYIV_CITY,
         )
         self.startup.industries.add(self.industry)
@@ -60,6 +61,7 @@ class StartupProfileModelTest(TestCase):
                 startup_name='Zero',
                 startup_description='D',
                 startup_phone='1',
+                startup_email='zero@test.com',
                 employees=0,
             )
 
