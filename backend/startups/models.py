@@ -187,6 +187,7 @@ class StartupProfile(models.Model):
             self.startup_phone = NON_DIGIT_PATTERN.sub('', self.startup_phone)
 
         if self.startup_email:
+            self.startup_email.strip()
             self.startup_email = BaseUserManager.normalize_email(self.startup_email)
 
         if not self.slug:
@@ -209,6 +210,8 @@ class StartupProfile(models.Model):
                     queryset = queryset.exclude(pk=self.pk)
 
             self.slug = unique_slug
+
+        self.full_clean()
 
         super().save(*args, **kwargs)
 

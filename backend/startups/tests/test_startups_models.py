@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase
 
@@ -55,7 +56,7 @@ class StartupProfileModelTest(TestCase):
 
     def test_employees_must_be_at_least_one(self):
         """Verify CheckConstraint blocks employees < 1."""
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError):
             StartupProfile.objects.create(
                 user=self.other_user,
                 startup_name='Zero',
@@ -83,6 +84,7 @@ class StartupProfileModelTest(TestCase):
             startup_name='Гончарство та Ко',
             startup_description='Desc',
             startup_phone='123',
+            startup_email='honchar@test.com',
         )
         self.assertEqual(ukr_startup.slug, 'honcharstvo-ta-ko')
 
@@ -100,6 +102,7 @@ class StartupProfileModelTest(TestCase):
             startup_name='TechAgro',
             startup_description='Desc',
             startup_phone='123',
+            startup_email='techagro2@test.com',
         )
         self.assertEqual(duplicate_startup.slug, 'techagro-1')
 
@@ -110,6 +113,7 @@ class StartupProfileModelTest(TestCase):
             startup_name='Ромашка',
             startup_description='Desc',
             startup_phone='123',
+            startup_email='romashka@test.com',
         )
         initial_slug = ukr_startup.slug
         ukr_startup.startup_name = 'Нова Назва Ромашки'
@@ -124,6 +128,7 @@ class StartupProfileModelTest(TestCase):
             startup_name='!!!',
             startup_description='Desc',
             startup_phone='123',
+            startup_email='special@test.com',
         )
         self.assertEqual(special_startup.slug, 'startup')
 
@@ -147,6 +152,7 @@ class StartupFollowerModelTest(TestCase):
             startup_name='FollowMe',
             startup_description='Desc',
             startup_phone='123',
+            startup_email='follower_test@test.com',
         )
 
     def test_create_follower_success(self):
