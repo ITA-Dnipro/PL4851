@@ -30,6 +30,10 @@ HIGH_RATE_LIMIT = mock.patch.object(
 )
 
 
+def refresh_cookie(response):
+    return response.cookies[settings.REFRESH_COOKIE_NAME]
+
+
 class LoginTestCase(APITestCase):
     def setUp(self):
         # Failed-attempt counters and throttling live in the cache
@@ -57,7 +61,7 @@ class LoginSuccessTests(LoginTestCase):
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertEqual(set(data), {'access', 'refresh', 'user'})
+        self.assertEqual(set(data), {'access', 'user'})
         self.assertEqual(
             data['user'],
             {'id': self.user.user_id, 'email': EMAIL, 'role': 'startup'},
@@ -72,16 +76,38 @@ class LoginSuccessTests(LoginTestCase):
         self.assertEqual(user, self.user)
 
     def test_refresh_lifetime_is_default_without_remember(self):
-        refresh = RefreshToken(self.login().json()['refresh'])
+        refresh = RefreshToken(refresh_cookie(self.login()).value)
 
         lifetime = timedelta(seconds=refresh['exp'] - refresh['iat'])
         self.assertEqual(lifetime, settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'])
 
     def test_refresh_lifetime_is_longer_with_remember(self):
-        refresh = RefreshToken(self.login(remember=True).json()['refresh'])
+        refresh = RefreshToken(refresh_cookie(self.login(remember=True)).value)
 
         lifetime = timedelta(seconds=refresh['exp'] - refresh['iat'])
         self.assertEqual(lifetime, settings.LOGIN_REMEMBER_REFRESH_LIFETIME)
+
+
+class LoginCookieTests(LoginTestCase):
+    def test_refresh_token_is_set_in_http_only_cookie(self):
+        cookie = refresh_cookie(self.login())
+
+        self.assertTrue(cookie['httponly'])
+        self.assertEqual(cookie['path'], settings.REFRESH_COOKIE_PATH)
+        self.assertEqual(cookie['samesite'], settings.REFRESH_COOKIE_SAMESITE)
+
+    def test_cookie_is_a_session_cookie_without_remember(self):
+        cookie = refresh_cookie(self.login())
+
+        self.assertEqual(cookie['max-age'], '')
+
+    def test_cookie_lasts_as_long_as_the_token_with_remember(self):
+        cookie = refresh_cookie(self.login(remember=True))
+
+        self.assertEqual(
+            int(cookie['max-age']),
+            settings.LOGIN_REMEMBER_REFRESH_LIFETIME.total_seconds(),
+        )
 
 
 class LoginFailureTests(LoginTestCase):

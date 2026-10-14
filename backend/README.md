@@ -78,9 +78,30 @@ The fixture lives in `content/pages/fixtures/landing.json`. Loading it again ove
 Response `200`:
 
 ```json
-{ "access": "<jwt>", "refresh": "<jwt>", "user": { "id": 1, "email": "user@example.com", "role": "startup" } }
+{ "access": "<jwt>", "user": { "id": 1, "email": "user@example.com", "role": "startup" } }
 ```
 
+The refresh token is set in the `refresh_token` cookie: `HttpOnly` (JavaScript can't read it), `SameSite=Lax`, `Path=/api/auth/`, `Secure` when `DEBUG` is off. Without `"remember": true` it's a session cookie, removed when the browser closes.
+
 - Access token lives 15 minutes, refresh token 1 day (30 days with `"remember": true`).
-- Send the access token as `Authorization: Bearer <access>`.
+- Send the access token as `Authorization: Bearer <access>`. Keep it in memory, not in `localStorage`.
 - Errors: `400` invalid data, `401` wrong email or password, `429` too many requests or too many failed attempts: 5 for this email from one client (IP) → that client is locked for 15 minutes; 20 for this email from any clients → the email is locked for 1 hour.
+
+`POST /api/auth/refresh/` — get a new access token, e.g. when the old one expires or after a page reload. No body: the token is taken from the cookie.
+
+Response `200`:
+
+```json
+{ "access": "<jwt>" }
+```
+
+- The refresh token itself stays the same, so the session still ends 1 day (or 30 days) after login.
+- Errors: `401` no cookie, or the token is invalid, expired, revoked, or the user is inactive or deleted. The client should then show the login page.
+
+`POST /api/auth/logout/` — revoke the refresh token and delete the cookie. No body.
+
+- Always returns `204`, even without a cookie or with an invalid one: the client can't delete an `HttpOnly` cookie, so it relies on this endpoint.
+- The access token can't be revoked and keeps working until it expires (up to 15 minutes), so the client should drop it on logout.
+- Issued and revoked refresh tokens are stored in the database (admin: **Token Blacklist**). Expired ones can be removed with `python manage.py flushexpiredtokens`.
+
+Frontend requests to `/api/auth/` must use `credentials: 'include'`, otherwise the browser doesn't send or save the cookie. CORS allows it for the origins in `CORS_ALLOWED_ORIGINS`. `SameSite=Lax` works while the frontend and the API are on the same site (as `localhost:5173` and `localhost:8000` are); on different domains the cookie would need `SameSite=None` and CSRF protection.

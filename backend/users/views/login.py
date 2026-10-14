@@ -8,7 +8,9 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from users.cookies import set_refresh_cookie
 from users.serializers.login import LoginSerializer, LoginUserSerializer
+from users.tokens import RememberMeRefreshToken
 
 LOCKOUT_MESSAGE = 'Too many failed login attempts. Try again later.'
 
@@ -61,17 +63,20 @@ class LoginView(APIView):
         cache.delete(client_key)
         user = serializer.validated_data['user']
 
-        refresh = RefreshToken.for_user(user)
         if serializer.validated_data['remember']:
-            refresh.set_exp(lifetime=settings.LOGIN_REMEMBER_REFRESH_LIFETIME)
+            token_class = RememberMeRefreshToken
+        else:
+            token_class = RefreshToken
+        refresh = token_class.for_user(user)
 
-        return Response(
+        response = Response(
             {
                 'access': str(refresh.access_token),
-                'refresh': str(refresh),
                 'user': LoginUserSerializer(user).data,
             }
         )
+        set_refresh_cookie(response, refresh, serializer.validated_data['remember'])
+        return response
 
 
 def register_failed_attempt(key, seconds):
