@@ -105,3 +105,6 @@ Response `200`:
 - Issued and revoked refresh tokens are stored in the database (admin: **Token Blacklist**). Expired ones can be removed with `python manage.py flushexpiredtokens`.
 
 Frontend requests to `/api/auth/` must use `credentials: 'include'`, otherwise the browser doesn't send or save the cookie. CORS allows it for the origins in `CORS_ALLOWED_ORIGINS`. `SameSite=Lax` works while the frontend and the API are on the same site (as `localhost:5173` and `localhost:8000` are); on different domains the cookie would need `SameSite=None` and CSRF protection.
+
+- Use `localhost` for both the frontend and the API, not `127.0.0.1`: for the browser they are different sites, so the cookie isn't sent and refresh returns `401`.
+- Login, refresh and logout check the `Origin` header: requests from other sites get `403`, so a foreign page can't log the user in or out through a form. Allowed origins are the API's own (the browsable API) and `CORS_ALLOWED_ORIGINS`; requests without `Origin` (curl, Postman) are allowed.

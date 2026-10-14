@@ -3,6 +3,7 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from users.cookies import get_refresh_cookie
+from users.permissions import TrustedOrigin
 from users.serializers.refresh import RefreshSerializer
 
 MISSING_COOKIE_MESSAGE = 'Refresh token cookie is missing'
@@ -10,6 +11,7 @@ MISSING_COOKIE_MESSAGE = 'Refresh token cookie is missing'
 
 class RefreshView(TokenRefreshView):
     serializer_class = RefreshSerializer
+    permission_classes = [TrustedOrigin]
 
     def post(self, request, *args, **kwargs):
         refresh = get_refresh_cookie(request)

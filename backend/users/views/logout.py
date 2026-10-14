@@ -5,11 +5,13 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.cookies import delete_refresh_cookie, get_refresh_cookie
+from users.permissions import TrustedOrigin
 
 
 class LogoutView(APIView):
     # The token comes from the cookie, no other authentication is needed
     authentication_classes = []
+    permission_classes = [TrustedOrigin]
 
     def post(self, request):
         refresh = get_refresh_cookie(request)

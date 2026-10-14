@@ -9,6 +9,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.cookies import set_refresh_cookie
+from users.permissions import TrustedOrigin
 from users.serializers.login import LoginSerializer, LoginUserSerializer
 from users.tokens import RememberMeRefreshToken
 
@@ -41,6 +42,7 @@ def get_lockouts(request):
 class LoginView(APIView):
     # JWT only: no CSRF check from SessionAuthentication, and 401 stays 401
     authentication_classes = [JWTAuthentication]
+    permission_classes = [TrustedOrigin]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'login'
 
