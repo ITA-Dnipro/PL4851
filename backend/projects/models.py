@@ -2,6 +2,9 @@ from django.db import models
 
 MAX_LENGTH_PROJECT_TITLE = 255
 MAX_LENGTH_PROJECT_STAGE = 100
+MAX_LENGTH_STATUS = 20
+MAX_LENGTH_SHORT_DESCRIPTION = 255
+MAX_LENGTH_LOGO = 255
 INVESTMENT_SUM_MAX_DIGITS = 12
 INVESTMENT_SUM_DECIMAL_PLACES = 2
 RAISED_AMOUNT_MAX_DIGITS = 12
@@ -9,6 +12,12 @@ RAISED_AMOUNT_DECIMAL_PLACES = 2
 
 
 class Project(models.Model):
+    class ProjectStatus(models.TextChoices):
+        DRAFT = 'draft', 'Чернетка'
+        ACTIVE = 'active', 'Активний'
+        PAUSED = 'paused', 'Призупинений'
+        CLOSED = 'closed', 'Закритий'
+
     project_id = models.AutoField(primary_key=True)
     startup = models.ForeignKey(
         'startups.StartupProfile',
@@ -16,6 +25,9 @@ class Project(models.Model):
         related_name='projects',
     )
     project_title = models.CharField(max_length=MAX_LENGTH_PROJECT_TITLE)
+    short_description = models.CharField(
+        max_length=MAX_LENGTH_SHORT_DESCRIPTION, blank=True, default=''
+    )
     project_description = models.TextField()
     investment_sum = models.DecimalField(
         max_digits=INVESTMENT_SUM_MAX_DIGITS,
@@ -27,12 +39,24 @@ class Project(models.Model):
         decimal_places=RAISED_AMOUNT_DECIMAL_PLACES,
         default=0,
     )
+    status = models.CharField(
+        max_length=MAX_LENGTH_STATUS,
+        choices=ProjectStatus.choices,
+        default=ProjectStatus.DRAFT,
+    )
+    logo = models.ImageField(
+        upload_to='projects/logos/%Y/%m/',
+        blank=True,
+        null=True,
+        max_length=MAX_LENGTH_LOGO,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         indexes = [
             models.Index(fields=['project_stage'], name='project_stage_idx'),
+            models.Index(fields=['status'], name='project_status_idx'),
         ]
         constraints = [
             models.CheckConstraint(

@@ -1,4 +1,10 @@
 # Forum-Project-Stage-CC
+
+[![CI](https://github.com/ITA-Dnipro/PL4851/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/ITA-Dnipro/PL4851/actions/workflows/ci.yml?query=branch%3Adevelop)
+[![codecov](https://codecov.io/gh/ITA-Dnipro/PL4851/branch/develop/graph/badge.svg)](https://app.codecov.io/gh/ITA-Dnipro/PL4851)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
+
 Forum Project Stage CC Template Repo
 
 **Project Vision Statement:**
@@ -178,6 +184,7 @@ Checks run automatically on `git commit` via [pre-commit](https://pre-commit.com
 | Backend | black (formatting), isort (imports), flake8 + flake8-quotes (lint) | `backend/pyproject.toml`, `backend/.flake8` |
 | Frontend | ESLint | `frontend/eslint.config.js` |
 | Any file | trailing whitespace, end of file, YAML syntax, merge conflicts, large files | `.pre-commit-config.yaml` |
+| GitHub config | `.github/dependabot.yml` and workflows validated against their schemas (check-jsonschema) | `.pre-commit-config.yaml` |
 
 Style rules: line length 88, **single quotes** in Python (black keeps quotes as written, flake8-quotes enforces single).
 
@@ -239,4 +246,76 @@ Both checks must be green before merging.
 
 Most lint failures are fixed locally by `pre-commit run --all-files`. Tests: `cd backend && pytest`.
 
+### Testing & Coverage (Backend)
+
+Tests are written using `pytest` and `pytest-django`. Each app keeps its tests in its own `tests/` package, one file per feature (e.g. `users/tests/test_models.py`, `users/tests/test_login.py`).
+
+#### Running Tests
+
+Make sure you are in the `backend` directory:
+
+```bash
+cd backend
+```
+
+Run all tests:
+`pytest`
+
+Run tests of one app:
+`pytest users`
+
+Run tests by marker:
+`pytest -m api`
+
+`pytest -m models`
+
+#### Coverage Reports
+
+`./scripts/run_coverage.sh`
+
 To rerun a job without a new commit (e.g. a flaky network error), use **Re-run jobs** on the workflow run page.
+
+### Code Coverage (Codecov)
+
+The backend CI job runs pytest with coverage and uploads the report (`backend/coverage.xml`) to [Codecov](https://app.codecov.io/gh/ITA-Dnipro/PL4851). On every PR Codecov posts a comment with the coverage change and adds two checks, `codecov/project` and `codecov/patch`. For now they are informational: they never fail a PR (see `codecov.yml`).
+
+#### Codecov token
+
+The upload token is stored as the repository secret `CODECOV_TOKEN` (**Settings → Secrets and variables → Actions**). To replace it (repo admin): copy the upload token from the repository's page on Codecov (**Configuration → General**) and update the secret.
+
+If an upload fails (e.g. Codecov is down), the **Upload coverage to Codecov** step logs an error but doesn't fail the job (`fail_ci_if_error: false`). PRs opened by Dependabot can't read the secret, so their coverage isn't uploaded.
+
+### Dependency Updates (Dependabot)
+
+[Dependabot](https://docs.github.com/en/code-security/dependabot) keeps dependencies up to date (config: `.github/dependabot.yml`). Every Monday it checks for new versions and opens PRs into `develop`:
+
+| Ecosystem | Files | PRs |
+|---|---|---|
+| GitHub Actions | `.github/workflows/*.yml` | one PR for all actions |
+| pip | `backend/requirements*.txt` | one PR with all minor and patch updates; major updates are skipped |
+| npm | `frontend/package.json`, `frontend/package-lock.json` | same as pip |
+
+- Major updates of pip and npm packages (e.g. Django 5 → 6) are not proposed: they can break the project, so we upgrade them by hand when the team decides to. To see what's available: `docker compose exec backend pip list --outdated` and `docker compose exec frontend npm outdated`.
+- pip and npm releases are proposed only when they are at least 5 days old (`cooldown`): broken or compromised releases are usually withdrawn by then.
+- black, isort, flake8 and flake8-quotes are excluded because they are also pinned in `.pre-commit-config.yaml`. Update them by hand in both files at once, so CI and the git hooks run the same versions.
+
+Reviewing a Dependabot PR:
+
+1. Wait for CI. Green CI means the project still installs, builds and passes tests with the new versions.
+2. For a major update (only GitHub Actions get those now), read the release notes in the PR description and check that CI still passes.
+3. Merge it like any other PR. If it has conflicts with `develop`, comment `@dependabot rebase`.
+4. Don't want an update? Comment `@dependabot ignore this major version` (or `@dependabot ignore this dependency`) and close the PR.
+
+After pulling a change to `frontend/package*.json`, reinstall dependencies: `npm --prefix frontend install`, or with Docker `docker compose up --build -V` (`-V` recreates the container's `node_modules`).
+
+If `.github/dependabot.yml` has an error, GitHub shows it in **Insights → Dependency graph → Dependabot**. The `check-dependabot` pre-commit hook catches most errors before commit.
+
+### Security
+
+- Never commit secrets. `.env` files are gitignored; only `.env.example` with placeholder values goes to the repo. CI secrets (e.g. `CODECOV_TOKEN`) are stored in **Settings → Secrets and variables**.
+- Outside local development, set a unique `SECRET_KEY`, `DEBUG=False` and real `ALLOWED_HOSTS` through environment variables. `python manage.py check --deploy` lists what else to fix.
+- Repo admins should enable in **Settings → Advanced Security** (*Code security* in the older UI):
+  - **Dependabot alerts**: a warning in the **Security** tab when a dependency has a known vulnerability;
+  - **Dependabot security updates**: a fix PR right away, without waiting for the weekly run or the cooldown;
+  - **Secret scanning** with **push protection**: blocks pushes that contain tokens or passwords.
+- Found a vulnerability? Don't open a public issue: report it privately to the maintainers, or via **Security → Report a vulnerability** if private reporting is enabled.

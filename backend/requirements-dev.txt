@@ -5,3 +5,4 @@ flake8==7.4.1
 flake8-quotes==3.4.0
 pytest==9.1.1
 pytest-django==4.14.0
+pytest-cov==7.1.0

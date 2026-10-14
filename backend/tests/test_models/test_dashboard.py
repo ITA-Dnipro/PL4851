@@ -1,14 +1,16 @@
+import pytest
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.test import TestCase
 
+from dashboard.models import SavedProject
 from investors.models import InvestorProfile
 from projects.models import Project
-from startups.models import StartupProfile
-
-from .models import SavedProject
+from startups.models import Industry, LocationType, StartupProfile
 
 User = get_user_model()
+
+pytestmark = pytest.mark.models
 
 
 class SavedProjectModelTest(TestCase):
@@ -17,9 +19,13 @@ class SavedProjectModelTest(TestCase):
         self.user_investor = User.objects.create_user(
             email='i@test.com', role='investor'
         )
+        self.industry = Industry.objects.get_or_create(
+            slug='it', defaults={'industry_name': 'Інформаційні технології / IT'}
+        )[0]
         self.startup = StartupProfile.objects.create(
-            user=self.user_startup, startup_name='S1', industry='it'
+            user=self.user_startup, startup_name='S1', location=LocationType.KYIV_CITY
         )
+        self.startup.industries.add(self.industry)
         self.investor = InvestorProfile.objects.create(
             user=self.user_investor, investor_name='I1', investor_type='private'
         )

@@ -1,20 +1,26 @@
+import pytest
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.test import TestCase
 
-from startups.models import StartupProfile
-
-from .models import Project
+from projects.models import Project
+from startups.models import Industry, LocationType, StartupProfile
 
 User = get_user_model()
+
+pytestmark = pytest.mark.models
 
 
 class ProjectModelTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(email='founder2@test.com', role='startup')
         self.startup = StartupProfile.objects.create(
-            user=self.user, startup_name='FoodTech', industry='food'
+            user=self.user, startup_name='FoodTech', location=LocationType.KYIV_CITY
         )
+        self.industry = Industry.objects.get_or_create(
+            slug='food', defaults={'industry_name': 'Їжа / Харчова промисловість'}
+        )[0]
+        self.startup.industries.add(self.industry)
         self.project = Project.objects.create(
             startup=self.startup,
             project_title='Smart Packaging',

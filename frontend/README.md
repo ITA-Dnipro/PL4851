@@ -37,3 +37,14 @@ src/
   components/       shared components (Layout with nav bar)
   pages/            one file per page
 ```
+
+## Icons
+Icons come from the free Font Awesome solid set and are rendered with `components/Icon`:
+
+```tsx
+import { faTruck } from '@fortawesome/free-solid-svg-icons'
+
+<Icon icon={faTruck} className={styles.icon} />   // size: width/height, color: color
+```
+
+Import only the icons you use. Icons set in the admin by name (e.g. "For whom" cards) must be added to the section's `icons.ts`, otherwise a fallback icon is shown.

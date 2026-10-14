@@ -1,5 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import Header from './Header'
+import Footer from './Footer'
+import { footerMock } from './Footer/mocks'
 
 function Layout() {
   return (
@@ -8,6 +10,7 @@ function Layout() {
       <main className="page">
         <Outlet />
       </main>
+      <Footer data={footerMock} />
     </>
   )
 }
