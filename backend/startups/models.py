@@ -1,8 +1,58 @@
 import re
 
+from django.contrib.auth.models import BaseUserManager
 from django.db import models
+from django.utils.text import slugify
 
 from users.models import User
+
+UKRAINIAN_TRANSLIT = {
+    'а': 'a',
+    'б': 'b',
+    'в': 'v',
+    'г': 'h',
+    'ґ': 'g',
+    'д': 'd',
+    'е': 'e',
+    'є': 'ye',
+    'ж': 'zh',
+    'з': 'z',
+    'и': 'y',
+    'і': 'i',
+    'ї': 'yi',
+    'й': 'y',
+    'к': 'k',
+    'л': 'l',
+    'м': 'm',
+    'н': 'n',
+    'о': 'o',
+    'п': 'p',
+    'р': 'r',
+    'с': 's',
+    'т': 't',
+    'у': 'u',
+    'ф': 'f',
+    'х': 'kh',
+    'ц': 'ts',
+    'ч': 'ch',
+    'ш': 'sh',
+    'щ': 'shch',
+    'ь': '',
+    'ю': 'yu',
+    'я': 'ya',
+}
+
+
+def custom_slugify(text):
+    """Transliterates Ukrainian characters to Latin and then slugifies the result."""
+    if not text:
+        return ''
+
+    text = text.lower()
+    translit_text = ''.join(UKRAINIAN_TRANSLIT.get(char, char) for char in text)
+
+    return slugify(translit_text)
+
 
 MAX_LENGTH_STARTUP_NAME = 255
 MAX_LENGTH_EDRPOU_OR_IPN = 20
@@ -14,6 +64,8 @@ MAX_LENGTH_LOCATION = 50
 MAX_LENGTH_LOGO = 255
 DEFAULT_EMPLOYEES = 1
 NON_DIGIT_PATTERN = re.compile(r'\D')
+MAX_LENGTH_SLUG = 255
+MAX_LENGTH_EMAIL = 254
 
 
 class Industry(models.Model):
@@ -110,10 +162,18 @@ class StartupProfile(models.Model):
     )
     employees = models.IntegerField(default=DEFAULT_EMPLOYEES)
     is_verified = models.BooleanField(default=False)
+    slug = models.SlugField(max_length=MAX_LENGTH_SLUG, unique=True)
+    hero_image = models.ImageField(
+        upload_to='startups/hero_images/%Y/%m/', blank=True, null=True
+    )
+    startup_email = models.EmailField(max_length=MAX_LENGTH_EMAIL)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         indexes = [
             models.Index(fields=['location'], name='startup_location_idx'),
+            models.Index(fields=['created_at'], name='startup_created_at_idx'),
         ]
         constraints = [
             models.CheckConstraint(
@@ -125,7 +185,63 @@ class StartupProfile(models.Model):
     def save(self, *args, **kwargs):
         if self.startup_phone:
             self.startup_phone = NON_DIGIT_PATTERN.sub('', self.startup_phone)
+
+        if self.startup_email:
+            clean_email = self.startup_email.strip()
+            self.startup_email = BaseUserManager.normalize_email(clean_email)
+
+        if not self.slug:
+            base_slug = custom_slugify(self.startup_name)
+            if not base_slug:
+                base_slug = 'startup'
+            base_slug = base_slug[:MAX_LENGTH_SLUG].rstrip('-')
+            unique_slug = base_slug
+            counter = 1
+
+            queryset = StartupProfile.objects.filter(slug=unique_slug)
+            if self.pk:
+                queryset = queryset.exclude(pk=self.pk)
+
+            while queryset.exists():
+                suffix = f'-{counter}'
+                allowed_base_len = MAX_LENGTH_SLUG - len(suffix)
+                unique_slug = f"{base_slug[:allowed_base_len].rstrip('-')}{suffix}"
+                counter += 1
+
+                queryset = StartupProfile.objects.filter(slug=unique_slug)
+                if self.pk:
+                    queryset = queryset.exclude(pk=self.pk)
+
+            self.slug = unique_slug
+
         super().save(*args, **kwargs)
 
     def __str__(self):
         return self.startup_name
+
+
+class StartupFollower(models.Model):
+    follower_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.RESTRICT,
+        to_field='user_id',
+        related_name='following_startups',
+    )
+    startup = models.ForeignKey(
+        StartupProfile,
+        on_delete=models.RESTRICT,
+        to_field='startup_id',
+        related_name='followers',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['created_at'], name='follower_created_at_idx'),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'startup'], name='unique_user_startup_follower'
+            ),
+        ]
