@@ -19,6 +19,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   let response: Response
+  let data: unknown
   try {
     response = await fetch(`${API_URL}${path}`, {
       method,
@@ -28,6 +29,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       credentials: 'include',
       signal,
     })
+    // Reading the body can fail too if the connection drops halfway
+    data = await readJson(response)
   } catch (error) {
     // An aborted request isn't an API error: let the caller ignore it
     if (error instanceof DOMException && error.name === 'AbortError') {
@@ -36,7 +39,6 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     throw new ApiError(NETWORK_ERROR_STATUS, 'Network error')
   }
 
-  const data = await readJson(response)
   if (!response.ok) {
     throw toApiError(response, data)
   }

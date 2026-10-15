@@ -55,6 +55,7 @@
 .input:focus {
   outline: none;
   border-color: var(--color-black-90);
+  box-shadow: 0 0 0 1px var(--color-black-90);
 }
 
 /* Listed with :focus so the color stays while the user types */
@@ -66,6 +67,15 @@
 .inputValid,
 .inputValid:focus {
   border-color: var(--color-green);
+}
+
+/* A thicker border in the field's own color shows the focus in every state */
+.inputError:focus {
+  box-shadow: 0 0 0 1px var(--color-error);
+}
+
+.inputValid:focus {
+  box-shadow: 0 0 0 1px var(--color-green);
 }
 
 .error {

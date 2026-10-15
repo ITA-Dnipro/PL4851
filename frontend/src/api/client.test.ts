@@ -66,6 +66,24 @@ describe('apiRequest', () => {
     expect(error.retryAfter).toBe(900)
   })
 
+  it('reports a connection drop while reading the body as status 0', async () => {
+    const response = new Response('{"ok": true}')
+    vi.spyOn(response, 'text').mockRejectedValue(new TypeError('network error'))
+    mockFetch(response)
+
+    const error = await catchError(apiRequest('/health/'))
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error.status).toBe(NETWORK_ERROR_STATUS)
+  })
+
+  it('passes an aborted request through as is', async () => {
+    const abort = new DOMException('The operation was aborted.', 'AbortError')
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(abort)
+
+    await expect(apiRequest('/health/')).rejects.toBe(abort)
+  })
+
   it('reports a network failure as status 0', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'))
 
