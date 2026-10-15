@@ -80,8 +80,7 @@ class StartupPublicProfileDetailViewTest(APITestCase):
         from startups.models import StartupProfile
 
         self.startup = StartupProfile.objects.first()
-        if not self.startup:
-            self.fail('Fixtures is empty')
+        assert self.startup is not None, 'Фікстура порожня або моделі не завантажились'
         self.startup.is_verified = True
         self.startup.save()
         self.url = reverse(
