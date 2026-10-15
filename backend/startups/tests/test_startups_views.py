@@ -2,6 +2,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from startups.serializers import StartupPublicProfileSerializer
+
 
 class StartupProfileAPIViewTest(APITestCase):
     fixtures = [
@@ -58,6 +60,17 @@ class StartupProfileAPIViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['startup_name'], 'Handmade Co')
+
+    def test_get_startups_list_success_coverage(self):
+        """Verifies a successful list request"""
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('results', response.data)
+
+    def test_filtering_by_tag_industries_coverage(self):
+        """Forcibly passes ?tag=craft to enter the `if tag` block:"""
+        response = self.client.get(self.url, {'tag': 'craft'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class StartupPublicProfileDetailViewTest(APITestCase):
@@ -134,3 +147,34 @@ class StartupPublicProfileDetailViewTest(APITestCase):
             )
         finally:
             settings.MEDIA_URL = old_media_url
+
+    def test_logo_and_hero_image_urls_when_exist(self):
+        """Verifies behavior when images are loaded"""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        fake_image = SimpleUploadedFile(
+            'test.jpg', b'file_content', content_type='image/jpeg'
+        )
+        self.startup.logo = fake_image
+        self.startup.hero_image = fake_image
+        self.startup.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('test', response.data['logo'])
+        self.assertIn('test', response.data['hero_image'])
+
+    def test_about_html_empty_description_fallback(self):
+        """Verifies an empty string is returned if there is no description."""
+        self.startup.startup_description = ''
+        self.startup.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['about_html'], '')
+
+    def test_projects_count_fallback_without_annotate(self):
+        """invokes the serializer without an annotation, triggering the else-block"""
+        from startups.models import StartupProfile
+
+        raw_startup = StartupProfile.objects.get(pk=self.startup.startup_id)
+        serializer = StartupPublicProfileSerializer(raw_startup)
+        self.assertEqual(serializer.data['projects_count'], 7)
