@@ -4,7 +4,10 @@ from rest_framework.test import APITestCase
 
 
 class StartupProfileAPIViewTest(APITestCase):
-    fixtures = ['fixtures/startups_projects_pagination_data.json']
+    fixtures = [
+        'fixtures/startups_projects_pagination_data.json',
+        'fixtures/startup_profile_stats.json',
+    ]
 
     def setUp(self):
         self.url = reverse('startups:startup-list')
@@ -55,3 +58,79 @@ class StartupProfileAPIViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['startup_name'], 'Handmade Co')
+
+
+class StartupPublicProfileDetailViewTest(APITestCase):
+    fixtures = ['fixtures/startups_projects_pagination_data.json']
+
+    def setUp(self):
+        from startups.models import StartupProfile
+
+        self.startup = StartupProfile.objects.first()
+        if not self.startup:
+            self.fail('Fixtures is empty')
+        self.startup.is_verified = True
+        self.startup.save()
+        self.url = reverse(
+            'startups:startup-detail', kwargs={'id': self.startup.startup_id}
+        )
+
+    def test_get_startup_profile_success(self):
+        """Verification of a successful GET request for
+        the detailed profile and field structure."""
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        expected_fields = [
+            'startup_id',
+            'startup_name',
+            'slug',
+            'hero_image',
+            'logo',
+            'short_description',
+            'about_html',
+            'contact',
+            'website',
+            'industries',
+            'followers_count',
+            'projects_count',
+            'created_at',
+        ]
+        for field in expected_fields:
+            self.assertIn(field, response.data)
+
+        self.assertIn('email', response.data['contact'])
+        self.assertIn('phone', response.data['contact'])
+
+    def test_get_unknown_startup_id_returns_404(self):
+        """Verification that a request with a non-existent ID returns a 404."""
+        invalid_url = reverse('startups:startup-detail', kwargs={'id': 99999})
+        response = self.client.get(invalid_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_about_html_sanitization(self):
+        """Checking that the HTML is being cleaned up"""
+        self.startup.startup_description = (
+            "Тест **Markdown** <script>alert('xss')</script>"
+        )
+        self.startup.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('<strong>Markdown</strong>', response.data['about_html'])
+        self.assertNotIn('<script>', response.data['about_html'])
+
+    def test_hero_image_fallback_placeholder(self):
+        """Verify that the serializer returns a default
+        placeholder if `hero_image` is empty."""
+        from django.conf import settings
+
+        old_media_url = settings.MEDIA_URL
+        settings.MEDIA_URL = '/media/'
+        try:
+            response = self.client.get(self.url)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(
+                response.data['hero_image'], '/media/thumbs/hero.placeholder.jpg'
+            )
+        finally:
+            settings.MEDIA_URL = old_media_url
