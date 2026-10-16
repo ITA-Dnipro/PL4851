@@ -1,3 +1,7 @@
+import shutil
+import tempfile
+
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -73,8 +77,17 @@ class StartupProfileAPIViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
+TEMP_MEDIA_ROOT = tempfile.mkdtemp()
+
+
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class StartupPublicProfileDetailViewTest(APITestCase):
     fixtures = ['fixtures/startups_projects_pagination_data.json']
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
+        super().tearDownClass()
 
     def setUp(self):
         from startups.models import StartupProfile
