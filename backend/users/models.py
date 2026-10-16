@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.utils import timezone
 
 MAX_LENGTH_NAME = 150
 MAX_LENGTH_EMAIL = 254
@@ -53,3 +54,42 @@ class User(AbstractUser):
 
     def __str__(self):
         return f'{self.email} ({self.role})'
+
+
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='password_reset_tokens',
+    )
+
+    token_hash = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+    revoked = models.BooleanField(default=False)
+
+    def is_valid(self):
+        return (
+            not self.revoked
+            and self.used_at is None
+            and self.expires_at > timezone.now()
+        )
+
+    def mark_as_used(self):
+        self.used_at = timezone.now()
+        self.save(update_fields=['used_at'])
+
+    def revoke(self):
+        self.revoked = True
+        self.save(update_fields=['revoked'])
+
+    def __str__(self):
+        return f'Password reset token for {self.user.email}'
+
+
+class PasswordResetMetrics(models.Model):
+    requests = models.PositiveBigIntegerField(default=0)
+    confirms = models.PositiveBigIntegerField(default=0)
+    expired_attempts = models.PositiveBigIntegerField(default=0)
+    reused_attempts = models.PositiveBigIntegerField(default=0)
