@@ -1,0 +1,43 @@
+[
+  {
+    "model": "startups.startupfollower",
+    "pk": 1,
+    "fields": {
+      "user": 12,
+      "startup": 11,
+      "created_at": "2026-10-05T10:00:00Z"
+    }
+  },
+  {
+    "model": "projects.project",
+    "pk": 1,
+    "fields": {
+      "startup": 11,
+      "project_title": "Leather Forge Online Shop",
+      "short_description": "Web platform for sales",
+      "project_description": "Full description of development",
+      "investment_sum": "10000.00",
+      "raised_amount": "1500.00",
+      "project_stage": "MVP",
+      "status": "active",
+      "created_at": "2026-10-15T12:00:00Z",
+      "updated_at": "2026-10-15T12:00:00Z"
+    }
+  },
+  {
+    "model": "projects.project",
+    "pk": 2,
+    "fields": {
+      "startup": 11,
+      "project_title": "Secret Draft Project",
+      "short_description": "Hidden",
+      "project_description": "Hidden draft text",
+      "investment_sum": "5000.00",
+      "raised_amount": "0.00",
+      "project_stage": "Idea",
+      "status": "draft",
+      "created_at": "2026-10-15T12:00:00Z",
+      "updated_at": "2026-10-15T12:00:00Z"
+    }
+  }
+]
