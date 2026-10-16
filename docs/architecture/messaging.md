@@ -32,6 +32,11 @@
   proxy/access logs, which would leak a still-valid token. No other message
   type is processed until the `auth` message has been validated; unauthenticated
   or invalid-token sockets are closed.
+- Auth deadline: the client has a fixed window (e.g. 10s) after connect to
+  send the `auth` message. If it has not arrived (or failed validation) by
+  then, the consumer closes the socket. This bounds how long an
+  unauthenticated connection can be held open and prevents it being used to
+  exhaust server connection capacity.
 - Consumer joins a Channels group per conversation (`conversation_<id>`) only
   after auth succeeds, checked against DB membership before allowing `group_add`.
 
@@ -95,15 +100,25 @@
   Celery task sends email/push notification.
 
 ## 9. Local dev — docker-compose additions
+
+Merge these into the existing `docker-compose.yml` (add the new services, and
+merge `mongo_data` into the existing top-level `volumes:` map alongside
+`postgres_data`):
+
+```yaml
 services:
   redis:
     image: redis:7
-    ports: ["6379:6379"]
+    ports: ["127.0.0.1:6379:6379"]
   mongo:
     image: mongo:7
-    ports: ["27017:27017"]
+    ports: ["127.0.0.1:27017:27017"]
     volumes: [mongo_data:/data/db]
   worker:
     build: { context: ., dockerfile: Dockerfile.backend }
     command: celery -A config worker -l info
     depends_on: [redis, mongo, db]
+
+volumes:
+  mongo_data:
+```
