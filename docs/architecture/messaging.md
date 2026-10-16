@@ -25,21 +25,42 @@
 
 ## 4. WebSocket routing & auth
 - `asgi.py` entrypoint, `ProtocolTypeRouter` splitting `http` vs `websocket`.
-- Auth: reuse existing JWT (`djangorestframework-simplejwt`) — token passed
-  as query param or Sec-WebSocket-Protocol header at connect time, validated
-  in a custom `AuthMiddlewareStack` replacement before `AuthMiddlewareStack`
-  hands off to the consumer (JWT doesn't carry Django session cookies).
-- Consumer joins a Channels group per conversation (`conversation_<id>`),
-  checked against DB membership before allowing `group_add`.
+- Auth: connection is accepted over WSS, but the socket stays unauthenticated
+  until the client sends a first `auth` message containing the existing JWT
+  (`djangorestframework-simplejwt`). No bearer token is ever placed in the
+  connection URL/query string — WS handshake URLs are frequently retained in
+  proxy/access logs, which would leak a still-valid token. No other message
+  type is processed until the `auth` message has been validated; unauthenticated
+  or invalid-token sockets are closed.
+- Consumer joins a Channels group per conversation (`conversation_<id>`) only
+  after auth succeeds, checked against DB membership before allowing `group_add`.
 
 ## 5. Message lifecycle
-1. Client sends message over WS (or POST /api/messages/ as REST fallback).
-2. Consumer validates permissions + sanitizes content.
+1. Client sends message over WS (authenticated connection, see §4), or
+   POST /api/messages/ as REST fallback.
+2. Both entry points — the WS consumer and the REST view — run the same
+   checks via a shared service: authenticate the request, verify the sender
+   is a participant of the conversation, apply per-user rate limiting, then
+   validate/sanitize the message content. Neither path persists content that
+   skipped this service.
 3. Persist to MongoDB (conversation_id, sender_id, body, attachments, ts).
 4. Publish to Redis channel group → fan out to connected participants.
 5. Enqueue background job (Celery) to:
    - write a Postgres `Notification` row,
-   - push email/webpush if recipient is offline (no active WS connection).
+   - push email/webpush if recipient is offline (see §6.1 for presence).
+
+### 5.1 Failure recovery
+- Redis channel-layer delivery is fire-and-forget: a client disconnected at
+  publish time simply misses that broadcast. Reconnecting clients must not
+  rely on the channel layer to "catch up" — instead, the REST inbox endpoint
+  supports cursor-based pagination (`?after_id=<last_seen_message_id>`), and
+  clients fetch everything after their last known message id on (re)connect.
+- Celery notification jobs must be durable against worker/process crashes:
+  use an outbox pattern (write a `pending` outbox row in the same DB
+  transaction as the triggering event, have a reconciler/retry task sweep
+  unprocessed outbox rows) or Celery's own ack-late + retry semantics with
+  idempotent task bodies, so a crash mid-task does not silently drop the
+  Notification row or the offline email/push delivery.
 
 ## 6. Scaling & retention
 - Mongo: shard by `conversation_id` if volume grows; TTL index for ephemeral
@@ -55,11 +76,23 @@
 - Rate limiting: per-user token bucket (Redis-backed) on message send,
   both WS and REST paths.
 
+## 6.1 Presence
+- Channels groups are broadcast-only pub/sub — there is no API to enumerate
+  who is currently a member of `conversation_<id>`, so presence cannot be
+  derived from group membership.
+- Presence is tracked in a separate registry: on successful auth, the
+  consumer writes a Redis key (e.g. `presence:<user_id>:<channel_name>`) with
+  a short TTL, refreshed by a periodic heartbeat/ping from the client; the
+  key expires automatically if the connection drops without a clean close.
+- The Celery notification task queries this registry (not the Channels
+  group) to decide whether the recipient has any live connection before
+  deciding to send an offline email/push notification.
+
 ## 8. Diagrams
 - Sequence: Send → Persist (Mongo) → Publish (Redis) → Deliver (WS) →
   Notify (Celery → Postgres Notification + email/push).
-- Flow: Offline user → no active WS in group → Celery task checks presence →
-  sends email/push notification.
+- Flow: Offline user → presence registry has no live key for the user →
+  Celery task sends email/push notification.
 
 ## 9. Local dev — docker-compose additions
 services:
