@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'users',
     'startups',
@@ -154,6 +155,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
 
 CORS_ALLOWED_ORIGINS = ['http://localhost:5173']
+# The frontend sends the refresh token cookie with credentials: 'include'
+CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
@@ -185,3 +188,9 @@ LOGIN_LOCKOUT_SECONDS = 15 * 60
 LOGIN_MAX_FAILED_ATTEMPTS_PER_EMAIL = 20
 LOGIN_EMAIL_LOCKOUT_SECONDS = 60 * 60
 LOGIN_REMEMBER_REFRESH_LIFETIME = timedelta(days=30)
+
+# The refresh token lives in an HttpOnly cookie sent only to the auth endpoints
+REFRESH_COOKIE_NAME = 'refresh_token'
+REFRESH_COOKIE_PATH = '/api/auth/'
+REFRESH_COOKIE_SAMESITE = 'Lax'
+REFRESH_COOKIE_SECURE = not DEBUG
