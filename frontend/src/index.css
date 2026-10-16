@@ -28,6 +28,7 @@ button {
   background: var(--color-black);
   color: var(--color-white);
   padding: 0 16px;
+  border: none;
   border-radius: var(--radius-4);
   font-weight: 500;
 
@@ -39,6 +40,12 @@ button {
 .button:hover {
   background: var(--color-primary-hover);
   text-decoration: none;
+}
+
+.button:disabled {
+  background: var(--color-light-gray);
+  color: var(--color-gray);
+  cursor: not-allowed;
 }
 
 .container {
