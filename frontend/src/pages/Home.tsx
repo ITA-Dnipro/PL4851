@@ -9,6 +9,7 @@ import { whyWorthSectionMock } from '../sections/landing/WhyWorthSection/mocks'
 import NewParticipantsSection from '../sections/landing/NewParticipantsSection'
 import { useHomeData } from '../hooks/useHomeData'
 
+// TODO: fetch section data from GET /api/content/landing/ instead of mocks
 function Home() {
 
   const { startups, isLoading, isLoadingMore, loadMore } = useHomeData()

@@ -1,10 +1,19 @@
+import shutil
+import tempfile
+
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from startups.serializers import StartupPublicProfileSerializer
+
 
 class StartupProfileAPIViewTest(APITestCase):
-    fixtures = ['fixtures/startups_projects_pagination_data.json']
+    fixtures = [
+        'fixtures/startups_projects_pagination_data.json',
+        'fixtures/startup_profile_stats.json',
+    ]
 
     def setUp(self):
         self.url = reverse('startups:startup-list')
@@ -55,3 +64,129 @@ class StartupProfileAPIViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['startup_name'], 'Handmade Co')
+
+    def test_get_startups_list_success_coverage(self):
+        """Verifies a successful list request"""
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('results', response.data)
+
+    def test_filtering_by_tag_industries_coverage(self):
+        """Forcibly passes ?tag=craft to enter the `if tag` block:"""
+        response = self.client.get(self.url, {'tag': 'craft'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+TEMP_MEDIA_ROOT = tempfile.mkdtemp()
+
+
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
+class StartupPublicProfileDetailViewTest(APITestCase):
+    fixtures = ['fixtures/startups_projects_pagination_data.json']
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
+        super().tearDownClass()
+
+    def setUp(self):
+        from startups.models import StartupProfile
+
+        self.startup = StartupProfile.objects.first()
+        assert self.startup is not None, 'Фікстура порожня або моделі не завантажились'
+        self.startup.is_verified = True
+        self.startup.save()
+        self.url = reverse(
+            'startups:startup-detail', kwargs={'id': self.startup.startup_id}
+        )
+
+    def test_get_startup_profile_success(self):
+        """Verification of a successful GET request for
+        the detailed profile and field structure."""
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        expected_fields = [
+            'startup_id',
+            'startup_name',
+            'slug',
+            'hero_image',
+            'logo',
+            'short_description',
+            'about_html',
+            'contact',
+            'website',
+            'industries',
+            'followers_count',
+            'projects_count',
+            'created_at',
+        ]
+        for field in expected_fields:
+            self.assertIn(field, response.data)
+
+        self.assertIn('email', response.data['contact'])
+        self.assertIn('phone', response.data['contact'])
+
+    def test_get_unknown_startup_id_returns_404(self):
+        """Verification that a request with a non-existent ID returns a 404."""
+        invalid_url = reverse('startups:startup-detail', kwargs={'id': 99999})
+        response = self.client.get(invalid_url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_about_html_sanitization(self):
+        """Checking that the HTML is being cleaned up"""
+        self.startup.startup_description = (
+            "Тест **Markdown** <script>alert('xss')</script>"
+        )
+        self.startup.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('<strong>Markdown</strong>', response.data['about_html'])
+        self.assertNotIn('<script>', response.data['about_html'])
+
+    def test_hero_image_fallback_placeholder(self):
+        """Verify that the serializer returns a default
+        placeholder if `hero_image` is empty."""
+        from django.conf import settings
+
+        old_media_url = settings.MEDIA_URL
+        settings.MEDIA_URL = '/media/'
+        try:
+            response = self.client.get(self.url)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(
+                response.data['hero_image'], '/media/thumbs/hero.placeholder.jpg'
+            )
+        finally:
+            settings.MEDIA_URL = old_media_url
+
+    def test_logo_and_hero_image_urls_when_exist(self):
+        """Verifies behavior when images are loaded"""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        fake_image = SimpleUploadedFile(
+            'test.jpg', b'file_content', content_type='image/jpeg'
+        )
+        self.startup.logo = fake_image
+        self.startup.hero_image = fake_image
+        self.startup.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('test', response.data['logo'])
+        self.assertIn('test', response.data['hero_image'])
+
+    def test_about_html_empty_description_fallback(self):
+        """Verifies an empty string is returned if there is no description."""
+        self.startup.startup_description = ''
+        self.startup.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['about_html'], '')
+
+    def test_projects_count_fallback_without_annotate(self):
+        """invokes the serializer without an annotation, triggering the else-block"""
+        from startups.models import StartupProfile
+
+        raw_startup = StartupProfile.objects.get(pk=self.startup.startup_id)
+        serializer = StartupPublicProfileSerializer(raw_startup)
+        self.assertEqual(serializer.data['projects_count'], 7)
