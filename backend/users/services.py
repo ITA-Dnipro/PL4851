@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import secrets
 from datetime import timedelta
 
@@ -8,6 +9,8 @@ from django.utils import timezone
 
 from .metrics import increment_metric
 from .models import PasswordResetToken
+
+logger = logging.getLogger(__name__)
 
 
 def hash_token(token):
@@ -33,6 +36,7 @@ def create_password_reset_token(user):
 @transaction.atomic
 def consume_password_reset_token(raw_token):
     token_hash = hash_token(raw_token)
+
     try:
         token = PasswordResetToken.objects.select_for_update().get(
             token_hash=token_hash,
@@ -42,10 +46,24 @@ def consume_password_reset_token(raw_token):
 
     if token.used_at is not None:
         increment_metric('reused_attempts')
+        logger.warning(
+            'password_reset_token_reused',
+            extra={
+                'event': 'password_reset_token_reused',
+                'timestamp': timezone.now().isoformat(),
+            },
+        )
         return None
 
     if token.expires_at <= timezone.now():
         increment_metric('expired_attempts')
+        logger.warning(
+            'password_reset_token_expired',
+            extra={
+                'event': 'password_reset_token_expired',
+                'timestamp': timezone.now().isoformat(),
+            },
+        )
         return None
 
     if not token.is_valid():
