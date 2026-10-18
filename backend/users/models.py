@@ -71,7 +71,8 @@ class PasswordResetToken(models.Model):
 
     def is_valid(self):
         return (
-            not self.revoked
+            self.user.is_active
+            and not self.revoked
             and self.used_at is None
             and self.expires_at > timezone.now()
         )

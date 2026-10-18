@@ -36,6 +36,12 @@ class PasswordResetTokenTest(TestCase):
     def test_token_is_valid(self):
         self.assertTrue(self.token.is_valid())
 
+    def test_inactive_user_token_is_invalid(self):
+        self.user.is_active = False
+        self.user.save(update_fields=['is_active'])
+
+        self.assertFalse(self.token.is_valid())
+
     def test_used_token_is_invalid(self):
         self.token.mark_as_used()
 
