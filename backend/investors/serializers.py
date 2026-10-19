@@ -35,6 +35,8 @@ class InvestorProfileDetailSerializer(serializers.ModelSerializer):
 
     def get_contact(self, obj):
         """Returns the public contacts with the phone in international format."""
-        phone = f'+{obj.investor_phone}' if obj.investor_phone else ''
+        phone = obj.investor_phone
+        if phone and not phone.startswith('+'):
+            phone = f'+{phone}'
 
         return {'phone': phone}

@@ -1,6 +1,10 @@
 import pytest
 from django.urls import reverse
-from rest_framework.test import APITestCase
+from rest_framework.request import Request
+from rest_framework.test import APIRequestFactory, APITestCase
+
+from investors.models import InvestorProfile
+from investors.views import InvestorPagination
 
 pytestmark = pytest.mark.api
 
@@ -51,6 +55,13 @@ class InvestorProfileListViewTest(APITestCase):
         self.assertEqual(result_ids(response), [GREEN_CAPITAL])
         self.assertIsNotNone(data['next'])
 
+    def test_caps_page_size(self):
+        request = Request(APIRequestFactory().get(LIST_URL, {'page_size': 1000}))
+
+        page_size = InvestorPagination().get_page_size(request)
+
+        self.assertEqual(page_size, InvestorPagination.max_page_size)
+
     def test_searches_by_name(self):
         response = self.client.get(LIST_URL, {'search': 'green'})
 
@@ -99,6 +110,15 @@ class InvestorProfileDetailViewTest(APITestCase):
         self.assertEqual(data['investor_description'], '')
         self.assertEqual(data['contact'], {'phone': ''})
         self.assertIsNone(data['investment_min'])
+
+    def test_keeps_an_existing_phone_prefix(self):
+        InvestorProfile.objects.filter(pk=GREEN_CAPITAL).update(
+            investor_phone='+380501234567'
+        )
+
+        response = self.client.get(detail_url(GREEN_CAPITAL))
+
+        self.assertEqual(response.json()['contact'], {'phone': '+380501234567'})
 
     def test_unverified_investor_returns_404(self):
         response = self.client.get(detail_url(CRAFT_VENTURES))
