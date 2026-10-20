@@ -172,6 +172,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_THROTTLE_RATES': {
         'login': '5/min',
+        'password_reset_ip': '5/hour',
+        'password_reset_email': '5/hour',
     },
 }
 
@@ -194,6 +196,14 @@ REFRESH_COOKIE_NAME = 'refresh_token'
 REFRESH_COOKIE_PATH = '/api/auth/'
 REFRESH_COOKIE_SAMESITE = 'Lax'
 REFRESH_COOKIE_SECURE = not DEBUG
+
+EMAIL_BACKEND = os.getenv(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend',
+)
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'FORUM <no-reply@forum.local>')
+
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 
 LOGGING = {
     'version': 1,
