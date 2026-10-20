@@ -10,6 +10,9 @@ from django.utils import timezone
 from .metrics import increment_metric
 from .models import PasswordResetToken
 
+PASSWORD_RESET_TOKEN_LIFETIME = timedelta(hours=1)
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -21,13 +24,19 @@ def generate_token():
     return secrets.token_urlsafe(32)
 
 
+@transaction.atomic
 def create_password_reset_token(user):
+    PasswordResetToken.objects.filter(
+        user=user,
+        used_at__isnull=True,
+        revoked=False,
+    ).delete()
     raw_token = generate_token()
 
     PasswordResetToken.objects.create(
         user=user,
         token_hash=hash_token(raw_token),
-        expires_at=timezone.now() + timedelta(hours=1),
+        expires_at=timezone.now() + PASSWORD_RESET_TOKEN_LIFETIME,
     )
 
     return raw_token
