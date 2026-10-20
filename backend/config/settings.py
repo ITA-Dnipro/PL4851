@@ -194,3 +194,28 @@ REFRESH_COOKIE_NAME = 'refresh_token'
 REFRESH_COOKIE_PATH = '/api/auth/'
 REFRESH_COOKIE_SAMESITE = 'Lax'
 REFRESH_COOKIE_SECURE = not DEBUG
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'password_reset': {
+            'format': (
+                '%(asctime)s | %(levelname)s | ' '%(name)s | %(event)s | %(timestamp)s'
+            ),
+        },
+    },
+    'handlers': {
+        'password_reset_console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'password_reset',
+        },
+    },
+    'loggers': {
+        'users.services': {
+            'handlers': ['password_reset_console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+}
