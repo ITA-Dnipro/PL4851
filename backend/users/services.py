@@ -11,6 +11,7 @@ from .metrics import increment_metric
 from .models import PasswordResetToken
 
 PASSWORD_RESET_TOKEN_LIFETIME = timedelta(hours=1)
+PASSWORD_RESET_TOKEN_RETENTION = timedelta(days=7)
 
 
 logger = logging.getLogger(__name__)
@@ -27,10 +28,15 @@ def generate_token():
 @transaction.atomic
 def create_password_reset_token(user):
     PasswordResetToken.objects.filter(
+        expires_at__lt=timezone.now() - PASSWORD_RESET_TOKEN_RETENTION,
+    ).delete()
+
+    PasswordResetToken.objects.filter(
         user=user,
         used_at__isnull=True,
         revoked=False,
-    ).delete()
+    ).update(revoked=True)
+
     raw_token = generate_token()
 
     PasswordResetToken.objects.create(
