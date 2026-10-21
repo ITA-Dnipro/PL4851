@@ -13,6 +13,7 @@ class Command(BaseCommand):
         # retention policy is decided. Add a TTL index on created_at then.
 
         conversations = get_conversations_collection()
+        conversations.create_index('conversation_id', unique=True)
         conversations.create_index('participants')
         conversations.create_index('last_message_at')
 

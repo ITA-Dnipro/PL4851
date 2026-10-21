@@ -23,6 +23,10 @@ def create_conversation(participants, project_id=None, startup_id=None, meta=Non
 
 def append_message(conversation_id, sender_id, body, attachments=None, meta=None):
     now = datetime.now(timezone.utc)
+    conversations = get_conversations_collection()
+    if conversations.find_one({'conversation_id': conversation_id}) is None:
+        raise ValueError(f'Conversation {conversation_id} does not exist')
+
     message = {
         'conversation_id': conversation_id,
         'sender_id': sender_id,
@@ -33,8 +37,8 @@ def append_message(conversation_id, sender_id, body, attachments=None, meta=None
         'meta': meta or {},
     }
     get_messages_collection().insert_one(message)
-    get_conversations_collection().update_one(
+    conversations.update_one(
         {'conversation_id': conversation_id},
-        {'$set': {'last_message_at': now}},
+        {'$max': {'last_message_at': now}},
     )
     return message
