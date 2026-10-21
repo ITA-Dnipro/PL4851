@@ -29,9 +29,20 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_HOST: db
       DB_PORT: 5432
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB_NAME: ${MONGO_DB_NAME}
     depends_on:
       db:
         condition: service_healthy
+      mongo:
+        condition: service_started
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo_data:/data/db
 
   frontend:
     build:
@@ -47,3 +58,4 @@ services:
 
 volumes:
   postgres_data:
+  mongo_data:
