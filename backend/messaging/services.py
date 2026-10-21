@@ -7,15 +7,17 @@ from messaging.mongo import get_conversations_collection, get_messages_collectio
 def create_conversation(participants, project_id=None, startup_id=None, meta=None):
     now = datetime.now(timezone.utc)
     conversation_id = str(uuid.uuid4())
-    get_conversations_collection().insert_one({
-        'conversation_id': conversation_id,
-        'participants': participants,
-        'project_id': project_id,
-        'startup_id': startup_id,
-        'created_at': now,
-        'last_message_at': now,
-        'meta': meta or {},
-    })
+    get_conversations_collection().insert_one(
+        {
+            'conversation_id': conversation_id,
+            'participants': participants,
+            'project_id': project_id,
+            'startup_id': startup_id,
+            'created_at': now,
+            'last_message_at': now,
+            'meta': meta or {},
+        }
+    )
     return conversation_id
 
 
