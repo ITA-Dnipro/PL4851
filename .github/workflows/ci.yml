@@ -34,6 +34,11 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+
     env:
       SECRET_KEY: ci-only-not-secret
       DEBUG: 'False'
@@ -41,6 +46,8 @@ jobs:
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_HOST: localhost
+      MONGO_URI: mongodb://localhost:27017
+      MONGO_DB_NAME: pl4851_test
       DB_PORT: 5432
 
     steps:
