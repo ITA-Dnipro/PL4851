@@ -1,6 +1,6 @@
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import StartupView from './StartupView'
@@ -45,6 +45,8 @@ function renderPage(path = `/startups/${profile.slug}`) {
         <Route path="/startups/:slug" element={<StartupView />} />
       </Routes>
       <LocationDisplay />
+      {/* Opens another startup without reloading, like a link on the site */}
+      <Link to="/startups/123">Стартап 123</Link>
     </MemoryRouter>,
   )
   return user
@@ -137,6 +139,22 @@ describe('StartupView', () => {
     await act(() => new Promise((resolve) => setTimeout(resolve, 0)))
     expect(screen.getByTestId('location')).toHaveTextContent('/startups/11')
     expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('opens /startups/123 as id 123, not as the shown startup whose slug is "123"', async () => {
+    const otherStartup = { ...profile, startup_id: 123, startup_name: 'Інший стартап' }
+    const fetchMock = mockFetch()
+      .mockResolvedValueOnce(jsonResponse({ ...profile, slug: '123' }))
+      .mockResolvedValueOnce(jsonResponse(otherStartup))
+    const user = renderPage('/startups/11')
+
+    await screen.findByRole('heading', { level: 1, name: profile.startup_name })
+    await user.click(screen.getByRole('link', { name: 'Стартап 123' }))
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: otherStartup.startup_name }),
+    ).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenLastCalledWith(`${API_URL}/startups/123/`, expect.any(Object))
   })
 
   it('shows the not found page for an unknown startup', async () => {

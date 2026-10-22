@@ -94,12 +94,14 @@ function useProfile(slug: string) {
   const [result, setResult] = useState<ProfileResult | null>(null)
   const isValidLink = LINK_PATTERN.test(slug)
   // After the move from the id link to the slug link the loaded profile still fits,
-  // so it isn't requested again
+  // so it isn't requested again. A link of digits is always an id, never a slug
   const isCurrent =
     result !== null &&
     result.attempt === attempt &&
     (result.slug === slug ||
-      (result.state.status === 'success' && result.state.profile.slug === slug))
+      (result.state.status === 'success' &&
+        !ID_PATTERN.test(slug) &&
+        result.state.profile.slug === slug))
 
   useEffect(() => {
     if (!isValidLink || isCurrent) {
