@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -32,10 +33,11 @@ class PasswordResetRequestView(APIView):
         ).first()
 
         if user is not None:
-            raw_token = create_password_reset_token(user)
             try:
-                send_password_reset_email(user, raw_token)
+                with transaction.atomic():
+                    raw_token = create_password_reset_token(user)
+                    send_password_reset_email(user, raw_token)
             except Exception:
-                logger.exception('Failed to send the password reset email')
+                logger.exception('Failed to create or send the password reset email')
 
         return Response({'detail': RESPONSE_DETAIL})

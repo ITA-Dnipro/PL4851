@@ -3,6 +3,7 @@ import logging
 import secrets
 from datetime import timedelta
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.utils import timezone
@@ -27,6 +28,8 @@ def generate_token():
 
 @transaction.atomic
 def create_password_reset_token(user):
+    get_user_model().objects.select_for_update().get(pk=user.pk)
+
     PasswordResetToken.objects.filter(
         expires_at__lt=timezone.now() - PASSWORD_RESET_TOKEN_RETENTION,
     ).delete()
