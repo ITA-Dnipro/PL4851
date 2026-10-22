@@ -17,7 +17,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/startups/:id" element={<StartupView />} />
+        <Route path="/startups/:slug" element={<StartupView />} />
         <Route path="/dashboard" element={<InvestorDashboard />} />
         <Route path="/messages" element={<Inbox />} />
         <Route path="/search" element={<div>Search</div>} />

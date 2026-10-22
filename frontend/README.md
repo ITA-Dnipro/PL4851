@@ -23,7 +23,7 @@ cp .env.example .env    # edit VITE_API_URL if needed
 | `/` | Home |
 | `/login` | Login |
 | `/register` | Register |
-| `/startups/:id` | StartupView |
+| `/startups/:slug` | StartupView |
 | `/dashboard` | InvestorDashboard |
 | `/messages` | Inbox |
 
