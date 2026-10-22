@@ -14,7 +14,9 @@ class Command(BaseCommand):
 
         conversations = get_conversations_collection()
         conversations.create_index('conversation_id', unique=True)
-        conversations.create_index('participants')
+        # Supports the inbox query: filter by participant, sort by recency,
+        # without an in-memory sort.
+        conversations.create_index([('participants', 1), ('last_message_at', -1)])
         conversations.create_index('last_message_at')
 
         self.stdout.write(self.style.SUCCESS('Mongo indexes created.'))
