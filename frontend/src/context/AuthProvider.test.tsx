@@ -109,6 +109,23 @@ describe('AuthProvider', () => {
     expect(getAccessToken()).toBe(access)
   })
 
+  it('keeps a login that finished before the startup refresh failed', async () => {
+    let failRefresh: (error: unknown) => void = () => {}
+    vi.mocked(refreshAccessToken).mockReturnValue(
+      new Promise((_, reject) => {
+        failRefresh = reject
+      }),
+    )
+    vi.mocked(login).mockResolvedValue({ access: tokenExpiringIn(15), user: USER })
+    renderProvider()
+
+    await userEvent.click(screen.getByRole('button', { name: 'log in' }))
+    await screen.findByText('status: authenticated')
+    await act(async () => failRefresh(new ApiError(0, 'Network error')))
+
+    expect(screen.getByText('status: authenticated')).toBeInTheDocument()
+  })
+
   it('logs out locally even if the request fails', async () => {
     refreshSucceeds()
     vi.mocked(logout).mockRejectedValue(new ApiError(0, 'Network error'))

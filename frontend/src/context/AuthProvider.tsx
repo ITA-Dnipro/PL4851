@@ -3,7 +3,11 @@ import type { ReactNode } from 'react'
 
 import { login as loginRequest, logout as logoutRequest } from '../api/auth'
 import type { AuthUser, LoginRequest } from '../api/auth'
-import { setAccessToken, subscribeToAccessToken } from '../api/client/accessToken'
+import {
+  getAccessToken,
+  startSession,
+  subscribeToAccessToken,
+} from '../api/client/accessToken'
 import { refreshAccessToken } from '../api/client/authRequest'
 import { AuthContext } from './AuthContext'
 import type { AuthContextValue, AuthStatus } from './AuthContext'
@@ -51,22 +55,25 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
   // After a page reload the access token is gone, but the refresh cookie may be there
   useEffect(() => {
-    refreshAccessToken().catch(() => setStatus('anonymous'))
+    refreshAccessToken().catch(() => {
+      // The backend is unreachable; a login that already finished keeps its session
+      if (!getAccessToken()) {
+        setStatus('anonymous')
+      }
+    })
   }, [])
 
   const login = useCallback(async (data: LoginRequest) => {
     const response = await loginRequest(data)
     setUser(response.user)
-    setAccessToken(response.access)
+    startSession(response.access)
   }, [])
 
   const logout = useCallback(async () => {
-    try {
-      await logoutRequest()
-    } finally {
-      // Sign out locally even if the request failed
-      setAccessToken(null)
-    }
+    // Sign out locally first: it works even if the request fails, and a refresh
+    // still in progress can't bring the old session back
+    startSession(null)
+    await logoutRequest()
   }, [])
 
   const refresh = useCallback(async () => Boolean(await refreshAccessToken()), [])

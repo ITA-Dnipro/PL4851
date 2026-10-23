@@ -2,8 +2,20 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { API_URL } from '../../config'
 import { catchError, jsonResponse, mockFetch } from '../../test/http'
-import { getAccessToken, setAccessToken } from './accessToken'
-import { authRequest } from './authRequest'
+import { getAccessToken, setAccessToken, startSession } from './accessToken'
+import { authRequest, refreshAccessToken } from './authRequest'
+
+// A fetch mock whose response arrives only when the test calls respond()
+function delayedFetch() {
+  let respond: (response: Response) => void = () => {}
+  const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(
+    () =>
+      new Promise<Response>((resolve) => {
+        respond = resolve
+      }),
+  )
+  return { fetchMock, respond: (response: Response) => respond(response) }
+}
 
 function authorizationOf(call: unknown[]) {
   return ((call[1] as RequestInit).headers as Record<string, string>).Authorization
@@ -82,5 +94,40 @@ describe('authRequest', () => {
 
     expect(error.status).toBe(0)
     expect(getAccessToken()).toBe('old-token')
+  })
+
+  describe('when the session changes during a refresh', () => {
+    it('does not bring the session back after logout', async () => {
+      setAccessToken('old-token')
+      const { respond } = delayedFetch()
+      const refreshing = refreshAccessToken()
+
+      startSession(null)
+      respond(jsonResponse({ access: 'new-token' }))
+
+      expect(await refreshing).toBeNull()
+      expect(getAccessToken()).toBeNull()
+    })
+
+    it('does not end a session that started with a login', async () => {
+      const { respond } = delayedFetch()
+      const refreshing = refreshAccessToken()
+
+      startSession('login-token')
+      respond(jsonResponse({ detail: 'no cookie' }, { status: 401 }))
+
+      expect(await refreshing).toBe('login-token')
+      expect(getAccessToken()).toBe('login-token')
+    })
+
+    it('starts a new refresh instead of reusing the old one', async () => {
+      const { fetchMock } = delayedFetch()
+      void refreshAccessToken()
+
+      startSession('login-token')
+      void refreshAccessToken()
+
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+    })
   })
 })

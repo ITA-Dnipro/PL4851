@@ -1,10 +1,11 @@
 import { refresh } from '../auth'
-import { getAccessToken, setAccessToken } from './accessToken'
+import { getAccessToken, getSession, setAccessToken } from './accessToken'
 import { ApiError } from './errors'
 import { request } from './request'
 import type { RequestOptions } from './request'
 
-let refreshing: Promise<string | null> | null = null
+// The refresh in progress and the session it was started in
+let refreshing: { session: number; promise: Promise<string | null> } | null = null
 
 // request() for endpoints that need a signed-in user: sends the access token and,
 // when it has expired (401), gets a new one and repeats the request once
@@ -23,23 +24,37 @@ export async function authRequest<T>(
 }
 
 // Gets a new access token with the refresh cookie. Returns null when the session
-// is over. Parallel calls wait for the same request instead of sending their own.
+// is over. Parallel calls in the same session wait for the same request instead of
+// sending their own.
 export function refreshAccessToken(): Promise<string | null> {
-  refreshing ??= requestAccessToken().finally(() => {
-    refreshing = null
-  })
-  return refreshing
+  const session = getSession()
+  if (refreshing?.session !== session) {
+    const promise = requestAccessToken(session).finally(() => {
+      if (refreshing?.promise === promise) {
+        refreshing = null
+      }
+    })
+    refreshing = { session, promise }
+  }
+  return refreshing.promise
 }
 
-async function requestAccessToken(): Promise<string | null> {
+async function requestAccessToken(session: number): Promise<string | null> {
   try {
     const { access } = await refresh()
+    // A login or logout happened meanwhile: keep the token it set
+    if (session !== getSession()) {
+      return getAccessToken()
+    }
     setAccessToken(access)
     return access
   } catch (error) {
     // The cookie is missing, expired or revoked. Other errors (no connection)
     // don't end the session.
     if (error instanceof ApiError && error.status === 401) {
+      if (session !== getSession()) {
+        return getAccessToken()
+      }
       setAccessToken(null)
       return null
     }

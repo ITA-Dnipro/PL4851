@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Login from '.'
@@ -22,15 +22,21 @@ const login = vi.fn<AuthContextValue['login']>()
 const EMAIL = 'founder@example.com'
 const PASSWORD = 'secret'
 
-function renderLogin(from?: string) {
+// Shows the full address, to check that the query string survives the redirect
+function Dashboard() {
+  const location = useLocation()
+  return <p>Dashboard {location.search}</p>
+}
+
+function renderLogin(from?: { pathname: string; search?: string }) {
   const user = userEvent.setup()
-  const entry = from ? { pathname: '/login', state: { from: { pathname: from } } } : '/login'
+  const entry = from ? { pathname: '/login', state: { from } } : '/login'
   render(
     <MemoryRouter initialEntries={[entry]}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<p>Home page</p>} />
-        <Route path="/dashboard" element={<p>Dashboard</p>} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </MemoryRouter>,
   )
@@ -108,12 +114,12 @@ describe('Login page', () => {
 
   it('goes back to the page that required a login', async () => {
     login.mockResolvedValue()
-    const user = renderLogin('/dashboard')
+    const user = renderLogin({ pathname: '/dashboard', search: '?tab=saved' })
 
     await fillForm(user)
     await user.click(submitButton())
 
-    expect(await screen.findByText('Dashboard')).toBeInTheDocument()
+    expect(await screen.findByText('Dashboard ?tab=saved')).toBeInTheDocument()
   })
 
   it('disables the button while the request is in progress', async () => {

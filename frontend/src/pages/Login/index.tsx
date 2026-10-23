@@ -2,7 +2,7 @@ import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import type { Location } from 'react-router-dom'
+import type { Location, To } from 'react-router-dom'
 
 import Icon from '../../components/Icon'
 import { useAuth } from '../../hooks/useAuth'
@@ -23,7 +23,11 @@ function Login() {
   const location = useLocation()
   const { login } = useAuth()
   // ProtectedRoute passes the page the user tried to open
-  const redirectTo = (location.state as { from?: Location } | null)?.from?.pathname ?? '/'
+  const from = (location.state as { from?: Location } | null)?.from
+  // The whole address, so query parameters and the hash survive the login
+  const redirectTo: To = from
+    ? { pathname: from.pathname, search: from.search, hash: from.hash }
+    : '/'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(false)
