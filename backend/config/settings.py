@@ -32,6 +32,9 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017')
+MONGO_DB_NAME = os.getenv('MONGO_DB_NAME', 'pl4851')
+
 
 # Application definition
 
@@ -52,6 +55,7 @@ INSTALLED_APPS = [
     'dashboard',
     'content.sections',
     'content.pages',
+    'messaging',
 ]
 
 MIDDLEWARE = [
