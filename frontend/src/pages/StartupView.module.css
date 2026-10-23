@@ -1,0 +1,246 @@
+/* The gray shows until the image loads */
+.hero {
+  height: 368px;
+  background: var(--color-light-gray);
+}
+
+.heroImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.band {
+  padding: 40px 0;
+  background: var(--color-beige);
+}
+
+.bandInner {
+  display: flex;
+  align-items: flex-start;
+  gap: 40px;
+}
+
+.logo {
+  flex-shrink: 0;
+  width: 140px;
+  height: 140px;
+  background: var(--color-white);
+}
+
+.logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text);
+  overflow-wrap: break-word;
+}
+
+.location {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+  list-style: none;
+}
+
+.tag {
+  padding: 0 16px;
+  border-radius: var(--radius-100);
+  background: var(--color-black);
+  color: var(--color-beige);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 24px;
+  text-transform: uppercase;
+}
+
+.actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+/* Outlined, unlike the global filled .button */
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-4);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.action:hover {
+  background: var(--color-text);
+  color: var(--color-white);
+}
+
+.actionIcon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Main content on the left, the info card on the right */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 410px;
+  gap: 32px;
+  align-items: start;
+  padding-top: 80px;
+  padding-bottom: 80px;
+}
+
+.title {
+  margin-bottom: 32px;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+.lead {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding: 24px 16px;
+  border-radius: var(--radius-8);
+  background: var(--color-beige);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* The label column fits the longest label, "Електронна пошта", on one line */
+.row {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--color-black-90);
+}
+
+.value {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.website {
+  color: var(--color-link);
+}
+
+.sidebar a:hover {
+  text-decoration-line: underline;
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding-top: 120px;
+  padding-bottom: 120px;
+  font-size: 18px;
+  text-align: center;
+}
+
+/* <button> doesn't inherit the font size like the .button links do */
+.retry {
+  font-size: 16px;
+}
+
+.action:focus-visible,
+.retry:focus-visible,
+.sidebar a:focus-visible {
+  outline: 2px solid var(--color-black);
+  outline-offset: 2px;
+}
+
+/* Loading skeleton: reuses the page blocks above, painted gray */
+.placeholder {
+  background: var(--color-light-gray);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.placeholderName {
+  width: 50%;
+  height: 40px;
+  border-radius: var(--radius-4);
+}
+
+.placeholderTags {
+  width: 40%;
+  height: 24px;
+  margin-top: 28px;
+  border-radius: var(--radius-100);
+}
+
+.placeholderText {
+  height: 200px;
+  border-radius: var(--radius-4);
+}
+
+.placeholderCard {
+  height: 360px;
+  border-radius: var(--radius-8);
+}
+
+/* Read by screen readers, invisible on the page */
+.hiddenText {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .placeholder,
+  .action {
+    animation: none;
+    transition: none;
+  }
+}
