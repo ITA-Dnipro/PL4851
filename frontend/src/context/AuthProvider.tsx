@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { login as loginRequest, logout as logoutRequest } from '../api/auth'
 import type { AuthUser, LoginRequest } from '../api/auth'
 import {
+  endSession,
   getAccessToken,
   startSession,
   subscribeToAccessToken,
@@ -70,9 +71,9 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(async () => {
-    // Sign out locally first: it works even if the request fails, and a refresh
-    // still in progress can't bring the old session back
-    startSession(null)
+    // Sign out locally first: it works even if the request fails, and no refresh
+    // (in progress or new) can bring the session back
+    endSession()
     await logoutRequest()
   }, [])
 

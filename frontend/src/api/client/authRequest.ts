@@ -1,5 +1,5 @@
 import { refresh } from '../auth'
-import { getAccessToken, getSession, setAccessToken } from './accessToken'
+import { getAccessToken, getSession, sessionEnded, setAccessToken } from './accessToken'
 import { ApiError } from './errors'
 import { request } from './request'
 import type { RequestOptions } from './request'
@@ -27,6 +27,10 @@ export async function authRequest<T>(
 // is over. Parallel calls in the same session wait for the same request instead of
 // sending their own.
 export function refreshAccessToken(): Promise<string | null> {
+  // After logout only a new login can start a session
+  if (sessionEnded()) {
+    return Promise.resolve(null)
+  }
   const session = getSession()
   if (refreshing?.session !== session) {
     const promise = requestAccessToken(session).finally(() => {

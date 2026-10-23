@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { API_URL } from '../../config'
 import { catchError, jsonResponse, mockFetch } from '../../test/http'
-import { getAccessToken, setAccessToken, startSession } from './accessToken'
+import { endSession, getAccessToken, setAccessToken, startSession } from './accessToken'
 import { authRequest, refreshAccessToken } from './authRequest'
 
 // A fetch mock whose response arrives only when the test calls respond()
@@ -24,6 +24,8 @@ function authorizationOf(call: unknown[]) {
 describe('authRequest', () => {
   afterEach(() => {
     vi.restoreAllMocks()
+    // A fresh session for the next test, as after a page reload
+    startSession('reset')
     setAccessToken(null)
   })
 
@@ -102,7 +104,7 @@ describe('authRequest', () => {
       const { respond } = delayedFetch()
       const refreshing = refreshAccessToken()
 
-      startSession(null)
+      endSession()
       respond(jsonResponse({ access: 'new-token' }))
 
       expect(await refreshing).toBeNull()
@@ -128,6 +130,27 @@ describe('authRequest', () => {
       void refreshAccessToken()
 
       expect(fetchMock).toHaveBeenCalledTimes(2)
+    })
+
+    it('does not refresh after logout, even with the cookie still there', async () => {
+      setAccessToken('old-token')
+      endSession()
+      const fetchMock = mockFetch(jsonResponse({ detail: 'expired' }, { status: 401 }))
+
+      const error = await catchError(authRequest('/profile/'))
+
+      expect(error.status).toBe(401)
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      expect(getAccessToken()).toBeNull()
+    })
+
+    it('refreshes again after the next login', async () => {
+      endSession()
+      startSession('login-token')
+      const fetchMock = mockFetch(jsonResponse({ access: 'new-token' }))
+
+      expect(await refreshAccessToken()).toBe('new-token')
+      expect(fetchMock).toHaveBeenCalledTimes(1)
     })
   })
 })
