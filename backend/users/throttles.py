@@ -15,7 +15,10 @@ class PasswordResetEmailThrottle(SimpleRateThrottle):
     scope = 'password_reset_email'
 
     def get_cache_key(self, request, view):
-        email = str(request.data.get('email', '')).strip().lower()
+        data = request.data
+        if not hasattr(data, 'get'):
+            return None
+        email = str(data.get('email', '')).strip().lower()
         if not email:
             return None
         return self.cache_format % {'scope': self.scope, 'ident': email}

@@ -72,3 +72,8 @@ class PasswordResetRequestTests(TestCase):
         self.request_reset('known@example.com')
 
         self.assertFalse(PasswordResetToken.objects.filter(token_hash='old').exists())
+
+    def test_non_object_json_returns_400(self):
+        response = self.client.post(URL, [1, 2], format='json')
+
+        self.assertEqual(response.status_code, 400)
