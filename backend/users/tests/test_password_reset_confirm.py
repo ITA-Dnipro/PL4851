@@ -196,3 +196,49 @@ class PasswordResetConfirmTests(TestCase):
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password(self.new_password))
+
+    def test_password_reset_missing_fields(self):
+        response = self.client.post(
+            self.url,
+            {},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('uid', response.data)
+        self.assertIn('token', response.data)
+        self.assertIn('password', response.data)
+
+    def test_password_reset_invalid_uid_type(self):
+        response = self.reset_password(uid=123)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('uid', response.data)
+
+    def test_password_reset_invalid_token_type(self):
+        response = self.reset_password(token=['invalid-token'])
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('token', response.data)
+
+    def test_password_reset_invalid_password_type(self):
+        response = self.reset_password(password=['InvalidPassword123!'])
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('password', response.data)
+
+    def test_password_reset_null_fields(self):
+        response = self.client.post(
+            self.url,
+            {
+                'uid': None,
+                'token': None,
+                'password': None,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('uid', response.data)
+        self.assertIn('token', response.data)
+        self.assertIn('password', response.data)

@@ -15,6 +15,9 @@ from rest_framework_simplejwt.token_blacklist.models import (
     OutstandingToken,
 )
 
+from users.serializers.password_reset_confirm import (
+    PasswordResetConfirmSerializer,
+)
 from users.services import consume_password_reset_token
 
 logger = logging.getLogger(__name__)
@@ -27,16 +30,17 @@ class PasswordResetConfirmView(APIView):
     authentication_classes = []
 
     def post(self, request):
-        uid = request.data.get('uid')
-        token = request.data.get('token')
-        password = request.data.get('password')
+        serializer = PasswordResetConfirmSerializer(data=request.data)
 
-        if not uid or not token or not password:
+        if not serializer.is_valid():
             return Response(
-                {'detail': 'uid, token and password are required.'},
+                serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        uid = serializer.validated_data['uid']
+        token = serializer.validated_data['token']
+        password = serializer.validated_data['password']
         try:
             user_id = force_str(urlsafe_base64_decode(uid))
             user = User.objects.get(pk=user_id, is_active=True)
