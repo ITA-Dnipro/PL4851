@@ -209,8 +209,6 @@ else:
 
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'FORUM <no-reply@forum.local>')
 
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
