@@ -43,6 +43,12 @@ class PasswordResetTokenTest(TestCase):
         tokens = self.user.password_reset_tokens
         self.assertEqual(tokens.filter(revoked=False).count(), 1)
 
+    def test_previous_token_becomes_invalid_after_new_one(self):
+        create_password_reset_token(self.user)
+
+        self.token.refresh_from_db()
+        self.assertFalse(self.token.is_valid())
+
     def test_inactive_user_token_is_invalid(self):
         self.user.is_active = False
         self.user.save(update_fields=['is_active'])

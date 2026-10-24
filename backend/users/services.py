@@ -27,28 +27,37 @@ def generate_token():
 
 
 @transaction.atomic
-def create_password_reset_token(user):
+def create_password_reset_token(user, revoke_previous=True):
     get_user_model().objects.select_for_update().get(pk=user.pk)
 
     PasswordResetToken.objects.filter(
         expires_at__lt=timezone.now() - PASSWORD_RESET_TOKEN_RETENTION,
     ).delete()
 
-    PasswordResetToken.objects.filter(
-        user=user,
-        used_at__isnull=True,
-        revoked=False,
-    ).update(revoked=True)
+    if revoke_previous:
+        PasswordResetToken.objects.filter(
+            user=user,
+            used_at__isnull=True,
+            revoked=False,
+        ).update(revoked=True)
 
     raw_token = generate_token()
-
     PasswordResetToken.objects.create(
         user=user,
         token_hash=hash_token(raw_token),
         expires_at=timezone.now() + PASSWORD_RESET_TOKEN_LIFETIME,
     )
-
     return raw_token
+
+
+def revoke_previous_reset_tokens(user, raw_token):
+    current = PasswordResetToken.objects.get(token_hash=hash_token(raw_token))
+    PasswordResetToken.objects.filter(
+        user=user,
+        used_at__isnull=True,
+        revoked=False,
+        pk__lt=current.pk,
+    ).update(revoked=True)
 
 
 @transaction.atomic
