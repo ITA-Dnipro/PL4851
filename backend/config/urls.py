@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/auth/', include('users.urls')),
     path('api/content/', include('content.urls')),
     path('api/startups/', include('startups.urls', namespace='startups')),
+    path('api/investors/', include('investors.urls', namespace='investors')),
     path('api/', include('projects.urls', namespace='projects')),
 ]
 
