@@ -1,12 +1,13 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import Login from '.'
-import { login } from '../../api/auth'
-import type { LoginResponse } from '../../api/auth'
-import { ApiError, NETWORK_ERROR_STATUS } from '../../api/errors'
+import { ApiError, NETWORK_ERROR_STATUS } from '../../api/client/errors'
+import type { AuthContextValue } from '../../context/AuthContext'
+import { useAuth } from '../../hooks/useAuth'
+import { authValue } from '../../test/auth'
 import {
   INVALID_CREDENTIALS_MESSAGE,
   NETWORK_ERROR_MESSAGE,
@@ -14,23 +15,28 @@ import {
 } from './errors'
 import { EMAIL_FORMAT_MESSAGE } from './validation'
 
-vi.mock('../../api/auth', () => ({ login: vi.fn() }))
+vi.mock('../../hooks/useAuth')
+
+const login = vi.fn<AuthContextValue['login']>()
 
 const EMAIL = 'founder@example.com'
 const PASSWORD = 'secret'
 
-const loginResponse: LoginResponse = {
-  access: 'access-token',
-  user: { id: 1, email: EMAIL, role: 'startup' },
+// Shows the full address, to check that the query string survives the redirect
+function Dashboard() {
+  const location = useLocation()
+  return <p>Dashboard {location.search}</p>
 }
 
-function renderLogin() {
+function renderLogin(from?: { pathname: string; search?: string }) {
   const user = userEvent.setup()
+  const entry = from ? { pathname: '/login', state: { from } } : '/login'
   render(
-    <MemoryRouter initialEntries={['/login']}>
+    <MemoryRouter initialEntries={[entry]}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<p>Home page</p>} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </MemoryRouter>,
   )
@@ -47,8 +53,12 @@ async function fillForm(user: ReturnType<typeof userEvent.setup>, email = EMAIL)
 }
 
 describe('Login page', () => {
+  beforeEach(() => {
+    vi.mocked(useAuth).mockReturnValue(authValue({ login }))
+  })
+
   afterEach(() => {
-    vi.mocked(login).mockReset()
+    login.mockReset()
   })
 
   it('keeps the submit button disabled until the form is valid', async () => {
@@ -91,7 +101,7 @@ describe('Login page', () => {
   })
 
   it('sends the trimmed email with "remember me" and goes to the home page', async () => {
-    vi.mocked(login).mockResolvedValue(loginResponse)
+    login.mockResolvedValue()
     const user = renderLogin()
 
     await fillForm(user, `  ${EMAIL} `)
@@ -102,9 +112,19 @@ describe('Login page', () => {
     expect(login).toHaveBeenCalledWith({ email: EMAIL, password: PASSWORD, remember: true })
   })
 
+  it('goes back to the page that required a login', async () => {
+    login.mockResolvedValue()
+    const user = renderLogin({ pathname: '/dashboard', search: '?tab=saved' })
+
+    await fillForm(user)
+    await user.click(submitButton())
+
+    expect(await screen.findByText('Dashboard ?tab=saved')).toBeInTheDocument()
+  })
+
   it('disables the button while the request is in progress', async () => {
     // Never resolves, so the page stays in the loading state
-    vi.mocked(login).mockReturnValue(new Promise(() => {}))
+    login.mockReturnValue(new Promise(() => {}))
     const user = renderLogin()
 
     await fillForm(user)
@@ -114,7 +134,7 @@ describe('Login page', () => {
   })
 
   it('shows the credentials error and hides it once the user edits the form', async () => {
-    vi.mocked(login).mockRejectedValue(new ApiError(401, 'Invalid email or password'))
+    login.mockRejectedValue(new ApiError(401, 'Invalid email or password'))
     const user = renderLogin()
 
     await fillForm(user)
@@ -131,7 +151,7 @@ describe('Login page', () => {
     [new ApiError(429, 'Too many attempts', {}, 900), lockoutMessage(900)],
     [new ApiError(NETWORK_ERROR_STATUS, 'Network error'), NETWORK_ERROR_MESSAGE],
   ])('shows a message when the login fails: %s', async (error, message) => {
-    vi.mocked(login).mockRejectedValue(error)
+    login.mockRejectedValue(error)
     const user = renderLogin()
 
     await fillForm(user)

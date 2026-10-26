@@ -1,4 +1,4 @@
-import { apiRequest } from './client'
+import { request } from './client/request'
 
 export type UserRole = 'startup' | 'investor'
 
@@ -20,6 +20,20 @@ export interface LoginResponse {
   user: AuthUser
 }
 
+export interface RefreshResponse {
+  access: string
+}
+
 export function login(data: LoginRequest) {
-  return apiRequest<LoginResponse>('/auth/login/', { method: 'POST', body: data })
+  return request<LoginResponse>('/auth/login/', { method: 'POST', body: data })
+}
+
+// A new access token for the refresh token cookie
+export function refresh() {
+  return request<RefreshResponse>('/auth/refresh/', { method: 'POST' })
+}
+
+// Revokes the refresh token and deletes its cookie
+export function logout() {
+  return request<void>('/auth/logout/', { method: 'POST' })
 }
