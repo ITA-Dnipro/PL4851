@@ -6,7 +6,10 @@ from django.test import TestCase
 from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.models import PasswordResetMetrics, PasswordResetToken
@@ -62,6 +65,23 @@ class PasswordResetConfirmTests(TestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('OldPassword123!'))
 
+    def test_invalid_token_with_weak_password(self):
+        response = self.reset_password(
+            token='invalid-token',
+            password='weak',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data,
+            {'detail': 'Invalid or expired token.'},
+        )
+
+        token = PasswordResetToken.objects.get(
+            token_hash=hash_token(self.token),
+        )
+        self.assertIsNone(token.used_at)
+
     def test_password_reset_expired_token(self):
         token = PasswordResetToken.objects.get(
             token_hash=hash_token(self.token),
@@ -75,6 +95,9 @@ class PasswordResetConfirmTests(TestCase):
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('OldPassword123!'))
+
+        metrics = PasswordResetMetrics.objects.get(pk=1)
+        self.assertEqual(metrics.expired_attempts, 1)
 
     def test_password_reset_weak_password(self):
         response = self.reset_password(password='weak')
@@ -92,6 +115,9 @@ class PasswordResetConfirmTests(TestCase):
 
         self.assertEqual(first_response.status_code, 200)
         self.assertEqual(second_response.status_code, 400)
+
+        metrics = PasswordResetMetrics.objects.get(pk=1)
+        self.assertEqual(metrics.reused_attempts, 1)
 
     def test_password_reset_wrong_uid(self):
         other_user = User.objects.create_user(
@@ -120,8 +146,54 @@ class PasswordResetConfirmTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(TokenError):
             refresh_token.check_blacklist()
+
+    def test_password_reset_blacklists_multiple_refresh_tokens(self):
+        first_token = RefreshToken.for_user(self.user)
+        second_token = RefreshToken.for_user(self.user)
+
+        other_user = User.objects.create_user(
+            email='other_jwt_user@example.com',
+            first_name='Other',
+            last_name='User',
+            role='investor',
+            password='OldPassword123!',
+        )
+        other_user_token = RefreshToken.for_user(other_user)
+
+        first_token.blacklist()
+
+        response = self.reset_password()
+
+        self.assertEqual(response.status_code, 200)
+
+        with self.assertRaises(TokenError):
+            first_token.check_blacklist()
+
+        with self.assertRaises(TokenError):
+            second_token.check_blacklist()
+
+        other_user_token.check_blacklist()
+
+    def test_password_reset_revokes_old_access_token(self):
+        refresh_token = RefreshToken.for_user(self.user)
+        access_token = str(refresh_token.access_token)
+
+        authentication = JWTAuthentication()
+
+        validated_token = authentication.get_validated_token(access_token)
+        authenticated_user = authentication.get_user(validated_token)
+
+        self.assertEqual(authenticated_user.pk, self.user.pk)
+
+        response = self.reset_password()
+        self.assertEqual(response.status_code, 200)
+
+        validated_token = authentication.get_validated_token(access_token)
+
+        with self.assertRaises(AuthenticationFailed):
+            authentication.get_user(validated_token)
 
     def test_password_reset_audit_logging(self):
         with self.assertLogs(
@@ -150,8 +222,9 @@ class PasswordResetConfirmTests(TestCase):
         self.assertEqual(record.ip_address, '192.0.2.10')
         self.assertEqual(record.user_agent, 'PasswordResetTest/1.0')
         self.assertIsNotNone(record.timestamp)
-        self.assertNotIn(self.new_password, record.getMessage())
-        self.assertNotIn(self.token, record.getMessage())
+        log_data = str(record.__dict__)
+        self.assertNotIn(self.new_password, log_data)
+        self.assertNotIn(self.token, log_data)
 
     def test_password_reset_rollback_on_save_error(self):
         with patch.object(
