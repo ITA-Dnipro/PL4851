@@ -1,12 +1,14 @@
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+from premailer import transform
 
 SUBJECT = 'Відновлення пароля'
+EXPIRY_MINUTES = 60
 
 
 def build_reset_link(user, raw_token):
@@ -21,16 +23,18 @@ def build_reset_link(user, raw_token):
 
 
 def send_password_reset_email(user, raw_token):
-    body = render_to_string(
-        'users/emails/password_reset.txt',
-        {
-            'user_name': user.first_name,
-            'reset_link': build_reset_link(user, raw_token),
-        },
-    )
-    send_mail(
+    context = {
+        'user_name': user.first_name,
+        'reset_link': build_reset_link(user, raw_token),
+        'expiry_minutes': EXPIRY_MINUTES,
+    }
+    message = EmailMultiAlternatives(
         subject=SUBJECT,
-        message=body,
+        body=render_to_string('users/emails/password_reset.txt', context),
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
+        to=[user.email],
+        reply_to=[settings.EMAIL_REPLY_TO] if settings.EMAIL_REPLY_TO else None,
     )
+    html = transform(render_to_string('users/emails/password_reset.html', context))
+    message.attach_alternative(html, 'text/html')
+    message.send()

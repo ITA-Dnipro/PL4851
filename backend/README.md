@@ -126,6 +126,25 @@ Response `200`, always the same, whether or not the account exists:
 - Limits: 5 requests per hour per IP and 5 per hour per email, then `429`.
 - In development the email is printed to the backend console (`EMAIL_BACKEND` defaults to the console backend). Set `EMAIL_BACKEND`, `DEFAULT_FROM_EMAIL` and `FRONTEND_URL` in `.env` to change this.
 
+## Emails
+
+Password reset emails are sent as HTML with a plain-text fallback
+(`users/templates/users/emails/`). Template context: `user_name`,
+`reset_link`, `expiry_minutes`.
+
+**Local testing.** With the default console backend the email is printed in
+the terminal running `runserver`.
+
+**Staging / production.** Set in `.env`:
+
+- `EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend`
+- `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`,
+  `EMAIL_USE_TLS`
+- `DEFAULT_FROM_EMAIL` and optional `EMAIL_REPLY_TO`
+- `FRONTEND_URL`, the public frontend address used in the reset link
+
+When `DEBUG=False`, `EMAIL_BACKEND` and `FRONTEND_URL` are required.
+
 ## Investors
 
 Public investor profiles. Only verified investors (`is_verified=True`) are returned: an unverified or unknown id gets `404`.
