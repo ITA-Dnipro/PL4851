@@ -1,19 +1,22 @@
-import { API_URL } from '../config'
+import { API_URL } from '../../config'
 import { ApiError, NETWORK_ERROR_STATUS } from './errors'
 import type { FieldErrors } from './errors'
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
-interface RequestOptions {
+export interface RequestOptions {
   method?: HttpMethod
   body?: unknown
+  headers?: Record<string, string>
   signal?: AbortSignal
 }
 
-// Every request to the backend goes through here
-export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+// A plain request to the backend: JSON in and out, the refresh token cookie
+// included, failures as ApiError. Endpoints that need a signed-in user use
+// authRequest, which adds the access token on top of this.
+export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, signal } = options
-  const headers: Record<string, string> = { Accept: 'application/json' }
+  const headers: Record<string, string> = { Accept: 'application/json', ...options.headers }
   if (body !== undefined) {
     headers['Content-Type'] = 'application/json'
   }

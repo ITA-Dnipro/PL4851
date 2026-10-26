@@ -1,4 +1,4 @@
-import { ApiError, NETWORK_ERROR_STATUS } from '../../api/errors'
+import { ApiError, NETWORK_ERROR_STATUS } from '../../api/client/errors'
 
 export const INVALID_DATA_MESSAGE = 'Перевірте введені дані'
 export const INVALID_CREDENTIALS_MESSAGE = 'Електронна пошта чи пароль вказані некоректно'
