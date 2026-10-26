@@ -60,6 +60,23 @@ def revoke_previous_reset_tokens(user, raw_token):
     ).update(revoked=True)
 
 
+def get_valid_password_reset_token(raw_token, user):
+    token_hash = hash_token(raw_token)
+
+    try:
+        token = PasswordResetToken.objects.select_for_update().get(
+            token_hash=token_hash,
+            user=user,
+        )
+    except ObjectDoesNotExist:
+        return None
+
+    if not token.user.is_active or token.revoked:
+        return None
+
+    return token
+
+
 @transaction.atomic
 def consume_password_reset_token(raw_token):
     token_hash = hash_token(raw_token)

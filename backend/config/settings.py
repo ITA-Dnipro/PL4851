@@ -185,6 +185,7 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'USER_ID_FIELD': 'user_id',
+    'CHECK_REVOKE_TOKEN': True,
 }
 
 # Lockout per email + client IP
@@ -222,17 +223,35 @@ LOGGING = {
                 '%(asctime)s | %(levelname)s | ' '%(name)s | %(event)s | %(timestamp)s'
             ),
         },
+        'password_reset_audit': {
+            'format': (
+                '%(asctime)s | %(levelname)s | '
+                '%(name)s | %(event)s | %(timestamp)s | '
+                'user_id=%(user_id)s | '
+                'ip=%(ip_address)s | '
+                'user_agent=%(user_agent)s'
+            ),
+        },
     },
     'handlers': {
         'password_reset_console': {
             'class': 'logging.StreamHandler',
             'formatter': 'password_reset',
         },
+        'password_reset_audit_console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'password_reset_audit',
+        },
     },
     'loggers': {
         'users.services': {
             'handlers': ['password_reset_console'],
             'level': 'WARNING',
+            'propagate': False,
+        },
+        'users.views.password_reset_confirm': {
+            'handlers': ['password_reset_audit_console'],
+            'level': 'INFO',
             'propagate': False,
         },
     },
