@@ -4,6 +4,14 @@ from datetime import datetime, timezone
 from messaging.mongo import get_conversations_collection, get_messages_collection
 
 EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
+MAX_PAGE_SIZE = 100
+
+
+def _validate_pagination(page, page_size):
+    if page < 1:
+        raise ValueError('page must be >= 1')
+    if page_size < 1 or page_size > MAX_PAGE_SIZE:
+        raise ValueError(f'page_size must be between 1 and {MAX_PAGE_SIZE}')
 
 
 def create_conversation(participants, project_id=None, startup_id=None, meta=None):
@@ -59,6 +67,7 @@ def create_message(conversation_id, sender_id, body, attachments=None, meta=None
 
 
 def get_conversation(conversation_id, page=1, page_size=20):
+    _validate_pagination(page, page_size)
     conversations = get_conversations_collection()
     conversation = _get_conversation_or_raise(conversations, conversation_id)
 
@@ -82,6 +91,7 @@ def get_conversation(conversation_id, page=1, page_size=20):
 
 
 def list_conversations_for_user(user_id, page=1, page_size=20):
+    _validate_pagination(page, page_size)
     conversations_collection = get_conversations_collection()
     query = {'participants': user_id}
     total_count = conversations_collection.count_documents(query)

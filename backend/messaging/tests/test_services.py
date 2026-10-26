@@ -69,6 +69,20 @@ def test_list_conversations_for_user_sorted_by_recency():
     assert page['results'][0]['conversation_id'] == conversation_b
 
 
+@pytest.mark.parametrize('page,page_size', [(0, 20), (1, 0), (1, -1), (1, 101)])
+def test_get_conversation_rejects_invalid_pagination(page, page_size):
+    conversation_id = create_conversation(participants=[1, 2])
+
+    with pytest.raises(ValueError):
+        get_conversation(conversation_id, page=page, page_size=page_size)
+
+
+@pytest.mark.parametrize('page,page_size', [(0, 20), (1, 0), (1, -1), (1, 101)])
+def test_list_conversations_for_user_rejects_invalid_pagination(page, page_size):
+    with pytest.raises(ValueError):
+        list_conversations_for_user(1, page=page, page_size=page_size)
+
+
 def test_mark_messages_read_resets_unread_count():
     conversation_id = create_conversation(participants=[1, 2])
     create_message(conversation_id, sender_id=1, body='hello')
