@@ -108,3 +108,52 @@ Frontend requests to `/api/auth/` must use `credentials: 'include'`, otherwise t
 
 - Use `localhost` for both the frontend and the API, not `127.0.0.1`: for the browser they are different sites, so the cookie isn't sent and refresh returns `401`.
 - Login, refresh and logout check the `Origin` header: requests from other sites get `403`, so a foreign page can't log the user in or out through a form. Allowed origins are the API's own (the browsable API) and `CORS_ALLOWED_ORIGINS`; requests without `Origin` (curl, Postman) are allowed.
+
+`POST /api/auth/password-reset/` — request a password reset link by email.
+
+```json
+{ "email": "user@example.com" }
+```
+
+Response `200`, always the same, whether or not the account exists:
+
+```json
+{ "detail": "If the email exists, you will receive reset instructions." }
+```
+
+- For an active user an email is sent with the link `{FRONTEND_URL}/reset-password?uid=<base64 user id>&token=<token>`.
+- The token is valid for 1 hour and can be used once. A new request replaces the user's previous unused token.
+- Limits: 5 requests per hour per IP and 5 per hour per email, then `429`.
+- In development the email is printed to the backend console (`EMAIL_BACKEND` defaults to the console backend). Set `EMAIL_BACKEND`, `DEFAULT_FROM_EMAIL` and `FRONTEND_URL` in `.env` to change this.
+
+## Investors
+
+Public investor profiles. Only verified investors (`is_verified=True`) are returned: an unverified or unknown id gets `404`.
+
+`GET /api/investors/` — paginated list for investor cards.
+
+- Query params (all optional): `page`, `page_size` (default 8), `search` (by investor name), `type` (`private`, `fund` or `company`).
+- Each item: `investor_id`, `investor_name`, `investor_type`, `investment_min`.
+
+`GET /api/investors/{id}/` — full profile.
+
+```json
+{
+  "investor_id": 31,
+  "investor_name": "Green Capital",
+  "investor_type": "fund",
+  "investor_description": "We invest in craft food and eco packaging.",
+  "contact": { "phone": "+380501234567" },
+  "investment_min": "50000.00",
+  "is_verified": true
+}
+```
+
+- `investor_description` is plain text; empty optional fields come as `""` (`investor_description`, `contact.phone`) or `null` (`investment_min`).
+- `investment_min` is a string to keep the decimal precision.
+
+Load sample investors (users and profiles with ids 31–33, one of them unverified):
+
+```bash
+python manage.py loaddata investors
+```

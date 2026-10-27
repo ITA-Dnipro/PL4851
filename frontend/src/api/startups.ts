@@ -1,5 +1,5 @@
 import { BACKEND_ORIGIN } from '../config'
-import { apiRequest } from './client'
+import { request } from './client/request'
 
 // Public profile from GET /api/startups/{id}/
 export interface StartupProfile {
@@ -27,7 +27,7 @@ function toMediaUrl(path: string) {
 
 // Takes the last part of the page link: the backend finds the profile by id or by slug
 export async function fetchStartupProfile(idOrSlug: string, signal?: AbortSignal) {
-  const profile = await apiRequest<StartupProfile>(`/startups/${idOrSlug}/`, { signal })
+  const profile = await request<StartupProfile>(`/startups/${idOrSlug}/`, { signal })
   return {
     ...profile,
     hero_image: toMediaUrl(profile.hero_image),

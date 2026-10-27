@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { ApiError } from '../api/errors'
+import { ApiError } from '../api/client/errors'
 import { fetchStartupProfile } from '../api/startups'
 import type { StartupProfile } from '../api/startups'
 import Icon from '../components/Icon'
