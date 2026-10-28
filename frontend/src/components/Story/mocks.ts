@@ -1,4 +1,4 @@
-import type { StoryProps } from './types';
+import type { StoryProps } from './index';
 
 export const storyMock: StoryProps = {
   sections: [

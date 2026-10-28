@@ -7,7 +7,7 @@ interface StorySection {
   text: string;
 }
 
-interface StoryProps {
+export interface StoryProps {
   sections: StorySection[];
 }
 

@@ -1,4 +1,4 @@
-import type { AboutProps } from './types';
+import type { AboutProps } from './index';
 
 export const aboutMock: AboutProps = {
   aboutHtml: '<p data-testid="test-p">Інноваційні технології для бізнесу</p>'

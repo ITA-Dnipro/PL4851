@@ -7,7 +7,7 @@ interface Product {
   description: string;
 }
 
-interface ProductsListProps {
+export interface ProductsListProps {
   products: Product[];
 }
 

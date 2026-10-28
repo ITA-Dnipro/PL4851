@@ -2,7 +2,7 @@ import React from 'react';
 import DOMPurify from 'dompurify';
 import viewStyles from '../../pages/StartupView.module.css';
 
-interface AboutProps {
+export interface AboutProps {
   aboutHtml: string;
 }
 
