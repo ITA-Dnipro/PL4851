@@ -5,6 +5,7 @@ import Home from './pages/Home.tsx'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 import ForgotPassword from './pages/ForgotPassword'
+import RestorePassword from './pages/RestorePassword'
 import Register from './pages/Register.tsx'
 import StartupView from './pages/StartupView.tsx'
 import InvestorDashboard from './pages/InvestorDashboard.tsx'
@@ -18,6 +19,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<RestorePassword />} />
         <Route path="/register" element={<Register />} />
         <Route path="/startups/:slug" element={<StartupView />} />
         <Route element={<ProtectedRoute />}>
