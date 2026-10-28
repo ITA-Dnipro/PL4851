@@ -50,27 +50,24 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
-export async function fetchStartupProjects(startupId: number, signal?: AbortSignal): Promise<BackendProject[]> {
-  let allProjects: BackendProject[] = [];
-  let page = 1;
-  let hasNextPage = true;
+export async function fetchStartupProjects(
+  startupId: number,
+  signal?: AbortSignal,
+): Promise<BackendProject[]> {
+  const allProjects: BackendProject[] = []
+  const endpoint = `/startups/${startupId}/projects/`
+  let path: string | null = endpoint
 
-  while (hasNextPage) {
-    const url = `/startups/${startupId}/projects/?page=${page}`;
-    const data = await request(url, { signal }) as PaginatedResponse<BackendProject> | null;
+  while (path) {
+    const data: PaginatedResponse<BackendProject> = await request<PaginatedResponse<BackendProject>>(
+      path,
+      { signal },
+    )
+    allProjects.push(...data.results)
 
-    if (data && data.results && data.results.length > 0) {
-      allProjects = [...allProjects, ...data.results];
-
-      if (data.next) {
-        page += 1;
-      } else {
-        hasNextPage = false;
-      }
-    } else {
-      hasNextPage = false;
-    }
+    // DRF links to the same endpoint; request() adds the configured API base URL.
+    path = data.next ? `${endpoint}${new URL(data.next, BACKEND_ORIGIN).search}` : null
   }
 
-  return allProjects;
+  return allProjects
 }
