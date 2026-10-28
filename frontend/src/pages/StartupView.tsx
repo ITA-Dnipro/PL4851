@@ -41,11 +41,6 @@ function StartupView() {
       return;
     }
 
-    const isVitest = typeof window !== 'undefined' && '__vitest_worker__' in window;
-    if (isVitest) {
-      return;
-    }
-
     const controller = new AbortController();
 
     fetchStartupProjects(startupId, controller.signal)

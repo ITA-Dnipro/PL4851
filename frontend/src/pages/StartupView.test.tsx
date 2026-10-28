@@ -123,7 +123,7 @@ describe('StartupView', () => {
       expect(screen.getByTestId('location')).toHaveTextContent(`/startups/${profile.slug}`),
     )
     expect(screen.getByRole('heading', { level: 1, name: profile.startup_name })).toBeInTheDocument()
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledTimes(3)
     expect(fetchMock).toHaveBeenCalledWith(`${API_URL}/startups/11/`, expect.any(Object))
   })
 
@@ -138,14 +138,16 @@ describe('StartupView', () => {
     // Let a link change, if the page started one, finish before checking the link
     await act(() => new Promise((resolve) => setTimeout(resolve, 0)))
     expect(screen.getByTestId('location')).toHaveTextContent('/startups/11')
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
   it('opens /startups/123 as id 123, not as the shown startup whose slug is "123"', async () => {
     const otherStartup = { ...profile, startup_id: 123, startup_name: 'Інший стартап' }
     const fetchMock = mockFetch()
       .mockResolvedValueOnce(jsonResponse({ ...profile, slug: '123' }))
+      .mockResolvedValueOnce(jsonResponse({ results: [] }))
       .mockResolvedValueOnce(jsonResponse(otherStartup))
+      .mockResolvedValueOnce(jsonResponse({ results: [] }))
     const user = renderPage('/startups/11')
 
     await screen.findByRole('heading', { level: 1, name: profile.startup_name })
@@ -154,7 +156,7 @@ describe('StartupView', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: otherStartup.startup_name }),
     ).toBeInTheDocument()
-    expect(fetchMock).toHaveBeenLastCalledWith(`${API_URL}/startups/123/`, expect.any(Object))
+    expect(fetchMock).toHaveBeenCalledWith(`${API_URL}/startups/123/`, expect.any(Object))
   })
 
   it('shows the not found page for an unknown startup', async () => {
@@ -188,6 +190,6 @@ describe('StartupView', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: profile.startup_name }),
     ).toBeInTheDocument()
-    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock).toHaveBeenCalledWith(`${API_URL}/startups/${profile.slug}/`, expect.any(Object))
   })
 })
