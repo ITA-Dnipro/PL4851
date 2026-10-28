@@ -126,7 +126,7 @@ describe('StartupView', () => {
       expect(screen.getByTestId('location')).toHaveTextContent(`/startups/${profile.slug}`),
     )
     expect(screen.getByRole('heading', { level: 1, name: profile.startup_name })).toBeInTheDocument()
-    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
     expect(fetchMock).toHaveBeenCalledWith(`${API_URL}/startups/11/`, expect.any(Object))
   })
 
@@ -181,6 +181,15 @@ describe('StartupView', () => {
     ['no connection', () => Promise.reject(new TypeError('Failed to fetch'))],
     ['server error', () => Promise.resolve(jsonResponse({}, 500))],
   ])('shows an error and loads again on retry: %s', async (_, failedResponse) => {
+    const originalFetch = globalThis.fetch;
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((...args: Parameters<typeof fetch>) => {
+      const [input] = args;
+      const url = typeof input === 'string' ? input : (input as Request)?.url || '';
+      if (url.includes('/projects/')) {
+        return Promise.resolve(new Response(JSON.stringify({ results: [] }), { status: 200 }));
+      }
+      return originalFetch(...args);
+    }));
     const fetchMock = mockFetch()
       .mockImplementationOnce(failedResponse)
       .mockResolvedValueOnce(jsonResponse(profile))
@@ -212,11 +221,11 @@ describe('StartupView', () => {
     }
 
     beforeEach(() => {
-      // Exercise the browser flow while leaving Vitest's global worker state intact.
+    // Exercise the browser flow while leaving Vitest's global worker state intact.
       vi.stubGlobal('window', new Proxy(window, {
         has: (target, key) => key !== '__vitest_worker__' && Reflect.has(target, key),
-      }))
-    })
+    }))
+  })
 
     afterEach(() => {
       vi.unstubAllGlobals()

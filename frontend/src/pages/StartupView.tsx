@@ -34,14 +34,8 @@ function StartupView() {
     projects: BackendProject[]
   } | null>(null)
   const startupId = state.status === 'success' ? state.profile.startup_id : undefined
-
-  useEffect(() => {
-    if (startupId === undefined) {
-      return
-    }
-
-    const isVitest = typeof window !== 'undefined' && '__vitest_worker__' in window
-    if (isVitest) {
+    useEffect(() => {
+    if (startupId === undefined || state.status !== 'success') {
       return
     }
 
@@ -50,7 +44,8 @@ function StartupView() {
     fetchStartupProjects(startupId, controller.signal)
       .then((data) => {
         if (!controller.signal.aborted) {
-          setProjectResult({ startupId, projects: data })
+          const actualProjects = data && 'results' in data ? (data as { results: BackendProject[] }).results : data
+          setProjectResult({ startupId, projects: Array.isArray(actualProjects) ? actualProjects : [] })
         }
       })
       .catch((error) => {
@@ -60,7 +55,7 @@ function StartupView() {
       })
 
     return () => controller.abort()
-  }, [startupId])
+  }, [startupId, state.status])
 
   const projects = projectResult && projectResult.startupId === startupId ? projectResult.projects : []
   const mappedProducts = projects.map((project) => ({
@@ -192,7 +187,7 @@ function ProfileHeader({ profile }: { profile: StartupProfile }) {
               {startup_name}
             </h1>
             {location && <p className={styles.location}>{location}</p>}
-            {industries.length > 0 && (
+            {industries?.length && industries.length > 0 && (
               <ul className={styles.tags} aria-label="Галузі">
                 {industries.map((industry) => (
                   <li key={industry} className={styles.tag}>
