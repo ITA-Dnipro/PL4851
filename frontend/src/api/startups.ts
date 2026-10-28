@@ -34,3 +34,15 @@ export async function fetchStartupProfile(idOrSlug: string, signal?: AbortSignal
     logo: toMediaUrl(profile.logo),
   }
 }
+
+export interface BackendProject {
+  project_id: number;
+  project_title: string;
+  status: string;
+  logo: string | null;
+  short_description: string;
+}
+
+export async function fetchStartupProjects(startupId: number, signal?: AbortSignal): Promise<BackendProject[]> {
+  return await request<BackendProject[]>(`/startups/${startupId}/projects/`, { signal });
+}

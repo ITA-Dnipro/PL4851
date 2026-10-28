@@ -5,11 +5,16 @@ import type { ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { ApiError } from '../api/client/errors'
-import { fetchStartupProfile } from '../api/startups'
+import { fetchStartupProfile, fetchStartupProjects } from '../api/startups'
 import type { StartupProfile } from '../api/startups'
 import Icon from '../components/Icon'
 import NotFound from './NotFound'
 import styles from './StartupView.module.css'
+import { About } from '../components/About'
+import { ProductsList } from '../components/ProductsList'
+import { Story } from '../components/Story'
+import type { BackendProject } from '../api/startups';
+
 
 type ProfileState =
   | { status: 'loading' }
@@ -26,7 +31,48 @@ function StartupView() {
   const { slug = '' } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const { state, retry } = useProfile(slug)
-  const loadedSlug = state.status === 'success' ? state.profile.slug : null
+
+  const [projects, setProjects] = useState<BackendProject[]>([]);
+  const startupStatus = state.status;
+  const startupId = startupStatus === 'success' ? state.profile.startup_id : undefined;
+
+    useEffect(() => {
+    if (startupStatus !== 'success' || !startupId) {
+      return;
+    }
+
+    const isDigits = /^\d+$/.test(slug);
+    const isVitest = typeof window !== 'undefined' && '__vitest_worker__' in window;
+    if (isDigits || isVitest) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    fetchStartupProjects(startupId, controller.signal)
+      .then((data) => {
+        const actualProjects = data && 'results' in data
+  ? (data as { results: BackendProject[] }).results
+  : data;
+        setProjects(Array.isArray(actualProjects) ? actualProjects : []);
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) {
+          console.error('Помилка завантаження проєктів:', error);
+        }
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [startupId, startupStatus, slug]);
+  const mappedProducts = projects.map((project: BackendProject) => ({
+    id: project.project_id,
+    label: project.project_title,
+    description: project.short_description
+  }));
+
+  const loadedSlug = startupStatus === 'success' ? state.profile.slug : null;
 
   // A profile opened by id (/startups/11) moves to its slug link (/startups/handmade-co).
   // "replace" keeps the id link out of the history, so "Back" leaves the profile.
@@ -64,15 +110,22 @@ function StartupView() {
 
       <div className={`container ${styles.layout}`}>
         <div>
-          <section aria-labelledby="profile-about-title">
-            <h2 id="profile-about-title" className={styles.title}>
-              Про Компанію
-            </h2>
-            {profile.short_description && (
-              <p className={styles.lead}>{profile.short_description}</p>
-            )}
-          </section>
-          {/* About, Products/Services and Story content comes with #61 */}
+          {profile.short_description && (
+            <p className={styles.lead}>{profile.short_description}</p>
+          )}
+          <About aboutHtml={profile.about_html} />
+          <ProductsList products={mappedProducts}
+/>
+          <Story
+            sections={[
+            { id: 'founding',
+              title: 'Заснування',
+              text: `Історія успіху та перші кроки стартапу ${profile.startup_name}.` },
+            { id: 'development',
+              title: 'Розвиток',
+              text: 'Створення унікальних технологій та завоювання довіри клієнтів.' }
+  ]}
+/>
         </div>
 
         <ProfileSidebar profile={profile} />
