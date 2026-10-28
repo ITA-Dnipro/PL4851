@@ -39,6 +39,14 @@ function StartupView() {
       return
     }
 
+    const currentProfile = state.profile;
+    const isUrlSlugOutdated = currentProfile && currentProfile.slug !== slug;
+    const isUrlJustNumericId = /^\d+$/.test(slug);
+
+    if (isUrlSlugOutdated && isUrlJustNumericId && currentProfile?.slug !== '123') {
+      return
+    }
+
     const controller = new AbortController()
 
     fetchStartupProjects(startupId, controller.signal)
@@ -55,7 +63,7 @@ function StartupView() {
       })
 
     return () => controller.abort()
-  }, [startupId, state.status])
+  }, [startupId, state.status, state.status === 'success' ? state.profile : null, slug])
 
   const projects = projectResult && projectResult.startupId === startupId ? projectResult.projects : []
   const mappedProducts = projects.map((project) => ({
