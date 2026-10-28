@@ -111,6 +111,53 @@ async def test_send_message_persists_and_broadcasts(user_a, user_b):
     await receiver.disconnect()
 
 
+async def test_rejects_non_object_json_frame():
+    communicator = WebsocketCommunicator(application, '/ws/chat/')
+    connected, _ = await communicator.connect()
+    assert connected
+
+    await communicator.send_json_to(['not', 'an', 'object'])
+
+    response = await communicator.receive_json_from()
+    assert response == {'type': 'error', 'detail': 'Invalid message'}
+
+    await communicator.disconnect()
+
+
+async def test_rejects_token_for_inactive_user(user_a):
+    communicator = WebsocketCommunicator(application, '/ws/chat/')
+    connected, _ = await communicator.connect()
+    assert connected
+
+    token = str(AccessToken.for_user(user_a))
+    await _db(_deactivate, user_a)
+
+    await communicator.send_json_to({'type': 'auth', 'token': token})
+
+    with pytest.raises(Exception):
+        await communicator.receive_json_from()
+
+    await communicator.disconnect()
+
+
+async def test_rejects_non_string_conversation_id(user_a, user_b):
+    communicator = await _connect_authenticated(user_a)
+
+    await communicator.send_json_to(
+        {'type': 'join_conversation', 'conversation_id': {'$ne': None}}
+    )
+
+    response = await communicator.receive_json_from()
+    assert response['type'] == 'error'
+
+    await communicator.disconnect()
+
+
+def _deactivate(user):
+    user.is_active = False
+    user.save(update_fields=['is_active'])
+
+
 async def test_join_rejects_non_participant(user_a, user_b):
     conversation_id = await _db(create_conversation, [user_a.pk])
 

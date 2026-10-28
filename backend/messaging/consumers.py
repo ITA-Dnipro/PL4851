@@ -1,14 +1,25 @@
 import asyncio
+import logging
 
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from rest_framework_simplejwt.exceptions import TokenError
 
 from messaging import services
 
+logger = logging.getLogger(__name__)
+
 AUTH_TIMEOUT_SECONDS = 10
+
+
+def _require_conversation_id(content):
+    conversation_id = content.get('conversation_id')
+    if not isinstance(conversation_id, str):
+        raise ValueError('conversation_id must be a string')
+    return conversation_id
 
 
 def _serialize_message(message):
@@ -48,6 +59,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             )
 
     async def receive_json(self, content, **kwargs):
+        if not isinstance(content, dict):
+            await self.send_json({'type': 'error', 'detail': 'Invalid message'})
+            return
+
         message_type = content.get('type')
 
         if not self.authenticated:
@@ -74,6 +89,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         except ValueError as exc:
             await self.send_json({'type': 'error', 'detail': str(exc)})
         except Exception:
+            logger.exception('Unhandled error in %s', message_type)
             await self.send_json({'type': 'error', 'detail': 'Internal error'})
 
     async def _handle_auth(self, content):
@@ -95,14 +111,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def _authenticate(self, token):
+        authentication = JWTAuthentication()
         try:
-            validated_token = JWTAuthentication().get_validated_token(token)
-            return JWTAuthentication().get_user(validated_token)
-        except (TokenError, InvalidToken):
+            validated_token = authentication.get_validated_token(token)
+            return authentication.get_user(validated_token)
+        except (TokenError, AuthenticationFailed):
             return None
 
     async def _handle_join_conversation(self, content):
-        conversation_id = content.get('conversation_id')
+        conversation_id = _require_conversation_id(content)
         is_member = await sync_to_async(services.is_participant)(
             conversation_id, self.user.pk
         )
@@ -118,7 +135,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self._broadcast_presence(group_name, 'online')
 
     async def _handle_leave_conversation(self, content):
-        conversation_id = content.get('conversation_id')
+        conversation_id = _require_conversation_id(content)
         group_name = f'conversation.{conversation_id}'
 
         if group_name in self.joined_conversations:
@@ -131,7 +148,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def _handle_send_message(self, content):
-        conversation_id = content.get('conversation_id')
+        conversation_id = _require_conversation_id(content)
         body = content.get('body')
         attachments = content.get('attachments', [])
 
@@ -144,7 +161,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def _handle_mark_read(self, content):
-        conversation_id = content.get('conversation_id')
+        conversation_id = _require_conversation_id(content)
         await sync_to_async(services.mark_messages_read)(conversation_id, self.user.pk)
         await self.channel_layer.group_send(
             f'conversation.{conversation_id}',
@@ -156,7 +173,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def _handle_typing(self, content):
-        conversation_id = content.get('conversation_id')
+        conversation_id = _require_conversation_id(content)
         group_name = f'conversation.{conversation_id}'
         if group_name not in self.joined_conversations:
             raise ValueError('Join the conversation before sending typing events')

@@ -41,6 +41,7 @@ REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379')
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'channels',
     'django.contrib.admin',
     'django.contrib.auth',

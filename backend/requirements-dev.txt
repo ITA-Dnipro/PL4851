@@ -8,4 +8,3 @@ pytest-django==4.14.0
 pytest-cov==7.1.0
 mongomock==4.3.0
 pytest-asyncio==1.4.1
-daphne==4.2.3
