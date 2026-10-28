@@ -6,15 +6,12 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 import { ApiError } from '../api/client/errors'
 import { fetchStartupProfile, fetchStartupProjects } from '../api/startups'
-import type { StartupProfile } from '../api/startups'
+import type { BackendProject, StartupProfile } from '../api/startups'
 import Icon from '../components/Icon'
 import NotFound from './NotFound'
 import styles from './StartupView.module.css'
 import { About } from '../components/About'
 import { ProductsList } from '../components/ProductsList'
-import { Story } from '../components/Story'
-import type { BackendProject } from '../api/startups';
-
 
 type ProfileState =
   | { status: 'loading' }
@@ -32,45 +29,47 @@ function StartupView() {
   const navigate = useNavigate()
   const { state, retry } = useProfile(slug)
 
-  const [projects, setProjects] = useState<BackendProject[]>([]);
-  const startupStatus = state.status;
-  const startupId = startupStatus === 'success' ? state.profile.startup_id : undefined;
+  const [projectResult, setProjectResult] = useState<{
+    startupId: number
+    projects: BackendProject[]
+  } | null>(null)
+  const startupId = state.status === 'success' ? state.profile.startup_id : undefined
 
-    useEffect(() => {
-    if (startupStatus !== 'success' || !startupId) {
-      return;
+  useEffect(() => {
+    if (startupId === undefined) {
+      return
     }
 
-    const isVitest = typeof window !== 'undefined' && '__vitest_worker__' in window;
+    const isVitest = typeof window !== 'undefined' && '__vitest_worker__' in window
     if (isVitest) {
-      return;
+      return
     }
 
-    const controller = new AbortController();
+    const controller = new AbortController()
 
     fetchStartupProjects(startupId, controller.signal)
       .then((data) => {
-        setProjects(data);
+        if (!controller.signal.aborted) {
+          setProjectResult({ startupId, projects: data })
+        }
       })
       .catch((error) => {
         if (!controller.signal.aborted) {
-          console.error('Помилка завантаження проєктів:', error);
+          console.error('Помилка завантаження проєктів:', error)
         }
-      });
+      })
 
-    return () => {
-      controller.abort();
-      setProjects([]);
-    };
-  }, [startupId, startupStatus, slug]);
+    return () => controller.abort()
+  }, [startupId])
 
-  const mappedProducts = projects.map((project: BackendProject) => ({
+  const projects = projectResult && projectResult.startupId === startupId ? projectResult.projects : []
+  const mappedProducts = projects.map((project) => ({
     id: project.project_id,
     label: project.project_title,
-    description: project.short_description
-  }));
+    description: project.short_description,
+  }))
 
-  const loadedSlug = startupStatus === 'success' ? state.profile.slug : null;
+  const loadedSlug = state.status === 'success' ? state.profile.slug : null
 
   // A profile opened by id (/startups/11) moves to its slug link (/startups/handmade-co).
   // "replace" keeps the id link out of the history, so "Back" leaves the profile.
@@ -112,22 +111,7 @@ function StartupView() {
             <p className={styles.lead}>{profile.short_description}</p>
           )}
           <About aboutHtml={profile.about_html} />
-          <ProductsList products={mappedProducts}
-/>
-          <Story
-  sections={[
-    {
-      id: 'founding-date',
-      title: 'Приєднання до платформи',
-      text: `Компанія ${profile.startup_name} офіційно приєдналася до нашої спільноти ${
-        profile.created_at
-          ? `у ${new Date(profile.created_at).toLocaleDateString('uk-UA', { month: 'long', year: 'numeric' })}`
-          : 'нещодавно'
-      }.`
-    }
-  ]}
-/>
-
+          <ProductsList products={mappedProducts} />
         </div>
 
         <ProfileSidebar profile={profile} />
