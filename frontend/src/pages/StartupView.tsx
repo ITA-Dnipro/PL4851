@@ -41,9 +41,8 @@ function StartupView() {
       return;
     }
 
-    const isDigits = /^\d+$/.test(slug);
     const isVitest = typeof window !== 'undefined' && '__vitest_worker__' in window;
-    if (isDigits || isVitest) {
+    if (isVitest) {
       return;
     }
 
@@ -51,10 +50,7 @@ function StartupView() {
 
     fetchStartupProjects(startupId, controller.signal)
       .then((data) => {
-        const actualProjects = data && 'results' in data
-  ? (data as { results: BackendProject[] }).results
-  : data;
-        setProjects(Array.isArray(actualProjects) ? actualProjects : []);
+        setProjects(data);
       })
       .catch((error) => {
         if (!controller.signal.aborted) {
@@ -64,8 +60,10 @@ function StartupView() {
 
     return () => {
       controller.abort();
+      setProjects([]);
     };
   }, [startupId, startupStatus, slug]);
+
   const mappedProducts = projects.map((project: BackendProject) => ({
     id: project.project_id,
     label: project.project_title,
@@ -117,15 +115,19 @@ function StartupView() {
           <ProductsList products={mappedProducts}
 />
           <Story
-            sections={[
-            { id: 'founding',
-              title: 'Заснування',
-              text: `Історія успіху та перші кроки стартапу ${profile.startup_name}.` },
-            { id: 'development',
-              title: 'Розвиток',
-              text: 'Створення унікальних технологій та завоювання довіри клієнтів.' }
+  sections={[
+    {
+      id: 'founding-date',
+      title: 'Приєднання до платформи',
+      text: `Компанія ${profile.startup_name} офіційно приєдналася до нашої спільноти ${
+        profile.created_at
+          ? `у ${new Date(profile.created_at).toLocaleDateString('uk-UA', { month: 'long', year: 'numeric' })}`
+          : 'нещодавно'
+      }.`
+    }
   ]}
 />
+
         </div>
 
         <ProfileSidebar profile={profile} />

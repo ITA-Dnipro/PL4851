@@ -43,6 +43,34 @@ export interface BackendProject {
   short_description: string;
 }
 
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 export async function fetchStartupProjects(startupId: number, signal?: AbortSignal): Promise<BackendProject[]> {
-  return await request<BackendProject[]>(`/startups/${startupId}/projects/`, { signal });
+  let allProjects: BackendProject[] = [];
+  let page = 1;
+  let hasNextPage = true;
+
+  while (hasNextPage) {
+    const url = `/startups/${startupId}/projects/?page=${page}`;
+    const data = await request(url, { signal }) as PaginatedResponse<BackendProject> | null;
+
+    if (data && data.results && data.results.length > 0) {
+      allProjects = [...allProjects, ...data.results];
+
+      if (data.next) {
+        page += 1;
+      } else {
+        hasNextPage = false;
+      }
+    } else {
+      hasNextPage = false;
+    }
+  }
+
+  return allProjects;
 }
