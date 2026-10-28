@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import StartupView from './StartupView'
 import * as startupsApi from '../api/startups'
-import type { BackendProject, StartupProfile } from '../api/startups'
+import type { StartupProfile, StartupProject } from '../api/startups'
 import { API_URL, BACKEND_ORIGIN } from '../config'
 
 // Profile from the mockup, as GET /api/startups/{id}/ sends it
@@ -206,12 +206,10 @@ describe('StartupView', () => {
   })
 
   describe('project loading', () => {
-    const project: BackendProject = {
-      project_id: 1,
-      project_title: 'First startup project',
-      short_description: 'Project description',
-      status: 'active',
-      logo: null,
+    const project: StartupProject = {
+      id: 1,
+      label: 'First startup project',
+      description: 'Project description',
     }
     const otherStartup = {
       ...profile,
@@ -236,7 +234,7 @@ describe('StartupView', () => {
       const fetchProjects = vi.spyOn(startupsApi, 'fetchStartupProjects').mockResolvedValue([project])
       renderPage('/startups/11')
 
-      expect(await screen.findByText(`${project.project_title}:`)).toBeInTheDocument()
+      expect(await screen.findByText(`${project.label}:`)).toBeInTheDocument()
       expect(fetchProjects).toHaveBeenCalledWith(11, expect.any(AbortSignal))
       expect(screen.getByTestId('location')).toHaveTextContent('/startups/11')
     })
@@ -246,7 +244,7 @@ describe('StartupView', () => {
       const fetchProjects = vi.spyOn(startupsApi, 'fetchStartupProjects').mockResolvedValue([project])
       renderPage('/startups/11')
 
-      expect(await screen.findByText(`${project.project_title}:`)).toBeInTheDocument()
+      expect(await screen.findByText(`${project.label}:`)).toBeInTheDocument()
       expect(screen.getByTestId('location')).toHaveTextContent(`/startups/${profile.slug}`)
       expect(fetchProjects).toHaveBeenCalledTimes(1)
       expect(fetchProjects.mock.calls[0][1]?.aborted).toBe(false)
@@ -263,7 +261,7 @@ describe('StartupView', () => {
       const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
       const user = renderPage()
 
-      await screen.findByText(`${project.project_title}:`)
+      await screen.findByText(`${project.label}:`)
       await user.click(screen.getByRole('link', { name: 'Стартап 123' }))
       await screen.findByRole('heading', { level: 1, name: otherStartup.startup_name })
 
@@ -275,8 +273,8 @@ describe('StartupView', () => {
     })
 
     it('ignores an aborted request that resolves after the next startup projects load', async () => {
-      let resolveProjects!: (projects: BackendProject[]) => void
-      const otherProject = { ...project, project_id: 2, project_title: 'Other startup project' }
+      let resolveProjects!: (projects: StartupProject[]) => void
+      const otherProject = { ...project, id: 2, label: 'Other startup project' }
       mockFetch()
         .mockResolvedValueOnce(jsonResponse(profile))
         .mockResolvedValueOnce(jsonResponse(otherStartup))
@@ -287,12 +285,12 @@ describe('StartupView', () => {
 
       await screen.findByRole('heading', { level: 1, name: profile.startup_name })
       await user.click(screen.getByRole('link', { name: 'Стартап 123' }))
-      await screen.findByText(`${otherProject.project_title}:`)
+      await screen.findByText(`${otherProject.label}:`)
       expect(fetchProjects.mock.calls[0][1]?.aborted).toBe(true)
 
       await act(async () => resolveProjects([project]))
-      expect(screen.getByText(`${otherProject.project_title}:`)).toBeInTheDocument()
-      expect(screen.queryByText(`${project.project_title}:`)).not.toBeInTheDocument()
+      expect(screen.getByText(`${otherProject.label}:`)).toBeInTheDocument()
+      expect(screen.queryByText(`${project.label}:`)).not.toBeInTheDocument()
     })
   })
 })

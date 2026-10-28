@@ -1,17 +1,21 @@
 import { faEnvelope, faStar, faUserPlus } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { ApiError } from '../api/client/errors'
-import { fetchStartupProfile, fetchStartupProjects } from '../api/startups'
-import type { BackendProject, StartupProfile } from '../api/startups'
+import {
+  fetchStartupProfile,
+  fetchStartupProjects,
+  type StartupProfile,
+  type StartupProject, } from '../api/startups'
 import Icon from '../components/Icon'
 import NotFound from './NotFound'
 import styles from './StartupView.module.css'
 import { About } from '../components/About'
 import { ProductsList } from '../components/ProductsList'
+import { Story } from '../components/Story'
 
 type ProfileState =
   | { status: 'loading' }
@@ -31,46 +35,54 @@ function StartupView() {
 
   const [projectResult, setProjectResult] = useState<{
     startupId: number
-    projects: BackendProject[]
+    projects: StartupProject[]
   } | null>(null)
-  const startupId = state.status === 'success' ? state.profile.startup_id : undefined
-    useEffect(() => {
-    if (startupId === undefined || state.status !== 'success') {
+  const requestIdRef = useRef(0)
+
+  const startupStatus = state.status
+  const startupId = startupStatus === 'success' ? state.profile.startup_id : undefined
+  const projects =
+    startupId !== undefined && projectResult?.startupId === startupId
+      ? projectResult.projects
+      : []
+
+  useEffect(() => {
+    if (startupStatus !== 'success' || startupId == null) {
       return
     }
 
-    const currentProfile = state.profile;
-    const isUrlSlugOutdated = currentProfile && currentProfile.slug !== slug;
-    const isUrlJustNumericId = /^\d+$/.test(slug);
-
-    if (isUrlSlugOutdated && isUrlJustNumericId && currentProfile?.slug !== '123') {
-      return
-    }
-
+    const requestId = ++requestIdRef.current
     const controller = new AbortController()
 
     fetchStartupProjects(startupId, controller.signal)
       .then((data) => {
-        if (!controller.signal.aborted) {
-          const actualProjects = data && 'results' in data ? (data as { results: BackendProject[] }).results : data
-          setProjectResult({ startupId, projects: Array.isArray(actualProjects) ? actualProjects : [] })
+        if (requestId !== requestIdRef.current) {
+          return
         }
+
+        setProjectResult({ startupId, projects: data ?? [] })
       })
       .catch((error) => {
+        if (requestId !== requestIdRef.current) {
+          return
+        }
+
         if (!controller.signal.aborted) {
           console.error('Помилка завантаження проєктів:', error)
         }
       })
 
-    return () => controller.abort()
-  }, [startupId, state.status, state.status === 'success' ? state.profile : null, slug])
+  return () => {
+    controller.abort()
+  }
+}, [startupId, startupStatus])
 
-  const projects = projectResult && projectResult.startupId === startupId ? projectResult.projects : []
-  const mappedProducts = projects.map((project) => ({
-    id: project.project_id,
-    label: project.project_title,
-    description: project.short_description,
+    const mappedProducts = projects.map((project) => ({
+    id: project.id,
+    label: project.label,
+    description: project.description,
   }))
+
 
   const loadedSlug = state.status === 'success' ? state.profile.slug : null
 
@@ -104,17 +116,24 @@ function StartupView() {
 
   const { profile } = state
 
+  const storySections =
+    Array.isArray(profile.story_section) && profile.story_section.length > 0
+      ? profile.story_section
+      : []
+
   return (
     <>
       <ProfileHeader profile={profile} />
 
       <div className={`container ${styles.layout}`}>
         <div>
-          {profile.short_description && (
-            <p className={styles.lead}>{profile.short_description}</p>
-          )}
-          <About aboutHtml={profile.about_html} />
-          <ProductsList products={mappedProducts} />
+          {profile.short_description && <p className={styles.lead}>{profile.short_description}</p>}
+
+          {profile.about_html && <About aboutHtml={profile.about_html} />}
+          {projects.length > 0 && <ProductsList products={mappedProducts} />}
+          {storySections.length > 0 && <Story sections={storySections} />}
+
+          {/* This keeps original main structure intact, but feature blocks are mounted conditionally */}
         </div>
 
         <ProfileSidebar profile={profile} />
