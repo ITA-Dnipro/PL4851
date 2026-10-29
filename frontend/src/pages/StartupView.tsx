@@ -15,7 +15,7 @@ import NotFound from './NotFound'
 import styles from './StartupView.module.css'
 import { About } from '../components/About'
 import { ProductsList } from '../components/ProductsList'
-import { Story } from '../components/Story'
+// import { Story } from '../components/Story'
 
 type ProfileState =
   | { status: 'loading' }
@@ -77,13 +77,6 @@ function StartupView() {
   }
 }, [startupId, startupStatus])
 
-    const mappedProducts = projects.map((project) => ({
-    id: project.id,
-    label: project.label,
-    description: project.description,
-  }))
-
-
   const loadedSlug = state.status === 'success' ? state.profile.slug : null
 
   // A profile opened by id (/startups/11) moves to its slug link (/startups/handmade-co).
@@ -116,10 +109,11 @@ function StartupView() {
 
   const { profile } = state
 
-  const storySections =
-    Array.isArray(profile.story_section) && profile.story_section.length > 0
-      ? profile.story_section
-      : []
+  // backend doesn`t return story section yet
+  //const storySections =
+  //  Array.isArray(profile.story_section) && profile.story_section.length > 0
+  //    ? profile.story_section
+  //    : []
 
   return (
     <>
@@ -130,8 +124,8 @@ function StartupView() {
           {profile.short_description && <p className={styles.lead}>{profile.short_description}</p>}
 
           {profile.about_html && <About aboutHtml={profile.about_html} />}
-          {projects.length > 0 && <ProductsList products={mappedProducts} />}
-          {storySections.length > 0 && <Story sections={storySections} />}
+          {projects.length > 0 && <ProductsList products={projects} />}
+          {/* {storySections.length > 0 && <Story sections={storySections} />} */}
 
           {/* This keeps original main structure intact, but feature blocks are mounted conditionally */}
         </div>
