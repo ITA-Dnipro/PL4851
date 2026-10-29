@@ -1,10 +1,11 @@
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import StartupView from './StartupView'
-import type { StartupProfile } from '../api/startups'
+import * as startupsApi from '../api/startups'
+import type { StartupProfile, StartupProject } from '../api/startups'
 import { API_URL, BACKEND_ORIGIN } from '../config'
 
 // Profile from the mockup, as GET /api/startups/{id}/ sends it
@@ -98,6 +99,8 @@ describe('StartupView', () => {
       await screen.findByRole('heading', { level: 2, name: 'Про Компанію' }),
     ).toBeInTheDocument()
     expect(screen.getByText(profile.short_description)).toBeInTheDocument()
+    expect(screen.queryByTestId('story-block')).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Стартап' })).not.toBeInTheDocument()
 
     const sidebar = screen.getByRole('complementary', { name: 'Інформація про компанію' })
     expect(within(sidebar).getByText('Підписники').nextSibling).toHaveTextContent('42')
@@ -123,7 +126,7 @@ describe('StartupView', () => {
       expect(screen.getByTestId('location')).toHaveTextContent(`/startups/${profile.slug}`),
     )
     expect(screen.getByRole('heading', { level: 1, name: profile.startup_name })).toBeInTheDocument()
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
     expect(fetchMock).toHaveBeenCalledWith(`${API_URL}/startups/11/`, expect.any(Object))
   })
 
@@ -138,14 +141,16 @@ describe('StartupView', () => {
     // Let a link change, if the page started one, finish before checking the link
     await act(() => new Promise((resolve) => setTimeout(resolve, 0)))
     expect(screen.getByTestId('location')).toHaveTextContent('/startups/11')
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
   it('opens /startups/123 as id 123, not as the shown startup whose slug is "123"', async () => {
     const otherStartup = { ...profile, startup_id: 123, startup_name: 'Інший стартап' }
     const fetchMock = mockFetch()
       .mockResolvedValueOnce(jsonResponse({ ...profile, slug: '123' }))
+      .mockResolvedValueOnce(jsonResponse({ results: [] }))
       .mockResolvedValueOnce(jsonResponse(otherStartup))
+      .mockResolvedValueOnce(jsonResponse({ results: [] }))
     const user = renderPage('/startups/11')
 
     await screen.findByRole('heading', { level: 1, name: profile.startup_name })
@@ -154,7 +159,7 @@ describe('StartupView', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: otherStartup.startup_name }),
     ).toBeInTheDocument()
-    expect(fetchMock).toHaveBeenLastCalledWith(`${API_URL}/startups/123/`, expect.any(Object))
+    expect(fetchMock).toHaveBeenCalledWith(`${API_URL}/startups/123/`, expect.any(Object))
   })
 
   it('shows the not found page for an unknown startup', async () => {
@@ -176,6 +181,15 @@ describe('StartupView', () => {
     ['no connection', () => Promise.reject(new TypeError('Failed to fetch'))],
     ['server error', () => Promise.resolve(jsonResponse({}, 500))],
   ])('shows an error and loads again on retry: %s', async (_, failedResponse) => {
+    const originalFetch = globalThis.fetch;
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((...args: Parameters<typeof fetch>) => {
+      const [input] = args;
+      const url = typeof input === 'string' ? input : (input as Request)?.url || '';
+      if (url.includes('/projects/')) {
+        return Promise.resolve(new Response(JSON.stringify({ results: [] }), { status: 200 }));
+      }
+      return originalFetch(...args);
+    }));
     const fetchMock = mockFetch()
       .mockImplementationOnce(failedResponse)
       .mockResolvedValueOnce(jsonResponse(profile))
@@ -188,6 +202,95 @@ describe('StartupView', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: profile.startup_name }),
     ).toBeInTheDocument()
-    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock).toHaveBeenCalledWith(`${API_URL}/startups/${profile.slug}/`, expect.any(Object))
+  })
+
+  describe('project loading', () => {
+    const project: StartupProject = {
+      id: 1,
+      label: 'First startup project',
+      description: 'Project description',
+    }
+    const otherStartup = {
+      ...profile,
+      startup_id: 123,
+      startup_name: 'Інший стартап',
+      slug: '123',
+    }
+
+    beforeEach(() => {
+    // Exercise the browser flow while leaving Vitest's global worker state intact.
+      vi.stubGlobal('window', new Proxy(window, {
+        has: (target, key) => key !== '__vitest_worker__' && Reflect.has(target, key),
+    }))
+  })
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it('fetches projects for a numeric slug using the loaded startup ID', async () => {
+      mockFetch().mockResolvedValue(jsonResponse({ ...profile, slug: '123' }))
+      const fetchProjects = vi.spyOn(startupsApi, 'fetchStartupProjects').mockResolvedValue([project])
+      renderPage('/startups/11')
+
+      expect(await screen.findByText(`${project.label}:`)).toBeInTheDocument()
+      expect(fetchProjects).toHaveBeenCalledWith(11, expect.any(AbortSignal))
+      expect(screen.getByTestId('location')).toHaveTextContent('/startups/11')
+    })
+
+    it('keeps the project request when an ID link is replaced with its canonical slug', async () => {
+      mockFetch().mockResolvedValue(jsonResponse(profile))
+      const fetchProjects = vi.spyOn(startupsApi, 'fetchStartupProjects').mockResolvedValue([project])
+      renderPage('/startups/11')
+
+      expect(await screen.findByText(`${project.label}:`)).toBeInTheDocument()
+      expect(screen.getByTestId('location')).toHaveTextContent(`/startups/${profile.slug}`)
+      expect(fetchProjects).toHaveBeenCalledTimes(1)
+      expect(fetchProjects.mock.calls[0][1]?.aborted).toBe(false)
+    })
+
+    it('hides old projects while the new startup projects are pending and after they fail', async () => {
+      let rejectProjects!: (error: Error) => void
+      mockFetch()
+        .mockResolvedValueOnce(jsonResponse(profile))
+        .mockResolvedValueOnce(jsonResponse(otherStartup))
+      const fetchProjects = vi.spyOn(startupsApi, 'fetchStartupProjects')
+        .mockResolvedValueOnce([project])
+        .mockImplementationOnce(() => new Promise((_, reject) => { rejectProjects = reject }))
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const user = renderPage()
+
+      await screen.findByText(`${project.label}:`)
+      await user.click(screen.getByRole('link', { name: 'Стартап 123' }))
+      await screen.findByRole('heading', { level: 1, name: otherStartup.startup_name })
+
+      expect(fetchProjects).toHaveBeenLastCalledWith(123, expect.any(AbortSignal))
+      expect(screen.queryByTestId('product-item')).not.toBeInTheDocument()
+      await act(async () => rejectProjects(new Error('Projects unavailable')))
+      expect(consoleError).toHaveBeenCalled()
+      expect(screen.queryByTestId('product-item')).not.toBeInTheDocument()
+    })
+
+    it('ignores an aborted request that resolves after the next startup projects load', async () => {
+      let resolveProjects!: (projects: StartupProject[]) => void
+      const otherProject = { ...project, id: 2, label: 'Other startup project' }
+      mockFetch()
+        .mockResolvedValueOnce(jsonResponse(profile))
+        .mockResolvedValueOnce(jsonResponse(otherStartup))
+      const fetchProjects = vi.spyOn(startupsApi, 'fetchStartupProjects')
+        .mockImplementationOnce(() => new Promise((resolve) => { resolveProjects = resolve }))
+        .mockResolvedValueOnce([otherProject])
+      const user = renderPage()
+
+      await screen.findByRole('heading', { level: 1, name: profile.startup_name })
+      await user.click(screen.getByRole('link', { name: 'Стартап 123' }))
+      await screen.findByText(`${otherProject.label}:`)
+      expect(fetchProjects.mock.calls[0][1]?.aborted).toBe(true)
+
+      await act(async () => resolveProjects([project]))
+      expect(screen.getByText(`${otherProject.label}:`)).toBeInTheDocument()
+      expect(screen.queryByText(`${project.label}:`)).not.toBeInTheDocument()
+    })
   })
 })

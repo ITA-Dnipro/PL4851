@@ -1,15 +1,21 @@
 import { faEnvelope, faStar, faUserPlus } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { ApiError } from '../api/client/errors'
-import { fetchStartupProfile } from '../api/startups'
-import type { StartupProfile } from '../api/startups'
+import {
+  fetchStartupProfile,
+  fetchStartupProjects,
+  type StartupProfile,
+  type StartupProject, } from '../api/startups'
 import Icon from '../components/Icon'
 import NotFound from './NotFound'
 import styles from './StartupView.module.css'
+import { About } from '../components/About'
+import { ProductsList } from '../components/ProductsList'
+// import { Story } from '../components/Story'
 
 type ProfileState =
   | { status: 'loading' }
@@ -26,6 +32,51 @@ function StartupView() {
   const { slug = '' } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const { state, retry } = useProfile(slug)
+
+  const [projectResult, setProjectResult] = useState<{
+    startupId: number
+    projects: StartupProject[]
+  } | null>(null)
+  const requestIdRef = useRef(0)
+
+  const startupStatus = state.status
+  const startupId = startupStatus === 'success' ? state.profile.startup_id : undefined
+  const projects =
+    startupId !== undefined && projectResult?.startupId === startupId
+      ? projectResult.projects
+      : []
+
+  useEffect(() => {
+    if (startupStatus !== 'success' || startupId == null) {
+      return
+    }
+
+    const requestId = ++requestIdRef.current
+    const controller = new AbortController()
+
+    fetchStartupProjects(startupId, controller.signal)
+      .then((data) => {
+        if (requestId !== requestIdRef.current) {
+          return
+        }
+
+        setProjectResult({ startupId, projects: data ?? [] })
+      })
+      .catch((error) => {
+        if (requestId !== requestIdRef.current) {
+          return
+        }
+
+        if (!controller.signal.aborted) {
+          console.error('Помилка завантаження проєктів:', error)
+        }
+      })
+
+  return () => {
+    controller.abort()
+  }
+}, [startupId, startupStatus])
+
   const loadedSlug = state.status === 'success' ? state.profile.slug : null
 
   // A profile opened by id (/startups/11) moves to its slug link (/startups/handmade-co).
@@ -58,21 +109,25 @@ function StartupView() {
 
   const { profile } = state
 
+  // backend doesn`t return story section yet
+  //const storySections =
+  //  Array.isArray(profile.story_section) && profile.story_section.length > 0
+  //    ? profile.story_section
+  //    : []
+
   return (
     <>
       <ProfileHeader profile={profile} />
 
       <div className={`container ${styles.layout}`}>
         <div>
-          <section aria-labelledby="profile-about-title">
-            <h2 id="profile-about-title" className={styles.title}>
-              Про Компанію
-            </h2>
-            {profile.short_description && (
-              <p className={styles.lead}>{profile.short_description}</p>
-            )}
-          </section>
-          {/* About, Products/Services and Story content comes with #61 */}
+          {profile.short_description && <p className={styles.lead}>{profile.short_description}</p>}
+
+          {profile.about_html && <About aboutHtml={profile.about_html} />}
+          {projects.length > 0 && <ProductsList products={projects} />}
+          {/* {storySections.length > 0 && <Story sections={storySections} />} */}
+
+          {/* This keeps original main structure intact, but feature blocks are mounted conditionally */}
         </div>
 
         <ProfileSidebar profile={profile} />
@@ -153,7 +208,7 @@ function ProfileHeader({ profile }: { profile: StartupProfile }) {
               {startup_name}
             </h1>
             {location && <p className={styles.location}>{location}</p>}
-            {industries.length > 0 && (
+            {industries?.length && industries.length > 0 && (
               <ul className={styles.tags} aria-label="Галузі">
                 {industries.map((industry) => (
                   <li key={industry} className={styles.tag}>
