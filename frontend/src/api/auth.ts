@@ -37,3 +37,23 @@ export function refresh() {
 export function logout() {
   return request<void>('/auth/logout/', { method: 'POST' })
 }
+
+export interface PasswordResetConfirmRequest {
+  uid: string
+  token: string
+  password: string
+}
+
+export interface PasswordResetConfirmResponse {
+  detail: string
+}
+
+export function confirmPasswordReset(data: PasswordResetConfirmRequest) {
+  return request<PasswordResetConfirmResponse>(
+    '/auth/password-reset/confirm/',
+    {
+      method: 'POST',
+      body: data,
+    },
+  )
+}
