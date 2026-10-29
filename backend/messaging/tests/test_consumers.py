@@ -68,8 +68,9 @@ async def test_rejects_invalid_token():
 
     await communicator.send_json_to({'type': 'auth', 'token': 'garbage'})
 
-    with pytest.raises(Exception):
-        await communicator.receive_json_from()
+    close_message = await communicator.receive_output()
+    assert close_message['type'] == 'websocket.close'
+    assert close_message['code'] == 4401
 
     await communicator.disconnect()
 
@@ -164,6 +165,20 @@ async def test_join_rejects_non_participant(user_a, user_b):
     communicator = await _connect_authenticated(user_b)
     await communicator.send_json_to(
         {'type': 'join_conversation', 'conversation_id': conversation_id}
+    )
+
+    response = await communicator.receive_json_from()
+    assert response['type'] == 'error'
+
+    await communicator.disconnect()
+
+
+async def test_mark_read_rejects_non_participant(user_a, user_b):
+    conversation_id = await _db(create_conversation, [user_a.pk])
+
+    communicator = await _connect_authenticated(user_b)
+    await communicator.send_json_to(
+        {'type': 'mark_read', 'conversation_id': conversation_id}
     )
 
     response = await communicator.receive_json_from()
