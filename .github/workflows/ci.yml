@@ -39,6 +39,16 @@ jobs:
         ports:
           - 27017:27017
 
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
     env:
       SECRET_KEY: ci-only-not-secret
       DEBUG: 'False'
@@ -48,6 +58,7 @@ jobs:
       DB_HOST: localhost
       MONGO_URI: mongodb://localhost:27017
       MONGO_DB_NAME: pl4851_test
+      REDIS_URL: redis://localhost:6379
       DB_PORT: 5432
       EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
       FRONTEND_URL: http://localhost:5173
