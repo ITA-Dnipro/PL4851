@@ -126,6 +126,38 @@ Response `200`, always the same, whether or not the account exists:
 - Limits: 5 requests per hour per IP and 5 per hour per email, then `429`.
 - In development the email is printed to the backend console (`EMAIL_BACKEND` defaults to the console backend). Set `EMAIL_BACKEND`, `DEFAULT_FROM_EMAIL` and `FRONTEND_URL` in `.env` to change this.
 
+## Registration
+
+`POST /api/auth/register/` — create a startup or investor account.
+
+```json
+{
+  "email": "founder@example.com",
+  "password": "Str0ng-pass!",
+  "password_confirm": "Str0ng-pass!",
+  "first_name": "Andrii",
+  "last_name": "Sudakevych",
+  "company_name": "Handmade Co",
+  "role": "startup",
+  "legal_form": "sole_proprietor"
+}
+```
+
+- `role`: `startup` or `investor`. `legal_form`: `sole_proprietor` (ФОП) or `legal_entity`.
+- Password rules: at least 8 characters, at least one letter and one digit, not a common password, not too similar to the email or name.
+
+Response `201`:
+
+```json
+{ "id": 12, "email": "founder@example.com", "detail": "Verification email sent." }
+```
+
+- The account is created inactive, together with a profile for the role: `StartupProfile` (`startup_name` and a `slug` made from the company name) or `InvestorProfile` (`investor_name`). The other profile fields are empty and are filled in later.
+- An email is sent with the link `{FRONTEND_URL}/verify-email?uid=<base64 user id>&token=<token>`. The link is valid for 24 hours (`EMAIL_VERIFICATION_TIMEOUT`) and stops working once the account is activated. In development the email is printed to the backend console.
+- Until the email is verified the user can't log in: login returns `401`, as for a wrong password.
+- Errors: `400` invalid fields (errors by field name, e.g. `password`, `password_confirm`), `409` the email is already registered (case-insensitive), `429` more than 10 requests per hour from one IP.
+- `409` tells that an account with this email exists, so the form can show it next to the field. The per-IP limit slows down checking many emails this way.
+
 ## Investors
 
 Public investor profiles. Only verified investors (`is_verified=True`) are returned: an unverified or unknown id gets `404`.

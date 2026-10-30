@@ -44,3 +44,16 @@ class UserModelTest(TestCase):
         """Verify the login identity is email."""
         self.assertTrue(self.user.check_password('securepassword123'))
         self.assertEqual(User.USERNAME_FIELD, 'email')
+
+    def test_superuser_has_no_role(self):
+        """Verify a superuser is neither a startup nor an investor."""
+        admin = User.objects.create_superuser(
+            email='admin@example.com',
+            first_name='Admin',
+            last_name='User',
+            password='securepassword123',
+        )
+
+        self.assertEqual(admin.role, '')
+        self.assertFalse(admin.can_have_startup_profile())
+        self.assertFalse(admin.can_have_investor_profile())
