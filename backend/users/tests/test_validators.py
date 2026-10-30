@@ -25,3 +25,7 @@ def test_is_enabled_in_settings():
         validate_password('longpassword')
 
     assert 'password_too_simple' in [e.code for e in error.value.error_list]
+
+
+def test_describes_the_rule():
+    assert validator.get_help_text() == validator.message

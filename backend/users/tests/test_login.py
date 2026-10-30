@@ -67,6 +67,11 @@ class LoginSuccessTests(LoginTestCase):
             {'id': self.user.user_id, 'email': EMAIL, 'role': 'startup'},
         )
 
+    def test_ignores_email_case(self):
+        response = self.login(email='Founder@EXAMPLE.com')
+
+        self.assertEqual(response.status_code, 200)
+
     def test_access_token_authenticates_the_user(self):
         access = self.login().json()['access']
         request = APIRequestFactory().get('/', HTTP_AUTHORIZATION=f'Bearer {access}')
@@ -177,13 +182,13 @@ class LoginLockoutTests(LoginTestCase):
 
         self.assertEqual(response.status_code, 429)
 
-    def test_lockout_respects_local_part_case(self):
-        # Emails are stored with the local part as typed, so this is another account
+    def test_lockout_ignores_email_case(self):
+        # Login ignores the case, so changing it doesn't get around the lockout
         self.fail_max_attempts()
 
         response = self.login(email='Founder@example.com')
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 429)
 
     def test_lockout_does_not_affect_other_clients(self):
         # Someone else's failed attempts don't lock the owner out

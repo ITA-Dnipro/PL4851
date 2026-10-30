@@ -84,6 +84,7 @@ Response `200`:
 The refresh token is set in the `refresh_token` cookie: `HttpOnly` (JavaScript can't read it), `SameSite=Lax`, `Path=/api/auth/`, `Secure` when `DEBUG` is off. Without `"remember": true` it's a session cookie, removed when the browser closes.
 
 - Access token lives 15 minutes, refresh token 1 day (30 days with `"remember": true`).
+- The email is case-insensitive: `Founder@Example.com` and `founder@example.com` are the same account.
 - Send the access token as `Authorization: Bearer <access>`. Keep it in memory, not in `localStorage`.
 - Errors: `400` invalid data, `401` wrong email or password, `429` too many requests or too many failed attempts: 5 for this email from one client (IP) → that client is locked for 15 minutes; 20 for this email from any clients → the email is locked for 1 hour.
 
@@ -155,7 +156,9 @@ Response `201`:
 - The account is created inactive, together with a profile for the role: `StartupProfile` (`startup_name` and a `slug` made from the company name) or `InvestorProfile` (`investor_name`). The other profile fields are empty and are filled in later.
 - An email is sent with the link `{FRONTEND_URL}/verify-email?uid=<base64 user id>&token=<token>`. The link is valid for 24 hours (`EMAIL_VERIFICATION_TIMEOUT`) and stops working once the account is activated. In development the email is printed to the backend console.
 - Until the email is verified the user can't log in: login returns `401`, as for a wrong password.
-- Errors: `400` invalid fields (errors by field name, e.g. `password`, `password_confirm`), `409` the email is already registered (case-insensitive), `429` more than 10 requests per hour from one IP.
+- The email is stored in lowercase; login also ignores the email case.
+- Registering again with the email of an account that was never verified (inactive and never logged in) replaces that account and sends a new link. So an expired link or someone else's sign-up with this email doesn't lock the owner out.
+- Errors: `400` invalid fields (errors by field name, e.g. `password`, `password_confirm`), `409` the email belongs to an active account or one deactivated by an admin, `429` more than 10 requests per hour from one IP.
 - `409` tells that an account with this email exists, so the form can show it next to the field. The per-IP limit slows down checking many emails this way.
 
 ## Investors

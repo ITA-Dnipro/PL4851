@@ -7,6 +7,7 @@ from investors.models import MAX_LENGTH_INVESTOR_NAME
 from startups.models import MAX_LENGTH_STARTUP_NAME
 from users.exceptions import EmailAlreadyRegistered
 from users.models import MAX_LENGTH_EMAIL, MAX_LENGTH_NAME
+from users.services.registration import is_email_taken
 
 User = get_user_model()
 
@@ -25,8 +26,9 @@ class RegisterSerializer(serializers.Serializer):
     legal_form = serializers.ChoiceField(choices=User.LegalForm.choices)
 
     def validate_email(self, value):
-        email = User.objects.normalize_email(value)
-        if User.objects.filter(email__iexact=email).exists():
+        # Stored in lowercase: login and registration ignore the email case
+        email = User.objects.normalize_email(value).lower()
+        if is_email_taken(email):
             raise EmailAlreadyRegistered()
         return email
 

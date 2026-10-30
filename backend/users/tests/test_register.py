@@ -4,12 +4,15 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.cache import cache
+from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from investors.models import InvestorProfile
 from startups.models import StartupProfile
 from users.serializers.register import PASSWORDS_DO_NOT_MATCH_MESSAGE
+from users.services.email_verification import email_verification_token
 from users.views.register import VERIFICATION_SENT_MESSAGE
 
 pytestmark = pytest.mark.api
@@ -92,6 +95,7 @@ class RegisterSuccessTests(RegisterTestCase):
         self.assertEqual(profile.investor_type, '')
         self.assertFalse(StartupProfile.objects.exists())
 
+    @override_settings(FRONTEND_URL='https://forum.example/')
     def test_sends_verification_link(self):
         self.register()
 
@@ -103,14 +107,15 @@ class RegisterSuccessTests(RegisterTestCase):
             line for line in message.body.splitlines() if 'verify-email' in line
         )
         url = urlparse(link)
-        self.assertEqual(f'{url.scheme}://{url.netloc}', 'http://localhost:5173')
+        self.assertEqual(f'{url.scheme}://{url.netloc}', 'https://forum.example')
         self.assertEqual(url.path, '/verify-email')
         self.assertEqual(set(parse_qs(url.query)), {'uid', 'token'})
 
-    def test_lowercases_the_email_domain(self):
-        self.register(email='Founder@EXAMPLE.com')
+    def test_stores_the_email_in_lowercase(self):
+        response = self.register(email='Founder@EXAMPLE.com')
 
-        self.assertTrue(User.objects.filter(email='Founder@example.com').exists())
+        self.assertEqual(response.json()['email'], EMAIL)
+        self.assertTrue(User.objects.filter(email=EMAIL).exists())
 
     def test_user_cannot_log_in_before_verification(self):
         self.register()
@@ -152,6 +157,50 @@ class RegisterDuplicateEmailTests(RegisterTestCase):
         self.assertEqual(User.objects.count(), 1)
         self.assertFalse(StartupProfile.objects.exists())
         self.assertEqual(mail.outbox, [])
+
+
+class RegisterUnverifiedEmailTests(RegisterTestCase):
+    """A new registration replaces an account that never verified its email."""
+
+    def setUp(self):
+        super().setUp()
+        self.register(password='First-pass1', password_confirm='First-pass1')
+        self.pending = User.objects.get(email=EMAIL)
+        self.old_token = email_verification_token.make_token(self.pending)
+        mail.outbox.clear()
+
+    def test_replaces_the_pending_account(self):
+        response = self.register(
+            role=User.Role.INVESTOR,
+            company_name='Green Capital',
+            email='FOUNDER@example.com',
+        )
+
+        self.assertEqual(response.status_code, 201)
+        user = User.objects.get(email=EMAIL)
+        self.assertNotEqual(user.pk, self.pending.pk)
+        self.assertTrue(user.check_password(PASSWORD))
+        self.assertEqual(user.role, User.Role.INVESTOR)
+        self.assertFalse(StartupProfile.objects.exists())
+        self.assertEqual(InvestorProfile.objects.get().user, user)
+
+    def test_sends_a_new_link_and_the_old_one_stops_working(self):
+        self.register()
+
+        user = User.objects.get(email=EMAIL)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertFalse(email_verification_token.check_token(user, self.old_token))
+
+    def test_keeps_an_account_deactivated_by_an_admin(self):
+        # A user who has logged in before was verified, then deactivated
+        self.pending.last_login = timezone.now()
+        self.pending.save()
+
+        response = self.register()
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(User.objects.get(email=EMAIL).pk, self.pending.pk)
+        self.assertTrue(StartupProfile.objects.filter(user=self.pending).exists())
 
 
 class RegisterValidationTests(RegisterTestCase):
