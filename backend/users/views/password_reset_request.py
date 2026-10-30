@@ -7,7 +7,10 @@ from rest_framework.views import APIView
 from users.emails import send_password_reset_email
 from users.metrics import increment_metric
 from users.serializers.password_reset import PasswordResetRequestSerializer
-from users.services import create_password_reset_token, revoke_previous_reset_tokens
+from users.services.password_reset import (
+    create_password_reset_token,
+    revoke_previous_reset_tokens,
+)
 from users.throttles import PasswordResetEmailThrottle, PasswordResetIPThrottle
 
 logger = logging.getLogger(__name__)

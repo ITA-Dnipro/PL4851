@@ -37,6 +37,8 @@ class InvestorProfile(models.Model):
     investor_type = models.CharField(
         max_length=MAX_LENGTH_INVESTOR_TYPE,
         choices=InvestorType.choices,
+        blank=True,
+        default='',
     )
     investment_min = models.DecimalField(
         max_digits=INVESTMENT_MIN_MAX_DIGITS,

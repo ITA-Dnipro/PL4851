@@ -5,6 +5,7 @@ from django.utils import timezone
 MAX_LENGTH_NAME = 150
 MAX_LENGTH_EMAIL = 254
 MAX_LENGTH_ROLE = 20
+MAX_LENGTH_LEGAL_FORM = 20
 
 
 class UserManager(BaseUserManager):
@@ -16,9 +17,14 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+    def get_by_natural_key(self, email):
+        # Login ignores the email case, so Founder@ and founder@ are one account
+        return self.get(email__iexact=email)
+
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('role', '')
         return self.create_user(email, password, **extra_fields)
 
 
@@ -27,17 +33,29 @@ class User(AbstractUser):
         STARTUP = 'startup', 'Стартап'
         INVESTOR = 'investor', 'Інвестор'
 
+    class LegalForm(models.TextChoices):
+        SOLE_PROPRIETOR = 'sole_proprietor', 'ФОП'
+        LEGAL_ENTITY = 'legal_entity', 'Юридична особа'
+
     username = None
     user_id = models.AutoField(primary_key=True)
     first_name = models.CharField(max_length=MAX_LENGTH_NAME)
     last_name = models.CharField(max_length=MAX_LENGTH_NAME)
     email = models.EmailField(max_length=MAX_LENGTH_EMAIL, unique=True)
-    role = models.CharField(max_length=MAX_LENGTH_ROLE, choices=Role.choices)
+    role = models.CharField(
+        max_length=MAX_LENGTH_ROLE, choices=Role.choices, blank=True
+    )
+    legal_form = models.CharField(
+        max_length=MAX_LENGTH_LEGAL_FORM,
+        choices=LegalForm.choices,
+        blank=True,
+        default='',
+    )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name', 'role']
+    REQUIRED_FIELDS = ['first_name', 'last_name']
 
     objects = UserManager()
 

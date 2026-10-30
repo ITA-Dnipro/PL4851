@@ -8,8 +8,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.utils import timezone
 
-from .metrics import increment_metric
-from .models import PasswordResetToken
+from users.metrics import increment_metric
+from users.models import PasswordResetToken
 
 PASSWORD_RESET_TOKEN_LIFETIME = timedelta(hours=1)
 PASSWORD_RESET_TOKEN_RETENTION = timedelta(days=7)
