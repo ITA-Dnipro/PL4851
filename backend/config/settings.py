@@ -244,7 +244,7 @@ LOGGING = {
         },
     },
     'loggers': {
-        'users.services': {
+        'users.services.password_reset': {
             'handlers': ['password_reset_console'],
             'level': 'WARNING',
             'propagate': False,

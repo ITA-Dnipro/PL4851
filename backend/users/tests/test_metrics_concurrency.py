@@ -7,7 +7,7 @@ from django.test import TransactionTestCase
 
 from ..metrics import increment_metric
 from ..models import PasswordResetMetrics, PasswordResetToken
-from ..services import (
+from ..services.password_reset import (
     consume_password_reset_token,
     create_password_reset_token,
     hash_token,
