@@ -15,14 +15,14 @@ export const ProductsList: React.FC<ProductsListProps> = ({ products }) => {
   if (!products || products.length === 0) return null;
 
   return (
-    <section id="products" style={{ marginTop: '40px' }}>
-      <h2 className={viewStyles.title}>Інформація про проекти</h2>
-      <div className={viewStyles.group}>
+    <section id="products" className={viewStyles.productsSection}>
+      <h2 className={viewStyles.title}>Інформація про проєкти</h2>
+      <div className={viewStyles.productsList}>
         {products.map((item) => (
-          <div key={item.id} className={viewStyles.row} data-testid="product-item">
-            <strong className={viewStyles.value}>{item.label}:</strong>
+          <p key={item.id} className={viewStyles.productItem} data-testid="product-item">
+            <strong>{item.label}:</strong>{' '}
             <span>{item.description}</span>
-          </div>
+          </p>
         ))}
       </div>
     </section>

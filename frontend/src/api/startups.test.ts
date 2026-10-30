@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { API_URL } from '../config'
 import { jsonResponse, mockFetch } from '../test/http'
 import { ApiError } from './client/errors'
-import { fetchStartupProjects } from './startups'
+import { fetchStartupProjects, updateStartupFollow, updateStartupSave } from './startups'
 import type { BackendProject, PaginatedResponse, StartupProject } from './startups'
 
 const projects: BackendProject[] = Array.from({ length: 8 }, (_, index) => ({
@@ -67,5 +67,43 @@ describe('fetchStartupProjects', () => {
       .mockResolvedValueOnce(jsonResponse({ detail: 'Unavailable' }, { status: 503 }))
 
     await expect(fetchStartupProjects(11)).rejects.toBeInstanceOf(ApiError)
+  })
+})
+
+describe('updateStartupFollow', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  it('returns a successful local follow response without contacting the backend', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+
+    await expect(updateStartupFollow(11, true)).resolves.toEqual({
+      startup_id: 11,
+      is_following: true,
+    })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('returns the updated local state when unfollowing', async () => {
+    await expect(updateStartupFollow(11, false)).resolves.toEqual({
+      startup_id: 11,
+      is_following: false,
+    })
+  })
+
+  it('returns a successful local save response without contacting the backend', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+
+    await expect(updateStartupSave(11, true)).resolves.toEqual({
+      startup_id: 11,
+      is_saved: true,
+    })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('returns the updated local state when removing a saved startup', async () => {
+    await expect(updateStartupSave(11, false)).resolves.toEqual({
+      startup_id: 11,
+      is_saved: false,
+    })
   })
 })

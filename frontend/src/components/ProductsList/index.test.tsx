@@ -27,7 +27,7 @@ describe('ProductsList Component', () => {
   it('should render the list of products with correct titles and text', () => {
     renderProductsList(productsMock);
 
-    const heading = screen.getByRole('heading', { name: /інформація про проекти/i });
+    const heading = screen.getByRole('heading', { name: /інформація про проєкти/i });
     expect(heading).toBeInTheDocument();
 
     const items = screen.getAllByTestId('product-item');
@@ -41,7 +41,7 @@ describe('ProductsList Component', () => {
 
     expect(container.firstChild).toBeNull();
 
-    const heading = screen.queryByRole('heading', { name: /інформація про проекти/i });
+    const heading = screen.queryByRole('heading', { name: /інформація про проєкти/i });
     expect(heading).not.toBeInTheDocument();
   });
 });

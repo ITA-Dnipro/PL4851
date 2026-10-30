@@ -48,6 +48,37 @@ export interface StartupProject {
   description: string
 }
 
+export interface StartupFollowResponse {
+  startup_id: number
+  is_following: boolean
+}
+
+export interface StartupSaveResponse {
+  startup_id: number
+  is_saved: boolean
+}
+
+// Local mock for /api/startups/{id}/follow/ until the backend endpoint is available.
+async function mockStartupAction<T>(
+  createResponse: () => T,
+): Promise<T> {
+  return createResponse()
+}
+
+export async function updateStartupFollow(
+  startupId: number,
+  shouldFollow: boolean,
+): Promise<StartupFollowResponse> {
+  return mockStartupAction(() => ({ startup_id: startupId, is_following: shouldFollow }))
+}
+
+export async function updateStartupSave(
+  startupId: number,
+  shouldSave: boolean,
+): Promise<StartupSaveResponse> {
+  return mockStartupAction(() => ({ startup_id: startupId, is_saved: shouldSave }))
+}
+
 // The backend sends uploaded files as paths ("/media/thumbs/placeholder.jpg")
 function toMediaUrl(path: string) {
   return /^https?:\/\//.test(path) ? path : `${BACKEND_ORIGIN}${path}`

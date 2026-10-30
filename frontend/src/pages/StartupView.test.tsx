@@ -86,9 +86,113 @@ describe('StartupView', () => {
 
     const tags = within(screen.getByRole('list', { name: 'Галузі' })).getAllByRole('listitem')
     expect(tags.map((tag) => tag.textContent)).toEqual(profile.industries)
-    for (const label of ['Стежити', 'Написати', 'Додати в збережені']) {
+    for (const tag of within(screen.getByRole('list', { name: 'Галузі' })).getAllByRole('button')) {
+      expect(tag).toHaveAttribute('aria-pressed', 'false')
+    }
+    for (const label of ['Стежити', 'Додати в збережені']) {
       expect(screen.getByRole('button', { name: label })).toBeEnabled()
     }
+    expect(screen.getByRole('link', { name: 'Написати' })).toHaveAttribute(
+      'href',
+      `mailto:${profile.contact.email}`,
+    )
+  })
+
+  it('calls the follow API and updates its accessible state', async () => {
+    mockFetch().mockResolvedValue(jsonResponse(profile))
+    const updateFollow = vi
+      .spyOn(startupsApi, 'updateStartupFollow')
+      .mockImplementation(async (startupId, shouldFollow) => ({
+        startup_id: startupId,
+        is_following: shouldFollow,
+      }))
+    const user = renderPage()
+
+    const followButton = await screen.findByRole('button', { name: 'Стежити' })
+    expect(followButton).toHaveAttribute('aria-pressed', 'false')
+
+    await user.click(followButton)
+
+    expect(updateFollow).toHaveBeenCalledWith(profile.startup_id, true)
+    const followingButton = await screen.findByRole('button', { name: 'Ви стежите' })
+    expect(followingButton).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(followingButton)
+
+    expect(updateFollow).toHaveBeenLastCalledWith(profile.startup_id, false)
+    expect(await screen.findByRole('button', { name: 'Стежити' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+  })
+
+  it('calls the save API stub and updates its accessible state', async () => {
+    mockFetch().mockResolvedValue(jsonResponse(profile))
+    const updateSave = vi
+      .spyOn(startupsApi, 'updateStartupSave')
+      .mockImplementation(async (startupId, shouldSave) => ({
+        startup_id: startupId,
+        is_saved: shouldSave,
+      }))
+    const user = renderPage()
+
+    const saveButton = await screen.findByRole('button', { name: 'Додати в збережені' })
+    await user.click(saveButton)
+
+    expect(updateSave).toHaveBeenCalledWith(profile.startup_id, true)
+    const savedButton = screen.getByRole('button', { name: 'Збережено' })
+    expect(savedButton).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(savedButton)
+    expect(updateSave).toHaveBeenLastCalledWith(profile.startup_id, false)
+    expect(screen.getByRole('button', { name: 'Додати в збережені' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+  })
+
+  it('keeps the previous save state when the save API stub fails', async () => {
+    mockFetch().mockResolvedValue(jsonResponse(profile))
+    vi.spyOn(startupsApi, 'updateStartupSave').mockRejectedValue(new Error('Unavailable'))
+    const user = renderPage()
+
+    await user.click(await screen.findByRole('button', { name: 'Додати в збережені' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Не вдалося змінити збереження. Спробуйте ще раз.',
+    )
+    expect(screen.getByRole('button', { name: 'Додати в збережені' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+  })
+
+  it('shows an error and keeps the previous follow state when the API fails', async () => {
+    mockFetch().mockResolvedValue(jsonResponse(profile))
+    vi.spyOn(startupsApi, 'updateStartupFollow').mockRejectedValue(new Error('Unavailable'))
+    const user = renderPage()
+
+    await user.click(await screen.findByRole('button', { name: 'Стежити' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Не вдалося змінити підписку. Спробуйте ще раз.',
+    )
+    expect(screen.getByRole('button', { name: 'Стежити' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+  })
+
+  it('allows selecting and unselecting industry tags', async () => {
+    mockFetch().mockResolvedValue(jsonResponse(profile))
+    const user = renderPage()
+
+    const tag = await screen.findByRole('button', { name: 'Виноробство' })
+    await user.click(tag)
+    expect(tag).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(tag)
+    expect(tag).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('renders the main content and the sidebar with contacts', async () => {
@@ -245,7 +349,9 @@ describe('StartupView', () => {
       renderPage('/startups/11')
 
       expect(await screen.findByText(`${project.label}:`)).toBeInTheDocument()
-      expect(screen.getByTestId('location')).toHaveTextContent(`/startups/${profile.slug}`)
+      await waitFor(() =>
+        expect(screen.getByTestId('location')).toHaveTextContent(`/startups/${profile.slug}`),
+      )
       expect(fetchProjects).toHaveBeenCalledTimes(1)
       expect(fetchProjects.mock.calls[0][1]?.aborted).toBe(false)
     })
