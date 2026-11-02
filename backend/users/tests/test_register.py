@@ -251,7 +251,17 @@ class RegisterValidationTests(RegisterTestCase):
         )
 
     def test_rejects_password_without_digits(self):
-        response = self.register(password='onlyletters', password_confirm='onlyletters')
+        response = self.register(password='OnlyLetters', password_confirm='OnlyLetters')
+
+        self.assert_field_error(response, 'password')
+
+    def test_rejects_password_without_uppercase(self):
+        response = self.register(password='lower-case1', password_confirm='lower-case1')
+
+        self.assert_field_error(response, 'password')
+
+    def test_rejects_password_with_cyrillic_letters(self):
+        response = self.register(password='Пароль-Ok7', password_confirm='Пароль-Ok7')
 
         self.assert_field_error(response, 'password')
 

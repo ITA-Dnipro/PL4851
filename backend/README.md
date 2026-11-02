@@ -164,7 +164,7 @@ When `DEBUG=False`, `EMAIL_BACKEND` and `FRONTEND_URL` are required.
 ```
 
 - `role`: `startup` or `investor`. `legal_form`: `sole_proprietor` (ФОП) or `legal_entity`.
-- Password rules: at least 8 characters, at least one letter and one digit, not a common password, not too similar to the email or name.
+- Password rules: at least 8 characters with an uppercase Latin letter (A-Z), a lowercase Latin letter (a-z) and a digit (0-9), no Cyrillic letters; not a common password, not too similar to the email or name. The same rules apply when a new password is set through password reset.
 
 Response `201`:
 
