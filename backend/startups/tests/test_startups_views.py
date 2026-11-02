@@ -133,6 +133,23 @@ class StartupPublicProfileDetailViewTest(APITestCase):
         response = self.client.get(invalid_url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_get_startup_profile_by_slug(self):
+        """Verify that the profile is also found by its slug."""
+        url = reverse(
+            'startups:startup-detail-by-slug', kwargs={'slug': self.startup.slug}
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['startup_id'], self.startup.startup_id)
+
+    def test_get_unknown_startup_slug_returns_404(self):
+        """Verify that a request with a non-existent slug returns a 404."""
+        url = reverse(
+            'startups:startup-detail-by-slug', kwargs={'slug': 'no-such-startup'}
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_about_html_sanitization(self):
         """Checking that the HTML is being cleaned up"""
         self.startup.startup_description = (

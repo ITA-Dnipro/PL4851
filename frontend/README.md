@@ -24,7 +24,7 @@ cp .env.example .env    # edit VITE_API_URL if needed
 | `/login` | Login | |
 | `/forgot-password` | ForgotPassword (placeholder) | |
 | `/register` | Register | |
-| `/startups/:id` | StartupView | |
+| `/startups/:slug` | StartupView | |
 | `/dashboard` | InvestorDashboard | yes |
 | `/messages` | Inbox | yes |
 | `/profile` | Profile (placeholder) | yes |
