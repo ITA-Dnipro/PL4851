@@ -12,11 +12,11 @@ User = get_user_model()
 def unverified_accounts(email):
     """Accounts registered with this email that were never verified.
 
-    An inactive user who has logged in before was deactivated by an admin,
+    A verified account deactivated by an admin keeps its email_verified_at,
     so it is not treated as a pending registration.
     """
     return User.objects.filter(
-        email__iexact=email, is_active=False, last_login__isnull=True
+        email__iexact=email, is_active=False, email_verified_at__isnull=True
     )
 
 
@@ -54,6 +54,7 @@ def register_user(
                 role=role,
                 legal_form=legal_form,
                 is_active=False,
+                email_verified_at=None,
             )
     except IntegrityError:
         # Another request registered the same email after the serializer check

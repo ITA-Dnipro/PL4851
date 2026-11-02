@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.db.models.functions import Lower
 from django.utils import timezone
 
 MAX_LENGTH_NAME = 150
@@ -12,7 +13,9 @@ class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError('Email is required')
-        user = self.model(email=self.normalize_email(email), **extra_fields)
+        # Stored in lowercase: login ignores the email case
+        email = self.normalize_email(email).lower()
+        user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -52,6 +55,11 @@ class User(AbstractUser):
         default='',
     )
     is_active = models.BooleanField(default=True)
+    # Registration sets None until the email is verified; accounts created any
+    # other way (admin, createsuperuser, fixtures) count as verified
+    email_verified_at = models.DateTimeField(
+        null=True, blank=True, default=timezone.now
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = 'email'
@@ -63,6 +71,14 @@ class User(AbstractUser):
         indexes = [
             models.Index(fields=['role'], name='user_role_idx'),
         ]
+        constraints = [
+            # The email field is unique only with the exact case
+            models.UniqueConstraint(Lower('email'), name='user_email_lower_unique'),
+        ]
+
+    def clean(self):
+        super().clean()
+        self.email = self.email.lower()
 
     def can_have_startup_profile(self):
         return self.role == self.Role.STARTUP

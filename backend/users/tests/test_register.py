@@ -71,6 +71,7 @@ class RegisterSuccessTests(RegisterTestCase):
 
         user = User.objects.get(email=EMAIL)
         self.assertFalse(user.is_active)
+        self.assertIsNone(user.email_verified_at)
         self.assertTrue(user.check_password(PASSWORD))
         self.assertEqual(user.first_name, 'Andrii')
         self.assertEqual(user.last_name, 'Test')
@@ -191,9 +192,9 @@ class RegisterUnverifiedEmailTests(RegisterTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertFalse(email_verification_token.check_token(user, self.old_token))
 
-    def test_keeps_an_account_deactivated_by_an_admin(self):
-        # A user who has logged in before was verified, then deactivated
-        self.pending.last_login = timezone.now()
+    def test_keeps_a_verified_account_deactivated_by_an_admin(self):
+        # Verified and then deactivated, even if it never logged in
+        self.pending.email_verified_at = timezone.now()
         self.pending.save()
 
         response = self.register()
@@ -201,6 +202,20 @@ class RegisterUnverifiedEmailTests(RegisterTestCase):
         self.assertEqual(response.status_code, 409)
         self.assertEqual(User.objects.get(email=EMAIL).pk, self.pending.pk)
         self.assertTrue(StartupProfile.objects.filter(user=self.pending).exists())
+
+    def test_keeps_a_deactivated_account_created_outside_registration(self):
+        user = User.objects.create_user(
+            email='admin.created@example.com',
+            first_name='Admin',
+            last_name='Created',
+            role=User.Role.STARTUP,
+            is_active=False,
+        )
+
+        response = self.register(email='admin.created@example.com')
+
+        self.assertEqual(response.status_code, 409)
+        self.assertTrue(User.objects.filter(pk=user.pk).exists())
 
 
 class RegisterValidationTests(RegisterTestCase):
