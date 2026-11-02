@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { ApiError, NETWORK_ERROR_STATUS } from '../../api/errors'
+import { ApiError, NETWORK_ERROR_STATUS } from '../../api/client/errors'
 import {
   INVALID_CREDENTIALS_MESSAGE,
   INVALID_DATA_MESSAGE,

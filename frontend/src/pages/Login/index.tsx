@@ -1,10 +1,11 @@
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react'
 import type { SubmitEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import type { Location, To } from 'react-router-dom'
 
-import { login } from '../../api/auth'
 import Icon from '../../components/Icon'
+import { useAuth } from '../../hooks/useAuth'
 import styles from './styles.module.css'
 import { getLoginErrorMessage } from './errors'
 import { validateEmail, validatePassword } from './validation'
@@ -19,6 +20,14 @@ function inputClassName(error: string | null, isChecked: boolean) {
 
 function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { login } = useAuth()
+  // ProtectedRoute passes the page the user tried to open
+  const from = (location.state as { from?: Location } | null)?.from
+  // The whole address, so query parameters and the hash survive the login
+  const redirectTo: To = from
+    ? { pathname: from.pathname, search: from.search, hash: from.hash }
+    : '/'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(false)
@@ -48,8 +57,7 @@ function Login() {
     setServerError(null)
     try {
       await login({ email: email.trim(), password, remember })
-      // Keeping the access token and the user comes with AuthProvider (#26)
-      navigate('/')
+      navigate(redirectTo, { replace: true })
     } catch (error) {
       setServerError(getLoginErrorMessage(error))
       setIsSubmitting(false)

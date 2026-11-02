@@ -5,6 +5,7 @@ import styles from './Header.module.css';
 import logo from '../assets/logo.svg';
 import searchIcon from '../assets/search.svg';
 import { useAuth } from '../hooks/useAuth';
+import UserMenu from './UserMenu';
 
 export default function Header() {
   const [query, setQuery] = useState('');
@@ -49,7 +50,7 @@ export default function Header() {
 
             <div className={styles.actions}>
               {isAuthenticated ? (
-                <Link to="/dashboard" className="button">Кабінет</Link>
+                <UserMenu />
               ) : (
                 <>
                   <Link to="/login" className={styles.login}>Увійти</Link>

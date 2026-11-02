@@ -5,6 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Header from './Header';
 import { useAuth } from '../hooks/useAuth';
 import type { AuthUser } from '../hooks/useAuth'
+import { authValue } from '../test/auth'
 
 const navigate = vi.fn();
 
@@ -18,6 +19,7 @@ vi.mock('../hooks/useAuth');
 const mockUser: AuthUser = {
   id: 1,
   email: 'test@example.com',
+  role: 'startup',
 }
 
 function renderHeader() {
@@ -31,7 +33,7 @@ function renderHeader() {
 describe('Header', () => {
   beforeEach(() => {
     navigate.mockClear();
-    vi.mocked(useAuth).mockReturnValue({ user: null, isAuthenticated: false })
+    vi.mocked(useAuth).mockReturnValue(authValue())
   });
 
   it('The logo links to the homepage', () => {
@@ -69,9 +71,12 @@ describe('Header', () => {
   });
 
   it('hides the login buttons when the user is logged in', () => {
-    vi.mocked(useAuth).mockReturnValue({ user: mockUser, isAuthenticated: true })
+    vi.mocked(useAuth).mockReturnValue(
+      authValue({ status: 'authenticated', isAuthenticated: true, user: mockUser }),
+    )
     renderHeader();
 
     expect(screen.queryByRole('link', { name: 'Увійти' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Мій профіль' })).toBeInTheDocument();
   });
 });
