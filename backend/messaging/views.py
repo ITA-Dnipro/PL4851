@@ -1,3 +1,5 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
@@ -39,6 +41,12 @@ def _get_conversation_or_403(conversation_id, user_id):
 
 class ConversationListCreateView(APIView):
     permission_classes = [IsAuthenticated]
+
+    def get_throttles(self):
+        if self.request.method == 'POST':
+            self.throttle_scope = 'create_conversation'
+            return [ScopedRateThrottle()]
+        return []
 
     @extend_schema(
         summary='List conversations for the current user',
@@ -176,7 +184,14 @@ class MessageListCreateView(APIView):
             serializer.validated_data['body'],
             attachments=serializer.validated_data.get('attachments', []),
         )
-        return Response(MessageSerializer(message).data, status=status.HTTP_201_CREATED)
+        serialized_message = MessageSerializer(message).data
+
+        async_to_sync(get_channel_layer().group_send)(
+            f'conversation.{conversation_id}',
+            {'type': 'message_received', 'message': serialized_message},
+        )
+
+        return Response(serialized_message, status=status.HTTP_201_CREATED)
 
 
 class ConversationReadView(APIView):

@@ -1,6 +1,9 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from projects.models import Project
+from startups.models import StartupProfile
+
 User = get_user_model()
 
 
@@ -26,6 +29,26 @@ class ConversationCreateSerializer(serializers.Serializer):
                 f'Unknown user ids: {sorted(missing_ids)}'
             )
         return list(unique_ids)
+
+    def validate_project_id(self, value):
+        if value is None:
+            return value
+        is_visible = (
+            Project.objects.exclude(status=Project.ProjectStatus.DRAFT)
+            .filter(pk=value)
+            .exists()
+        )
+        if not is_visible:
+            raise serializers.ValidationError('Unknown or inaccessible project_id')
+        return value
+
+    def validate_startup_id(self, value):
+        if value is None:
+            return value
+        is_visible = StartupProfile.objects.filter(pk=value, is_verified=True).exists()
+        if not is_visible:
+            raise serializers.ValidationError('Unknown or inaccessible startup_id')
+        return value
 
 
 class MessageCreateSerializer(serializers.Serializer):

@@ -194,6 +194,7 @@ REST_FRAMEWORK = {
         'password_reset_ip': '5/hour',
         'password_reset_email': '5/hour',
         'send_message': '30/min',
+        'create_conversation': '10/min',
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
