@@ -5,6 +5,7 @@ import Home from './pages/Home.tsx'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 import ForgotPassword from './pages/ForgotPassword'
+import RestorePassword from './pages/RestorePassword'
 import Register from './pages/Register'
 import ResendVerification from './pages/ResendVerification'
 import Terms from './pages/Terms'
@@ -20,6 +21,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<RestorePassword />} />
         <Route path="/register" element={<Register />} />
         <Route path="/resend-verification" element={<ResendVerification />} />
         <Route path="/terms" element={<Terms />} />

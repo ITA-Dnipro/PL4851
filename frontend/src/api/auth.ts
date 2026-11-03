@@ -61,3 +61,23 @@ export function logout() {
 export function register(data: RegisterRequest) {
   return request<RegisterResponse>('/auth/register/', { method: 'POST', body: data })
 }
+
+export interface PasswordResetConfirmRequest {
+  uid: string
+  token: string
+  password: string
+}
+
+export interface PasswordResetConfirmResponse {
+  detail: string
+}
+
+export function confirmPasswordReset(data: PasswordResetConfirmRequest) {
+  return request<PasswordResetConfirmResponse>(
+    '/auth/password-reset/confirm/',
+    {
+      method: 'POST',
+      body: data,
+    },
+  )
+}
