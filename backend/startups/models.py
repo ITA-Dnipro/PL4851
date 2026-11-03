@@ -144,15 +144,19 @@ class StartupProfile(models.Model):
     short_description = models.CharField(
         max_length=MAX_LENGTH_SHORT_DESCRIPTION, blank=True, default=''
     )
-    startup_description = models.TextField()
+    startup_description = models.TextField(blank=True, default='')
     website = models.URLField(max_length=MAX_LENGTH_WEBSITE, blank=True)
-    startup_phone = models.CharField(max_length=MAX_LENGTH_STARTUP_PHONE)
+    startup_phone = models.CharField(
+        max_length=MAX_LENGTH_STARTUP_PHONE, blank=True, default=''
+    )
     location = models.CharField(
         max_length=MAX_LENGTH_LOCATION,
         choices=LocationType.choices,
         default=LocationType.KYIV_CITY,
     )
-    industries = models.ManyToManyField(Industry, related_name='startup_profiles')
+    industries = models.ManyToManyField(
+        Industry, related_name='startup_profiles', blank=True
+    )
     founded_at = models.DateField(blank=True, null=True)
     logo = models.ImageField(
         upload_to='startups/logos/%Y/%m/',
@@ -166,7 +170,9 @@ class StartupProfile(models.Model):
     hero_image = models.ImageField(
         upload_to='startups/hero_images/%Y/%m/', blank=True, null=True
     )
-    startup_email = models.EmailField(max_length=MAX_LENGTH_EMAIL)
+    startup_email = models.EmailField(
+        max_length=MAX_LENGTH_EMAIL, blank=True, default=''
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
