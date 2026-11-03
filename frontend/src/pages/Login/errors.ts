@@ -1,9 +1,10 @@
 import { ApiError, NETWORK_ERROR_STATUS } from '../../api/client/errors'
+import { NETWORK_ERROR_MESSAGE, UNKNOWN_ERROR_MESSAGE } from '../../utils/apiMessages'
+
+export { NETWORK_ERROR_MESSAGE, UNKNOWN_ERROR_MESSAGE }
 
 export const INVALID_DATA_MESSAGE = 'Перевірте введені дані'
 export const INVALID_CREDENTIALS_MESSAGE = 'Електронна пошта чи пароль вказані некоректно'
-export const NETWORK_ERROR_MESSAGE = 'Не вдалося з’єднатися із сервером. Спробуйте пізніше'
-export const UNKNOWN_ERROR_MESSAGE = 'Щось пішло не так. Спробуйте ще раз'
 
 export function lockoutMessage(retryAfter: number | null) {
   if (!retryAfter) {

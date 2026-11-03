@@ -5,7 +5,9 @@ import Home from './pages/Home.tsx'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 import ForgotPassword from './pages/ForgotPassword'
-import Register from './pages/Register.tsx'
+import Register from './pages/Register'
+import ResendVerification from './pages/ResendVerification'
+import Terms from './pages/Terms'
 import StartupView from './pages/StartupView.tsx'
 import InvestorDashboard from './pages/InvestorDashboard.tsx'
 import Inbox from './pages/Inbox.tsx'
@@ -19,6 +21,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/resend-verification" element={<ResendVerification />} />
+        <Route path="/terms" element={<Terms />} />
         <Route path="/startups/:slug" element={<StartupView />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<InvestorDashboard />} />
