@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/startups/', include('startups.urls', namespace='startups')),
     path('api/investors/', include('investors.urls', namespace='investors')),
     path('api/', include('projects.urls', namespace='projects')),
+    path('api/', include('dashboard.urls')),
 ]
 
 if settings.DEBUG:
