@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_spectacular',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'users',
@@ -192,7 +193,16 @@ REST_FRAMEWORK = {
         'login': '5/min',
         'password_reset_ip': '5/hour',
         'password_reset_email': '5/hour',
+        'send_message': '30/min',
     },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'PL4851 API',
+    'DESCRIPTION': 'Forum platform API',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 
 SIMPLE_JWT = {
