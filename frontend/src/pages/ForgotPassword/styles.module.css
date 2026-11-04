@@ -17,9 +17,10 @@
   font-weight: 600;
 }
 
-/* The title gets focus from code after a successful request; it isn't a tab stop */
-.title:focus {
-  outline: none;
+/* The title gets focus from code after a successful request: the ring shows for keyboard users */
+.title:focus-visible {
+  outline: 2px solid var(--color-black);
+  outline-offset: 2px;
 }
 
 .fields {
@@ -38,13 +39,10 @@
   margin-bottom: 20px;
 }
 
-/* The bottom padding keeps room for the error, so the form doesn't jump */
 .field {
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-bottom: 20px;
 }
 
 .label {
@@ -92,10 +90,10 @@
   box-shadow: 0 0 0 1px var(--color-green);
 }
 
+/* In the flow, so a wrapped message pushes the button down instead of covering the input;
+   the minimum height keeps a line free, so the form doesn't jump when a message appears */
 .error {
-  position: absolute;
-  bottom: 0;
-  left: 0;
+  min-height: 16px;
   font-size: 12px;
   line-height: 16px;
   color: var(--color-error);
