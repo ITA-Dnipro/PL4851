@@ -47,6 +47,11 @@ export interface PasswordResetRequestResponse {
 }
 
 // The same 200 for every valid address, so the answer doesn't tell whether the account exists
+/**
+ * Requests a password reset email and returns the backend's response detail.
+ * A successful response does not confirm that an account exists or that an email was sent.
+ * Rejects with ApiError for HTTP or network failures; abort errors propagate.
+ */
 export function requestPasswordReset(data: PasswordResetRequest) {
   return request<PasswordResetRequestResponse>('/auth/password-reset/', {
     method: 'POST',

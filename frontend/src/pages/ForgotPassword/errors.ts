@@ -12,6 +12,11 @@ export interface ResetRequestFailure {
 }
 
 // What to show under the email field when the reset request fails
+/**
+ * Returns a display message and whether the email field should be marked invalid.
+ * Only a 400 response with an email field error marks it invalid. Rate limiting and
+ * network failures get specific messages; other errors get a generic message.
+ */
 export function getResetRequestFailure(error: unknown): ResetRequestFailure {
   if (!(error instanceof ApiError)) {
     return { message: UNKNOWN_ERROR_MESSAGE, invalidEmail: false }

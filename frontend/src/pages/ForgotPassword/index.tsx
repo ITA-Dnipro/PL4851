@@ -18,6 +18,10 @@ function inputClassName(isInvalid: boolean, isChecked: boolean) {
   return isChecked ? `${styles.input} ${styles.inputValid}` : styles.input
 }
 
+/**
+ * Renders the password reset request form, optionally prefilled from the email query parameter.
+ * A successful request replaces the form with a confirmation and focuses its heading.
+ */
 function ForgotPassword() {
   // ?email=... fills in the address, so other pages can link here with it
   const [searchParams] = useSearchParams()
@@ -46,6 +50,10 @@ function ForgotPassword() {
     }
   }, [isSuccess])
 
+  /**
+   * Submits the trimmed email when valid and no request is pending. Request failures
+   * are converted to a message on the form so the user can retry.
+   */
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     setTouched(true)
