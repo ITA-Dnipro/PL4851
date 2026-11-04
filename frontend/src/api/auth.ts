@@ -38,6 +38,22 @@ export function logout() {
   return request<void>('/auth/logout/', { method: 'POST' })
 }
 
+export interface PasswordResetRequest {
+  email: string
+}
+
+export interface PasswordResetRequestResponse {
+  detail: string
+}
+
+// The same 200 for every valid address, so the answer doesn't tell whether the account exists
+export function requestPasswordReset(data: PasswordResetRequest) {
+  return request<PasswordResetRequestResponse>('/auth/password-reset/', {
+    method: 'POST',
+    body: data,
+  })
+}
+
 export interface PasswordResetConfirmRequest {
   uid: string
   token: string

@@ -22,7 +22,8 @@ cp .env.example .env    # edit VITE_API_URL if needed
 |---|---|---|
 | `/` | Home | |
 | `/login` | Login | |
-| `/forgot-password` | ForgotPassword (placeholder) | |
+| `/forgot-password` | ForgotPassword | |
+| `/reset-password` | RestorePassword | |
 | `/register` | Register | |
 | `/startups/:slug` | StartupView | |
 | `/dashboard` | InvestorDashboard | yes |
@@ -53,7 +54,7 @@ Tests sit next to the code they test (`index.test.tsx`, `request.test.ts`).
 ## API and auth
 ```
 api/
-  auth.ts                login(), refresh(), logout()
+  auth.ts                login(), refresh(), logout(), requestPasswordReset(), confirmPasswordReset()
   client/
     request.ts           request(): a plain request to the backend
     authRequest.ts       authRequest(): request() + access token, refresh on 401
