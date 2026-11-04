@@ -10,7 +10,16 @@ describe('isValidEmail', () => {
     },
   )
 
-  it.each(['', 'exgmail.com', 'name@', 'name@example', 'na me@example.com'])(
+  it.each([
+    '',
+    'exgmail.com',
+    'name@',
+    'name@example',
+    'na me@example.com',
+    'name@example..com',
+    'name@.example.com',
+    'name@example.com.',
+  ])(
     'rejects "%s"',
     (email) => {
       expect(isValidEmail(email)).toBe(false)
