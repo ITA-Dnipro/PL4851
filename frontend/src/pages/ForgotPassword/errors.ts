@@ -19,8 +19,11 @@ export function getResetRequestFailure(error: unknown): ResetRequestFailure {
 
   switch (error.status) {
     case 400:
-      // Django checks addresses more strictly than our pattern, e.g. a one-letter domain ending
-      return { message: EMAIL_FORMAT_MESSAGE, invalidEmail: true }
+      // Django checks addresses more strictly than our pattern, e.g. a one-letter domain ending.
+      // Any other bad request isn't the user's typo, so it gets the generic text
+      return error.fieldErrors.email
+        ? { message: EMAIL_FORMAT_MESSAGE, invalidEmail: true }
+        : { message: UNKNOWN_ERROR_MESSAGE, invalidEmail: false }
     case 429:
       return { message: TOO_MANY_REQUESTS_MESSAGE, invalidEmail: false }
     case NETWORK_ERROR_STATUS:

@@ -51,6 +51,7 @@ describe('ForgotPassword page', () => {
 
     expect(screen.getByRole('heading', { name: 'Забули пароль?' })).toBeInTheDocument()
     expect(emailInput()).toHaveValue('')
+    expect(emailInput()).toBeRequired()
     expect(submitButton()).toBeDisabled()
     expect(screen.getByRole('alert')).toBeEmptyDOMElement()
     expect(screen.getByText(/Я згадав свій пароль/)).toBeInTheDocument()
@@ -95,7 +96,7 @@ describe('ForgotPassword page', () => {
 
     expect(requestPasswordReset).toHaveBeenCalledExactlyOnceWith({ email: EMAIL })
     expect(await screen.findByRole('heading', { name: SUCCESS_TITLE })).toHaveFocus()
-    expect(screen.getByText(SUCCESS_TEXT)).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent(SUCCESS_TEXT)
     expect(screen.queryByLabelText('Електронна пошта')).not.toBeInTheDocument()
     expect(screen.queryByText(/Я згадав свій пароль/)).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Повернутися до входу' })).toHaveAttribute(

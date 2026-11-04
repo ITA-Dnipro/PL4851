@@ -7,13 +7,14 @@ import { TOO_MANY_REQUESTS_MESSAGE, getResetRequestFailure } from './errors'
 
 describe('getResetRequestFailure', () => {
   it.each([
-    [400, EMAIL_FORMAT_MESSAGE, true],
-    [429, TOO_MANY_REQUESTS_MESSAGE, false],
-    [NETWORK_ERROR_STATUS, NETWORK_ERROR_MESSAGE, false],
-    [500, UNKNOWN_ERROR_MESSAGE, false],
-  ])('maps status %i to its message', (status, message, invalidEmail) => {
+    [400, { email: ['Enter a valid email address.'] }, EMAIL_FORMAT_MESSAGE, true],
+    [400, { non_field_errors: ['Invalid data.'] }, UNKNOWN_ERROR_MESSAGE, false],
+    [429, {}, TOO_MANY_REQUESTS_MESSAGE, false],
+    [NETWORK_ERROR_STATUS, {}, NETWORK_ERROR_MESSAGE, false],
+    [500, {}, UNKNOWN_ERROR_MESSAGE, false],
+  ])('maps status %i with field errors %o to its message', (status, fieldErrors, message, invalidEmail) => {
     // A Retry-After from the backend must not add a wait time to the message
-    const error = new ApiError(status, 'Backend text', {}, 900)
+    const error = new ApiError(status, 'Backend text', fieldErrors, 900)
 
     expect(getResetRequestFailure(error)).toEqual({ message, invalidEmail })
   })

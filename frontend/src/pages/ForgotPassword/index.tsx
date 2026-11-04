@@ -74,7 +74,7 @@ function ForgotPassword() {
         {isSuccess ? (
           <>
             <div className={styles.fields}>
-              <p className={styles.text}>
+              <p className={styles.text} role="status" aria-live="polite">
                 На вашу електронну адресу були надіслані інструкції для зміни пароля.
               </p>
             </div>
@@ -104,6 +104,8 @@ function ForgotPassword() {
                   name="email"
                   autoComplete="email"
                   placeholder="Введіть свою електронну пошту"
+                  // Tells screen readers the field is mandatory; noValidate keeps browser popups off
+                  required
                   className={inputClassName(isEmailInvalid, touched && !serverError)}
                   value={email}
                   // A late answer would otherwise be shown against an edited address
