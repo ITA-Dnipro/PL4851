@@ -1,6 +1,9 @@
 import pytest
+from asgiref.sync import sync_to_async
 from channels.testing import WebsocketCommunicator
 from django.contrib.auth import get_user_model
+from django.urls import reverse
+from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import AccessToken
 
 from config.asgi import application
@@ -96,7 +99,6 @@ async def test_send_message_persists_and_broadcasts(user_a, user_b):
         'type': 'joined_conversation',
         'conversation_id': conversation_id,
     }
-    # sender gets notified that the receiver came online
     await sender.receive_json_from()
 
     await sender.send_json_to(
@@ -109,6 +111,41 @@ async def test_send_message_persists_and_broadcasts(user_a, user_b):
     assert event['message']['sender_id'] == user_a.pk
 
     await sender.disconnect()
+    await receiver.disconnect()
+
+
+async def test_rest_send_message_broadcasts_to_websocket_participants(user_a, user_b):
+    conversation_id = await _db(create_conversation, [user_a.pk, user_b.pk])
+
+    receiver = await _connect_authenticated(user_b)
+    await receiver.send_json_to(
+        {'type': 'join_conversation', 'conversation_id': conversation_id}
+    )
+    assert await receiver.receive_json_from() == {
+        'type': 'joined_conversation',
+        'conversation_id': conversation_id,
+    }
+
+    def _post_message():
+        client = APIClient()
+        client.force_authenticate(user=user_a)
+        return client.post(
+            reverse(
+                'messaging:message-list',
+                kwargs={'conversation_id': conversation_id},
+            ),
+            {'body': 'hello from REST'},
+            format='json',
+        )
+
+    response = await sync_to_async(_post_message)()
+    assert response.status_code == 201
+
+    event = await receiver.receive_json_from()
+    assert event['type'] == 'message_received'
+    assert event['message']['body'] == 'hello from REST'
+    assert event['message']['sender_id'] == user_a.pk
+
     await receiver.disconnect()
 
 

@@ -19,6 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from config.views import HealthView
 
@@ -30,6 +31,13 @@ urlpatterns = [
     path('api/startups/', include('startups.urls', namespace='startups')),
     path('api/investors/', include('investors.urls', namespace='investors')),
     path('api/', include('projects.urls', namespace='projects')),
+    path('api/conversations/', include('messaging.urls', namespace='messaging')),
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path(
+        'api/docs/',
+        SpectacularSwaggerView.as_view(url_name='schema'),
+        name='swagger-ui',
+    ),
 ]
 
 if settings.DEBUG:

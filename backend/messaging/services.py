@@ -39,13 +39,23 @@ def _get_conversation_or_raise(conversations, conversation_id):
     return conversation
 
 
+def get_conversation_meta(conversation_id):
+    """Return the raw conversation document, or None if it doesn't exist."""
+    return get_conversations_collection().find_one({'conversation_id': conversation_id})
+
+
 def is_participant(conversation_id, user_id):
-    conversation = get_conversations_collection().find_one(
-        {'conversation_id': conversation_id}
-    )
+    conversation = get_conversation_meta(conversation_id)
     if conversation is None:
         return False
     return user_id in conversation['participants']
+
+
+def get_last_message(conversation_id):
+    return get_messages_collection().find_one(
+        {'conversation_id': conversation_id},
+        sort=[('created_at', -1), ('_id', -1)],
+    )
 
 
 def create_message(conversation_id, sender_id, body, attachments=None, meta=None):
