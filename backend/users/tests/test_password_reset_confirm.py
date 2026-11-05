@@ -13,7 +13,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.models import PasswordResetMetrics, PasswordResetToken
-from users.services import create_password_reset_token, hash_token
+from users.services.password_reset import create_password_reset_token, hash_token
 
 User = get_user_model()
 

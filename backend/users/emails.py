@@ -7,7 +7,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from premailer import transform
 
-from .services import PASSWORD_RESET_TOKEN_LIFETIME
+from .services.password_reset import PASSWORD_RESET_TOKEN_LIFETIME
 
 SUBJECT = 'Відновлення пароля'
 EXPIRY_MINUTES = int(PASSWORD_RESET_TOKEN_LIFETIME.total_seconds() // 60)

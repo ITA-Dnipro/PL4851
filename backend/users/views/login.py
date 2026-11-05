@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from rest_framework.exceptions import AuthenticationFailed, Throttled
 from rest_framework.response import Response
@@ -18,9 +17,8 @@ LOCKOUT_MESSAGE = 'Too many failed login attempts. Try again later.'
 
 def get_lockouts(request):
     """Failed-attempt counters checked on login: (cache key, max attempts, seconds)."""
-    # Same normalization as for stored emails, so the key matches the account
-    email = str(request.data.get('email', '')).strip()
-    email = get_user_model().objects.normalize_email(email)
+    # Lowercased like the login lookup, so changing the case doesn't reset counters
+    email = str(request.data.get('email', '')).strip().lower()
     client = BaseThrottle().get_ident(request)
 
     return [

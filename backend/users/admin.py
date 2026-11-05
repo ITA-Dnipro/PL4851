@@ -18,13 +18,13 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ('role', 'is_active')
     search_fields = ('email', 'first_name', 'last_name')
     ordering = ('email',)
-    readonly_fields = ('created_at', 'last_login')
+    readonly_fields = ('created_at', 'last_login', 'email_verified_at')
 
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         (
             'Персональна інформація',
-            {'fields': ('first_name', 'last_name', 'role')},
+            {'fields': ('first_name', 'last_name', 'role', 'legal_form')},
         ),
         (
             'Права доступу',
@@ -38,7 +38,7 @@ class UserAdmin(BaseUserAdmin):
                 )
             },
         ),
-        ('Дати', {'fields': ('created_at', 'last_login')}),
+        ('Дати', {'fields': ('created_at', 'last_login', 'email_verified_at')}),
     )
 
     add_fieldsets = (

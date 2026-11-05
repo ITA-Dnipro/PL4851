@@ -143,6 +143,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+    {
+        'NAME': 'users.validators.PasswordComplexityValidator',
+    },
 ]
 
 
@@ -195,6 +198,7 @@ REST_FRAMEWORK = {
         'password_reset_email': '5/hour',
         'send_message': '30/min',
         'create_conversation': '10/min',
+        'register': '10/hour',
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
@@ -226,6 +230,9 @@ REFRESH_COOKIE_NAME = 'refresh_token'
 REFRESH_COOKIE_PATH = '/api/auth/'
 REFRESH_COOKIE_SAMESITE = 'Lax'
 REFRESH_COOKIE_SECURE = not DEBUG
+
+# A link from the registration email stays valid this long
+EMAIL_VERIFICATION_TIMEOUT = 24 * 60 * 60  # seconds
 
 if DEBUG:
     EMAIL_BACKEND = os.getenv(
@@ -278,7 +285,7 @@ LOGGING = {
         },
     },
     'loggers': {
-        'users.services': {
+        'users.services.password_reset': {
             'handlers': ['password_reset_console'],
             'level': 'WARNING',
             'propagate': False,

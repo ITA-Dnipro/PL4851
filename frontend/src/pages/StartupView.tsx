@@ -8,6 +8,8 @@ import { ApiError } from '../api/client/errors'
 import {
   fetchStartupProfile,
   fetchStartupProjects,
+  updateStartupFollow,
+  updateStartupSave,
   type StartupProfile,
   type StartupProject, } from '../api/startups'
 import Icon from '../components/Icon'
@@ -117,7 +119,7 @@ function StartupView() {
 
   return (
     <>
-      <ProfileHeader profile={profile} />
+      <ProfileHeader key={profile.startup_id} profile={profile} />
 
       <div className={`container ${styles.layout}`}>
         <div>
@@ -190,6 +192,50 @@ function useProfile(slug: string) {
 
 function ProfileHeader({ profile }: { profile: StartupProfile }) {
   const { startup_name, hero_image, logo, location, industries } = profile
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [isSaved, setIsSaved] = useState(false)
+  const [isFollowPending, setIsFollowPending] = useState(false)
+  const [isSavePending, setIsSavePending] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([])
+
+  const toggleFollow = async () => {
+    const nextFollowingState = !isFollowing
+    setIsFollowPending(true)
+    setActionError(null)
+
+    try {
+      const result = await updateStartupFollow(profile.startup_id, nextFollowingState)
+      setIsFollowing(result.is_following)
+    } catch {
+      setActionError('Не вдалося змінити підписку. Спробуйте ще раз.')
+    } finally {
+      setIsFollowPending(false)
+    }
+  }
+
+  const toggleSave = async () => {
+    const nextSavedState = !isSaved
+    setIsSavePending(true)
+    setActionError(null)
+
+    try {
+      const result = await updateStartupSave(profile.startup_id, nextSavedState)
+      setIsSaved(result.is_saved)
+    } catch {
+      setActionError('Не вдалося змінити збереження. Спробуйте ще раз.')
+    } finally {
+      setIsSavePending(false)
+    }
+  }
+
+  const toggleIndustry = (industry: string) => {
+    setSelectedIndustries((selected) =>
+      selected.includes(industry)
+        ? selected.filter((item) => item !== industry)
+        : [...selected, industry],
+    )
+  }
 
   return (
     <section aria-labelledby="profile-name">
@@ -211,19 +257,53 @@ function ProfileHeader({ profile }: { profile: StartupProfile }) {
             {industries?.length && industries.length > 0 && (
               <ul className={styles.tags} aria-label="Галузі">
                 {industries.map((industry) => (
-                  <li key={industry} className={styles.tag}>
-                    {industry}
+                  <li key={industry}>
+                    <button
+                      type="button"
+                      className={`${styles.tag} ${styles.tagButton} ${
+                        selectedIndustries.includes(industry) ? styles.tagSelected : ''
+                      }`}
+                      aria-pressed={selectedIndustries.includes(industry)}
+                      onClick={() => toggleIndustry(industry)}
+                    >
+                      {industry}
+                    </button>
                   </li>
                 ))}
               </ul>
             )}
           </div>
 
-          {/* The buttons do nothing yet: follow/save come with #62, message with #63 */}
-          <div className={styles.actions}>
-            <ActionButton label="Стежити" icon={faUserPlus} />
-            <ActionButton label="Написати" icon={faEnvelope} />
-            <ActionButton label="Додати в збережені" icon={faStar} />
+          <div className={styles.actionGroup}>
+            <div className={styles.actions}>
+              <ActionButton
+                label={isFollowing ? 'Ви стежите' : 'Стежити'}
+                icon={faUserPlus}
+                pressed={isFollowing}
+                disabled={isFollowPending}
+                onClick={toggleFollow}
+              />
+              {profile.contact.email ? (
+                <a className={styles.action} href={`mailto:${profile.contact.email}`}>
+                  Написати
+                  <Icon icon={faEnvelope} className={styles.actionIcon} />
+                </a>
+              ) : (
+                <ActionButton label="Написати" icon={faEnvelope} disabled />
+              )}
+              <ActionButton
+                label={isSaved ? 'Збережено' : 'Додати в збережені'}
+                icon={faStar}
+                pressed={isSaved}
+                disabled={isSavePending}
+                onClick={toggleSave}
+              />
+            </div>
+            {actionError && (
+              <p className={styles.followError} role="alert">
+                {actionError}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -231,9 +311,27 @@ function ProfileHeader({ profile }: { profile: StartupProfile }) {
   )
 }
 
-function ActionButton({ label, icon }: { label: string; icon: IconDefinition }) {
+function ActionButton({
+  label,
+  icon,
+  pressed,
+  disabled = false,
+  onClick,
+}: {
+  label: string
+  icon: IconDefinition
+  pressed?: boolean
+  disabled?: boolean
+  onClick?: () => void
+}) {
   return (
-    <button type="button" className={styles.action}>
+    <button
+      type="button"
+      className={`${styles.action} ${pressed ? styles.actionActive : ''}`}
+      aria-pressed={pressed}
+      disabled={disabled}
+      onClick={onClick}
+    >
       {label}
       <Icon icon={icon} className={styles.actionIcon} />
     </button>
