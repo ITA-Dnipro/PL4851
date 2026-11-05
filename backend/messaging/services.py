@@ -39,6 +39,25 @@ def _get_conversation_or_raise(conversations, conversation_id):
     return conversation
 
 
+def get_conversation_meta(conversation_id):
+    """Return the raw conversation document, or None if it doesn't exist."""
+    return get_conversations_collection().find_one({'conversation_id': conversation_id})
+
+
+def is_participant(conversation_id, user_id):
+    conversation = get_conversation_meta(conversation_id)
+    if conversation is None:
+        return False
+    return user_id in conversation['participants']
+
+
+def get_last_message(conversation_id):
+    return get_messages_collection().find_one(
+        {'conversation_id': conversation_id},
+        sort=[('created_at', -1), ('_id', -1)],
+    )
+
+
 def create_message(conversation_id, sender_id, body, attachments=None, meta=None):
     conversations = get_conversations_collection()
     conversation = _get_conversation_or_raise(conversations, conversation_id)
@@ -112,7 +131,12 @@ def list_conversations_for_user(user_id, page=1, page_size=20):
 
 def mark_messages_read(conversation_id, user_id):
     conversations = get_conversations_collection()
-    _get_conversation_or_raise(conversations, conversation_id)
+    conversation = _get_conversation_or_raise(conversations, conversation_id)
+
+    if user_id not in conversation['participants']:
+        raise ValueError(
+            f'User {user_id} is not a participant of conversation {conversation_id}'
+        )
 
     now = datetime.now(timezone.utc)
     conversations.update_one(

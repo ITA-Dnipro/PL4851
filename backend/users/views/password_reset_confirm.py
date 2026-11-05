@@ -18,7 +18,7 @@ from rest_framework_simplejwt.token_blacklist.models import (
 from users.serializers.password_reset_confirm import (
     PasswordResetConfirmSerializer,
 )
-from users.services import (
+from users.services.password_reset import (
     consume_password_reset_token,
     get_valid_password_reset_token,
 )

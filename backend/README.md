@@ -84,6 +84,7 @@ Response `200`:
 The refresh token is set in the `refresh_token` cookie: `HttpOnly` (JavaScript can't read it), `SameSite=Lax`, `Path=/api/auth/`, `Secure` when `DEBUG` is off. Without `"remember": true` it's a session cookie, removed when the browser closes.
 
 - Access token lives 15 minutes, refresh token 1 day (30 days with `"remember": true`).
+- The email is case-insensitive: `Founder@Example.com` and `founder@example.com` are the same account. Emails are stored in lowercase, and the database rejects emails that differ only by case.
 - Send the access token as `Authorization: Bearer <access>`. Keep it in memory, not in `localStorage`.
 - Errors: `400` invalid data, `401` wrong email or password, `429` too many requests or too many failed attempts: 5 for this email from one client (IP) → that client is locked for 15 minutes; 20 for this email from any clients → the email is locked for 1 hour.
 
@@ -144,6 +145,41 @@ the terminal running `runserver`.
 - `FRONTEND_URL`, the public frontend address used in the reset link
 
 When `DEBUG=False`, `EMAIL_BACKEND` and `FRONTEND_URL` are required.
+
+## Registration
+
+`POST /api/auth/register/` — create a startup or investor account.
+
+```json
+{
+  "email": "founder@example.com",
+  "password": "Str0ng-pass!",
+  "password_confirm": "Str0ng-pass!",
+  "first_name": "Andrii",
+  "last_name": "Sudakevych",
+  "company_name": "Handmade Co",
+  "role": "startup",
+  "legal_form": "sole_proprietor"
+}
+```
+
+- `role`: `startup` or `investor`. `legal_form`: `sole_proprietor` (ФОП) or `legal_entity`.
+- Password rules: at least 8 characters with an uppercase Latin letter (A-Z), a lowercase Latin letter (a-z) and a digit (0-9), no Cyrillic letters; not a common password, not too similar to the email or name. The same rules apply when a new password is set through password reset.
+
+Response `201`:
+
+```json
+{ "id": 12, "email": "founder@example.com", "detail": "Verification email sent." }
+```
+
+- The account is created inactive, together with a profile for the role: `StartupProfile` (`startup_name` and a `slug` made from the company name) or `InvestorProfile` (`investor_name`). The other profile fields are empty and are filled in later.
+- An email is sent with the link `{FRONTEND_URL}/verify-email?uid=<base64 user id>&token=<token>`. The link is valid for 24 hours (`EMAIL_VERIFICATION_TIMEOUT`) and stops working once the account is activated. In development the email is printed to the backend console.
+- Until the email is verified the user can't log in: login returns `401`, as for a wrong password.
+- The email is stored in lowercase; login also ignores the email case.
+- Registration saves the user with `email_verified_at` empty; accounts created any other way (admin, `createsuperuser`, fixtures) count as verified.
+- Registering again with the email of an account that was never verified (inactive with empty `email_verified_at`) replaces that account and sends a new link. So an expired link or someone else's sign-up with this email doesn't lock the owner out.
+- Errors: `400` invalid fields (errors by field name, e.g. `password`, `password_confirm`), `409` the email belongs to a verified account (active or deactivated by an admin), `429` more than 10 requests per hour from one IP.
+- `409` tells that an account with this email exists, so the form can show it next to the field. The per-IP limit slows down checking many emails this way.
 
 ## Investors
 

@@ -74,9 +74,28 @@
   text-transform: uppercase;
 }
 
+.tagButton {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.tagSelected {
+  background: var(--color-green);
+  color: var(--color-text);
+}
+
+.actionGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
 .actions {
   display: flex;
   flex-shrink: 0;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
@@ -94,12 +113,32 @@
   font-size: 16px;
   font-weight: 600;
   white-space: nowrap;
+  text-decoration: none;
   transition: background 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
 .action:hover {
   background: var(--color-text);
   color: var(--color-white);
+}
+
+.actionActive {
+  background: var(--color-text);
+  color: var(--color-white);
+}
+
+.action:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.followError {
+  max-width: 320px;
+  margin: 0;
+  color: var(--color-error);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: right;
 }
 
 .actionIcon {
@@ -129,6 +168,27 @@
   font-size: 20px;
   font-weight: 700;
   line-height: 1.4;
+}
+
+.productsSection {
+  margin-top: 40px;
+}
+
+.productsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.productItem {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-black-90);
+}
+
+.productItem strong {
+  font-weight: 700;
 }
 
 .sidebar {
@@ -186,10 +246,27 @@
 }
 
 .action:focus-visible,
+.tagButton:focus-visible,
 .retry:focus-visible,
 .sidebar a:focus-visible {
   outline: 2px solid var(--color-black);
   outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .bandInner {
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+
+  .actionGroup {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .followError {
+    text-align: left;
+  }
 }
 
 /* Loading skeleton: reuses the page blocks above, painted gray */
@@ -239,7 +316,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .placeholder,
-  .action {
+  .action,
+  .tagButton {
     animation: none;
     transition: none;
   }

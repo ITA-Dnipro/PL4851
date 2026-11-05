@@ -35,10 +35,14 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017')
 MONGO_DB_NAME = os.getenv('MONGO_DB_NAME', 'pl4851')
 
+REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379')
+
 
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -46,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_spectacular',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'users',
@@ -87,6 +92,16 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [REDIS_URL],
+        },
+    },
+}
 
 
 # Database
@@ -127,6 +142,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+    {
+        'NAME': 'users.validators.PasswordComplexityValidator',
     },
 ]
 
@@ -178,7 +196,18 @@ REST_FRAMEWORK = {
         'login': '5/min',
         'password_reset_ip': '5/hour',
         'password_reset_email': '5/hour',
+        'send_message': '30/min',
+        'create_conversation': '10/min',
+        'register': '10/hour',
     },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'PL4851 API',
+    'DESCRIPTION': 'Forum platform API',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 
 SIMPLE_JWT = {
@@ -201,6 +230,9 @@ REFRESH_COOKIE_NAME = 'refresh_token'
 REFRESH_COOKIE_PATH = '/api/auth/'
 REFRESH_COOKIE_SAMESITE = 'Lax'
 REFRESH_COOKIE_SECURE = not DEBUG
+
+# A link from the registration email stays valid this long
+EMAIL_VERIFICATION_TIMEOUT = 24 * 60 * 60  # seconds
 
 if DEBUG:
     EMAIL_BACKEND = os.getenv(
@@ -253,7 +285,7 @@ LOGGING = {
         },
     },
     'loggers': {
-        'users.services': {
+        'users.services.password_reset': {
             'handlers': ['password_reset_console'],
             'level': 'WARNING',
             'propagate': False,
