@@ -19,6 +19,9 @@ describe('isValidEmail', () => {
     'name@example..com',
     'name@.example.com',
     'name@example.com.',
+    'name..part@example.com',
+    '.name@example.com',
+    'name.@example.com',
   ])(
     'rejects "%s"',
     (email) => {
