@@ -212,3 +212,32 @@ Load sample investors (users and profiles with ids 31–33, one of them unverifi
 ```bash
 python manage.py loaddata investors
 ```
+
+`GET /api/users/{id}/saved/` - saved items.
+Owner {id} or admin.
+
+Query: page (default 1), page_size (default 12, max 50),
+       type (optional, only `project`)
+
+HTTP 200 OK
+`{
+    "count": 1,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "saved_id": 1,
+            "type": "project",
+            "title": "P",
+            "slug": "startup",
+            "thumbnail_url": null,
+            "short_description": "",
+            "location": "kyiv_city",
+            "tags": [],
+            "saved_at": "2026-11-03T15:44:42.362069Z"
+        }
+    ]
+}`
+
+Errors: 400 (unsupported type), 401.
