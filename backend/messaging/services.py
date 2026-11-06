@@ -1,9 +1,12 @@
+import logging
 import uuid
 from datetime import datetime, timezone
 
 from messaging import presence
 from messaging.mongo import get_conversations_collection, get_messages_collection
 from notifications.services import notify_new_message
+
+logger = logging.getLogger(__name__)
 
 EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 MAX_PAGE_SIZE = 100
@@ -61,6 +64,9 @@ def get_last_message(conversation_id):
 
 
 def create_message(conversation_id, sender_id, body, attachments=None, meta=None):
+    if not isinstance(body, str) or not body.strip():
+        raise ValueError('body must be a non-empty string')
+
     conversations = get_conversations_collection()
     conversation = _get_conversation_or_raise(conversations, conversation_id)
 
@@ -88,8 +94,15 @@ def create_message(conversation_id, sender_id, body, attachments=None, meta=None
     for recipient_id in conversation['participants']:
         if recipient_id == sender_id:
             continue
-        if not presence.is_online(recipient_id):
-            notify_new_message(recipient_id, sender_id, conversation_id, body)
+        try:
+            if not presence.is_conversation_online(conversation_id, recipient_id):
+                notify_new_message(recipient_id, sender_id, conversation_id, body)
+        except Exception:
+            logger.exception(
+                'Failed to notify recipient %s for conversation %s',
+                recipient_id,
+                conversation_id,
+            )
 
     return message
 

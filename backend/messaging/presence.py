@@ -1,9 +1,11 @@
+import time
 from functools import lru_cache
 
 import redis
 from django.conf import settings
 
 PRESENCE_TTL_SECONDS = 60
+PRESENCE_REFRESH_INTERVAL_SECONDS = 20
 
 
 @lru_cache
@@ -11,18 +13,23 @@ def get_client():
     return redis.from_url(settings.REDIS_URL)
 
 
-def _key(user_id, channel_name):
-    return f'presence:{user_id}:{channel_name}'
+def _conversation_key(conversation_id, user_id):
+    return f'presence:conversation:{conversation_id}:{user_id}'
 
 
-def mark_online(user_id, channel_name):
-    get_client().set(_key(user_id, channel_name), '1', ex=PRESENCE_TTL_SECONDS)
+def mark_conversation_online(conversation_id, user_id, channel_name):
+    expires_at = time.time() + PRESENCE_TTL_SECONDS
+    get_client().zadd(
+        _conversation_key(conversation_id, user_id), {channel_name: expires_at}
+    )
 
 
-def mark_offline(user_id, channel_name):
-    get_client().delete(_key(user_id, channel_name))
+def mark_conversation_offline(conversation_id, user_id, channel_name):
+    get_client().zrem(_conversation_key(conversation_id, user_id), channel_name)
 
 
-def is_online(user_id):
-    pattern = _key(user_id, '*')
-    return next(get_client().scan_iter(match=pattern, count=10), None) is not None
+def is_conversation_online(conversation_id, user_id):
+    client = get_client()
+    key = _conversation_key(conversation_id, user_id)
+    client.zremrangebyscore(key, '-inf', time.time())
+    return client.zcard(key) > 0

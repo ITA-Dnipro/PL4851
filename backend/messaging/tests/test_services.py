@@ -83,6 +83,14 @@ def test_create_message_rejects_non_participant(user_a, user_b):
         create_message(conversation_id, sender_id=999, body='hello')
 
 
+@pytest.mark.parametrize('body', [None, '', '   ', 123, ['hello']])
+def test_create_message_rejects_invalid_body(body, user_a, user_b):
+    conversation_id = create_conversation(participants=[user_a.pk, user_b.pk])
+
+    with pytest.raises(ValueError):
+        create_message(conversation_id, sender_id=user_a.pk, body=body)
+
+
 def test_get_conversation_paginates_messages_newest_first(user_a, user_b):
     conversation_id = create_conversation(participants=[user_a.pk, user_b.pk])
     create_message(conversation_id, sender_id=user_a.pk, body='first')
