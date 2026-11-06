@@ -86,7 +86,7 @@ The refresh token is set in the `refresh_token` cookie: `HttpOnly` (JavaScript c
 - Access token lives 15 minutes, refresh token 1 day (30 days with `"remember": true`).
 - The email is case-insensitive: `Founder@Example.com` and `founder@example.com` are the same account. Emails are stored in lowercase, and the database rejects emails that differ only by case.
 - Send the access token as `Authorization: Bearer <access>`. Keep it in memory, not in `localStorage`.
-- Errors: `400` invalid data, `401` wrong email or password, `429` too many requests or too many failed attempts: 5 for this email from one client (IP) → that client is locked for 15 minutes; 20 for this email from any clients → the email is locked for 1 hour.
+- Errors: `400` invalid data, `401` wrong email or password, `403` with `"code": "email_not_verified"` the password is right but the email isn't verified yet (see "Email verification"), `429` too many requests or too many failed attempts: 5 for this email from one client (IP) → that client is locked for 15 minutes; 20 for this email from any clients → the email is locked for 1 hour.
 
 `POST /api/auth/refresh/` — get a new access token, e.g. when the old one expires or after a page reload. No body: the token is taken from the cookie.
 
@@ -174,12 +174,43 @@ Response `201`:
 
 - The account is created inactive, together with a profile for the role: `StartupProfile` (`startup_name` and a `slug` made from the company name) or `InvestorProfile` (`investor_name`). The other profile fields are empty and are filled in later.
 - An email is sent with the link `{FRONTEND_URL}/verify-email?uid=<base64 user id>&token=<token>`. The link is valid for 24 hours (`EMAIL_VERIFICATION_TIMEOUT`) and stops working once the account is activated. In development the email is printed to the backend console.
-- Until the email is verified the user can't log in: login returns `401`, as for a wrong password.
+- Until the email is verified the user can't log in (see "Email verification").
 - The email is stored in lowercase; login also ignores the email case.
 - Registration saves the user with `email_verified_at` empty; accounts created any other way (admin, `createsuperuser`, fixtures) count as verified.
 - Registering again with the email of an account that was never verified (inactive with empty `email_verified_at`) replaces that account and sends a new link. So an expired link or someone else's sign-up with this email doesn't lock the owner out.
 - Errors: `400` invalid fields (errors by field name, e.g. `password`, `password_confirm`), `409` the email belongs to a verified account (active or deactivated by an admin), `429` more than 10 requests per hour from one IP.
 - `409` tells that an account with this email exists, so the form can show it next to the field. The per-IP limit slows down checking many emails this way.
+
+## Email verification
+
+`POST /api/auth/verify-email/` — activate the account from the link in the registration email. The frontend page `/verify-email` takes `uid` and `token` from the link and sends them:
+
+```json
+{ "uid": "MTI", "token": "dh9de4-7527b35aaba9fdc3d9319fce965a79a3" }
+```
+
+- `200` `{"detail": "Email verified."}`: the account is active and `email_verified_at` is set. Opening the same link again (while it's valid) also gets `200`, so a second click isn't shown as an error; a made-up token for a verified account still gets `400`. The user logs in as usual afterwards (no automatic login), from any device.
+- `400` `{"detail": "The verification link is invalid or has expired."}`: a changed, expired (24 hours) or already replaced link, or an unknown `uid`. The frontend offers to send the email again.
+- The token is signed, not stored: it stops working once the account is active, and older links stay valid until they expire.
+
+`POST /api/auth/resend-verification/` — send a new link.
+
+```json
+{ "email": "founder@example.com" }
+```
+
+- Always `200` with the same message, whether or not the email has a registration waiting for verification, so the endpoint doesn't tell which emails are registered. The email is sent only for such a registration.
+- Limits: 5 requests per hour per IP and 3 per hour per email (any client), then `429` with `Retry-After`.
+
+**Login before verification.** With the right password an unverified user gets `403`:
+
+```json
+{ "detail": "Email is not verified.", "code": "email_not_verified" }
+```
+
+- `code` tells it from the other `403` of login (a request from another site). The frontend can show "confirm your email" with a link to resend it.
+- A wrong password still gets the usual `401`, so the answer doesn't reveal the account; these attempts count towards the lockout, a `403` doesn't.
+- An account deactivated by an admin keeps getting `401`.
 
 ## Investors
 

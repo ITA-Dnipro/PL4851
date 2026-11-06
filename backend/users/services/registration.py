@@ -4,20 +4,9 @@ from django.db import IntegrityError, transaction
 from investors.models import InvestorProfile
 from startups.models import StartupProfile
 from users.exceptions import EmailAlreadyRegistered
-from users.services.email_verification import send_verification
+from users.services.email_verification import send_verification, unverified_accounts
 
 User = get_user_model()
-
-
-def unverified_accounts(email):
-    """Accounts registered with this email that were never verified.
-
-    A verified account deactivated by an admin keeps its email_verified_at,
-    so it is not treated as a pending registration.
-    """
-    return User.objects.filter(
-        email__iexact=email, is_active=False, email_verified_at__isnull=True
-    )
 
 
 def is_email_taken(email):

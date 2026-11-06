@@ -136,6 +136,30 @@ class LoginFailureTests(LoginTestCase):
 
         self.assertEqual(response.status_code, 401)
 
+    def test_unverified_user_with_the_right_password_gets_403(self):
+        self.user.is_active = False
+        self.user.email_verified_at = None
+        self.user.save()
+
+        response = self.login()
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            response.json(),
+            {'detail': 'Email is not verified.', 'code': 'email_not_verified'},
+        )
+        self.assertNotIn(settings.REFRESH_COOKIE_NAME, response.cookies)
+
+    def test_unverified_user_with_a_wrong_password_gets_the_same_401(self):
+        self.user.is_active = False
+        self.user.email_verified_at = None
+        self.user.save()
+
+        response = self.login(password='wrong-password')
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json(), {'detail': INVALID_CREDENTIALS_MESSAGE})
+
     def test_counter_disappearing_between_operations_returns_401(self):
         self.login(password='wrong-password')  # the counters exist now
 
@@ -212,6 +236,26 @@ class LoginLockoutTests(LoginTestCase):
         self.assertEqual(
             response['Retry-After'], str(settings.LOGIN_EMAIL_LOCKOUT_SECONDS)
         )
+
+    def test_unverified_login_with_the_right_password_is_not_a_failed_attempt(self):
+        self.user.is_active = False
+        self.user.email_verified_at = None
+        self.user.save()
+
+        for _ in range(settings.LOGIN_MAX_FAILED_ATTEMPTS + 1):
+            response = self.login()
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_wrong_passwords_lock_an_unverified_account(self):
+        self.user.is_active = False
+        self.user.email_verified_at = None
+        self.user.save()
+        self.fail_max_attempts()
+
+        response = self.login()
+
+        self.assertEqual(response.status_code, 429)
 
     def test_successful_login_keeps_per_email_counter(self):
         # The owner logging in during an attack doesn't give the attacker new attempts
