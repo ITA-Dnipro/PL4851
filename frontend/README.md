@@ -24,7 +24,9 @@ cp .env.example .env    # edit VITE_API_URL if needed
 | `/login` | Login | |
 | `/forgot-password` | ForgotPassword | |
 | `/reset-password` | RestorePassword | |
-| `/register` | Register | |
+| `/register` | Register: the registration form, then "check your email" | |
+| `/resend-verification` | ResendVerification (placeholder) | |
+| `/terms` | Terms (placeholder) | |
 | `/startups/:slug` | StartupView | |
 | `/dashboard` | InvestorDashboard | yes |
 | `/messages` | Inbox | yes |
@@ -44,8 +46,9 @@ src/
   hooks/            shared hooks (useAuth)
   components/       shared components, one folder each (Header, Footer, UserMenu, ProtectedRoute)
   sections/         page sections, e.g. landing/HeroSection
-  pages/            pages; a page with its own files gets a folder (Login/)
+  pages/            pages; a page with its own files gets a folder (Login/, Register/)
   styles/           CSS variables
+  utils/            helpers shared by pages (email check, common error texts)
   test/             test setup and helpers shared by tests
 ```
 
@@ -54,7 +57,7 @@ Tests sit next to the code they test (`index.test.tsx`, `request.test.ts`).
 ## API and auth
 ```
 api/
-  auth.ts                login(), refresh(), logout(), requestPasswordReset(), confirmPasswordReset()
+  auth.ts                login(), refresh(), logout(), register(), requestPasswordReset(), confirmPasswordReset()
   client/
     request.ts           request(): a plain request to the backend
     authRequest.ts       authRequest(): request() + access token, refresh on 401
@@ -66,7 +69,7 @@ Every request goes through `request()`: it adds `API_URL`, sends and parses JSON
 
 Endpoint functions are grouped by backend area (`api/auth.ts`, later `api/startups.ts`…) and choose one of two helpers:
 
-- `request()` — public endpoints and the auth endpoints (login, refresh, logout), which work with a password or the cookie;
+- `request()` — public endpoints and the auth endpoints (login, refresh, logout, register), which work with a password or the cookie;
 - `authRequest()` — endpoints that need a signed-in user. It sends `Authorization: Bearer <access>`; on 401 it gets a new access token once (one shared refresh for parallel requests) and repeats the request.
 
 ```ts
@@ -74,6 +77,12 @@ export function login(data: LoginRequest) {
   return request<LoginResponse>('/auth/login/', { method: 'POST', body: data })
 }
 ```
+
+### Registration
+`pages/Register/` sends `register()` and then shows "check your email" instead of the form (no tokens: the account stays inactive until the email is verified).
+
+- The password rule is the same as on the backend: 8+ characters, an uppercase (A–Z) and a lowercase (a–z) Latin letter, a digit, no Cyrillic (`validation.ts`).
+- Backend errors (`errors.ts`): `409` → "this email is already registered" under the email; `400` → under the fields, with the form's own texts (a password the backend rejects is common or similar to the email or name); `429` and no connection → above the button.
 
 ### Tokens
 - **Access** (15 min) lives only in memory (`accessToken.ts`) and is gone after a reload.

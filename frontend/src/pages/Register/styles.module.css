@@ -1,0 +1,240 @@
+.page {
+  padding: 112px 24px 120px;
+  background: var(--color-beige);
+}
+
+.card {
+  max-width: 544px;
+  margin: 0 auto;
+  background: var(--color-white);
+  border-radius: var(--radius-8);
+}
+
+.title {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--color-light-gray);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 24px;
+}
+
+/* A red asterisk before required labels, as in the mockup */
+.required::before {
+  content: '*';
+  margin-right: 4px;
+  color: var(--color-error);
+}
+
+.notice {
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+/* The error sits in the flow, so a long one wraps without covering the input */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 20px;
+}
+
+.label {
+  font-size: 14px;
+}
+
+/* Pulled up to the label, as in the mockup */
+.hint {
+  margin-top: -8px;
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.inputWrapper {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-4);
+  font: inherit;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.input::placeholder {
+  color: var(--color-gray);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-black-90);
+  box-shadow: 0 0 0 1px var(--color-black-90);
+}
+
+/* Listed with :focus so the color stays while the user types */
+.inputError,
+.inputError:focus {
+  border-color: var(--color-error);
+}
+
+.inputError:focus {
+  box-shadow: 0 0 0 1px var(--color-error);
+}
+
+/* Pulled up to the input; the field's bottom padding stays below it */
+.error {
+  margin-top: -4px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--color-error);
+}
+
+/* Room for the show/hide button inside the field */
+.passwordInput {
+  padding-right: 44px;
+}
+
+.toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 40px;
+  border: none;
+  background: none;
+  color: var(--color-gray);
+}
+
+.toggle:hover {
+  color: var(--color-text);
+}
+
+.toggleIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.choiceGroup {
+  margin: 8px 0 20px;
+  padding: 0;
+  border: none;
+}
+
+.legend {
+  margin-bottom: 12px;
+  padding: 0;
+  font-size: 16px;
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 16px;
+}
+
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* A radio button drawn as a square box with a check mark */
+.choiceInput {
+  display: grid;
+  place-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  background: var(--color-white);
+  appearance: none;
+  cursor: pointer;
+}
+
+.choiceInput:checked {
+  border-color: var(--color-black);
+  background: var(--color-black);
+}
+
+.choiceInput:checked::after {
+  content: '';
+  width: 4px;
+  height: 8px;
+  margin-top: -2px;
+  border: solid var(--color-white);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.choiceInputError {
+  border-color: var(--color-error);
+}
+
+.choiceInput:focus-visible {
+  outline: 2px solid var(--color-black);
+  outline-offset: 2px;
+}
+
+.choiceError {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--color-error);
+}
+
+.terms {
+  font-size: 14px;
+}
+
+.termsLink {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.actions {
+  padding: 16px 24px;
+  border-top: 1px solid var(--color-light-gray);
+}
+
+.formError {
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: var(--color-error);
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* <button> doesn't inherit the font size like the .button links do */
+.submit {
+  font-size: 16px;
+}
+
+.page a:focus-visible,
+.page button:focus-visible {
+  outline: 2px solid var(--color-black);
+  outline-offset: 2px;
+}
