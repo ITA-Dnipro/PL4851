@@ -1,3 +1,4 @@
+import copy
 import logging
 from urllib.parse import urlencode
 
@@ -101,20 +102,28 @@ def user_from_uid(uid):
 def verify_email(uid, token):
     """Activates the account from the verification link.
 
-    Returns the user, or None when the link is broken, expired or used.
-    A verified account is returned as is, so opening the link again isn't an error.
+    Returns the user, or None when the link is broken, expired or not this
+    user's. Opening a valid link again returns the verified user, so a second
+    click isn't an error.
     """
     user = user_from_uid(uid)
     if user is None:
         return None
-    if user.email_verified_at is not None:
-        return user
-    if not email_verification_token.check_token(user, token):
+
+    # Links are signed while the account is inactive. Checking a verified
+    # account in that state still accepts its own link but no made-up token,
+    # so the answer doesn't tell which accounts are verified.
+    signed_state = copy.copy(user)
+    signed_state.is_active = False
+    if not email_verification_token.check_token(signed_state, token):
         return None
 
-    user.is_active = True
-    user.email_verified_at = timezone.now()
-    user.save(update_fields=['is_active', 'email_verified_at'])
+    # A conditional update: a request that lost the race, or an account an
+    # admin deactivated after verification, is left as it is
+    User.objects.filter(
+        pk=user.pk, is_active=False, email_verified_at__isnull=True
+    ).update(is_active=True, email_verified_at=timezone.now())
+    user.refresh_from_db()
     return user
 
 

@@ -101,6 +101,27 @@ class VerifyEmailSuccessTests(VerifyEmailTestCase):
         self.assertFalse(self.user.is_active)
 
 
+class VerifyEmailRaceTests(VerifyEmailTestCase):
+    def test_a_request_that_lost_the_race_changes_nothing(self):
+        # Read as pending, but meanwhile another request verified the account
+        # and an admin deactivated it
+        stale = User.objects.get(pk=self.user.pk)
+        verified_at = self.user.date_joined
+        User.objects.filter(pk=self.user.pk).update(
+            is_active=False, email_verified_at=verified_at
+        )
+
+        with mock.patch(
+            'users.services.email_verification.user_from_uid', return_value=stale
+        ):
+            response = self.verify()
+
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_active)
+        self.assertEqual(self.user.email_verified_at, verified_at)
+
+
 class VerifyEmailInvalidLinkTests(VerifyEmailTestCase):
     def test_rejects_a_changed_token(self):
         self.assert_invalid_link(self.verify(token=f'{self.token[:-1]}x'))
@@ -133,6 +154,15 @@ class VerifyEmailInvalidLinkTests(VerifyEmailTestCase):
         for uid in [urlsafe_base64_encode(b'999999'), '!!!', 'abc', 'MTI']:
             with self.subTest(uid=uid):
                 self.assert_invalid_link(self.verify(uid=uid))
+
+    def test_rejects_a_made_up_token_for_a_verified_account(self):
+        # Otherwise any token would tell that this uid is a verified account
+        self.verify()
+
+        response = self.verify(token=f'{self.token[:-1]}x')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'detail': INVALID_LINK_MESSAGE})
 
     def test_requires_uid_and_token(self):
         response = self.client.post(VERIFY_URL, {}, format='json')

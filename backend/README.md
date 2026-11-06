@@ -189,7 +189,7 @@ Response `201`:
 { "uid": "MTI", "token": "dh9de4-7527b35aaba9fdc3d9319fce965a79a3" }
 ```
 
-- `200` `{"detail": "Email verified."}`: the account is active and `email_verified_at` is set. Opening the link again also gets `200`, so a second click isn't shown as an error. The user logs in as usual afterwards (no automatic login), from any device.
+- `200` `{"detail": "Email verified."}`: the account is active and `email_verified_at` is set. Opening the same link again (while it's valid) also gets `200`, so a second click isn't shown as an error; a made-up token for a verified account still gets `400`. The user logs in as usual afterwards (no automatic login), from any device.
 - `400` `{"detail": "The verification link is invalid or has expired."}`: a changed, expired (24 hours) or already replaced link, or an unknown `uid`. The frontend offers to send the email again.
 - The token is signed, not stored: it stops working once the account is active, and older links stay valid until they expire.
 

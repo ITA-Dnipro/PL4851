@@ -100,6 +100,16 @@ class ResendVerificationRateLimitTests(ResendVerificationTestCase):
         self.assertIn('Retry-After', response.headers)
         self.assertEqual(len(mail.outbox), 3)
 
+    def test_case_variants_of_an_address_share_the_limit(self):
+        # PostgreSQL matches the dotless "ı" to "i" in iexact, like upper() does
+        variants = ['pending@example.com', 'PENDING@example.com', 'pendıng@example.com']
+        for i, email in enumerate(variants):
+            self.resend(email, ip=f'10.0.2.{i}')
+
+        response = self.resend(PENDING_EMAIL, ip='10.0.2.9')
+
+        self.assertEqual(response.status_code, 429)
+
     def test_limits_requests_from_one_client(self):
         for i in range(5):
             self.resend(f'user{i}@example.com', ip='10.0.1.1')

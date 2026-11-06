@@ -25,7 +25,9 @@ class ResendVerificationEmailThrottle(SimpleRateThrottle):
 
     def get_cache_key(self, request, view):
         data = request.data if hasattr(request.data, 'get') else {}
-        email = str(data.get('email', '')).strip().lower()
+        # Upper case, like PostgreSQL compares the email in the iexact lookup,
+        # so case variants of one address share the limit
+        email = str(data.get('email', '')).strip().upper()
         if not email:
             return None
         return self.cache_format % {'scope': self.scope, 'ident': email}
