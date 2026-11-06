@@ -1,7 +1,9 @@
 import uuid
 from datetime import datetime, timezone
 
+from messaging import presence
 from messaging.mongo import get_conversations_collection, get_messages_collection
+from notifications.services import notify_new_message
 
 EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 MAX_PAGE_SIZE = 100
@@ -82,6 +84,13 @@ def create_message(conversation_id, sender_id, body, attachments=None, meta=None
         {'conversation_id': conversation_id},
         {'$max': {'last_message_at': now}},
     )
+
+    for recipient_id in conversation['participants']:
+        if recipient_id == sender_id:
+            continue
+        if not presence.is_online(recipient_id):
+            notify_new_message(recipient_id, sender_id, conversation_id, body)
+
     return message
 
 

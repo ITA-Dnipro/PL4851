@@ -8,7 +8,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import TokenError
 
-from messaging import services
+from messaging import presence, services
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +57,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             await self.channel_layer.group_discard(
                 f'user.{self.user.pk}', self.channel_name
             )
+            await sync_to_async(presence.mark_offline)(self.user.pk, self.channel_name)
 
     async def receive_json(self, content, **kwargs):
         if not isinstance(content, dict):
@@ -71,6 +72,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 return
             await self._handle_auth(content)
             return
+
+        await sync_to_async(presence.mark_online)(self.user.pk, self.channel_name)
 
         handler = {
             'join_conversation': self._handle_join_conversation,
@@ -107,6 +110,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             handle.cancel()
 
         await self.channel_layer.group_add(f'user.{user.pk}', self.channel_name)
+        await sync_to_async(presence.mark_online)(user.pk, self.channel_name)
         await self.send_json({'type': 'auth_ok'})
 
     @database_sync_to_async

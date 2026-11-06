@@ -7,7 +7,9 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import AccessToken
 
 from config.asgi import application
+from messaging.presence import get_client
 from messaging.services import create_conversation
+from notifications.models import Notification
 
 pytestmark = [pytest.mark.websocket, pytest.mark.django_db(transaction=True)]
 
@@ -253,6 +255,70 @@ async def test_mark_read_emits_read_receipt(user_a, user_b):
 
     await sender.disconnect()
     await receiver.disconnect()
+
+
+async def test_connected_recipient_gets_no_notification(user_a, user_b):
+    conversation_id = await _db(create_conversation, [user_a.pk, user_b.pk])
+
+    sender = await _connect_authenticated(user_a)
+    receiver = await _connect_authenticated(user_b)
+
+    await sender.send_json_to(
+        {'type': 'join_conversation', 'conversation_id': conversation_id}
+    )
+    await sender.receive_json_from()
+    await receiver.send_json_to(
+        {'type': 'join_conversation', 'conversation_id': conversation_id}
+    )
+    await receiver.receive_json_from()
+    await sender.receive_json_from()  # presence from receiver joining
+
+    await sender.send_json_to(
+        {'type': 'send_message', 'conversation_id': conversation_id, 'body': 'hi'}
+    )
+    await receiver.receive_json_from()
+
+    exists = await _db(
+        lambda: Notification.objects.filter(
+            recipient=user_b, conversation_id=conversation_id
+        ).exists()
+    )
+    assert exists is False
+
+    await sender.disconnect()
+    await receiver.disconnect()
+
+
+async def test_disconnected_recipient_gets_notification(user_a, user_b):
+    conversation_id = await _db(create_conversation, [user_a.pk, user_b.pk])
+
+    sender = await _connect_authenticated(user_a)
+    await sender.send_json_to(
+        {'type': 'join_conversation', 'conversation_id': conversation_id}
+    )
+    await sender.receive_json_from()
+
+    await sender.send_json_to(
+        {'type': 'send_message', 'conversation_id': conversation_id, 'body': 'hi'}
+    )
+    # the group_send echoes back to the sender too; use it as a sync point
+    await sender.receive_json_from()
+
+    exists = await _db(
+        lambda: Notification.objects.filter(
+            recipient=user_b, conversation_id=conversation_id
+        ).exists()
+    )
+    assert exists is True
+
+    await sender.disconnect()
+
+
+@pytest.fixture(autouse=True)
+def _clean_presence():
+    client = get_client()
+    for key in client.scan_iter(match='presence:*'):
+        client.delete(key)
 
 
 async def _db(func, *args, **kwargs):

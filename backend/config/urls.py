@@ -33,6 +33,10 @@ urlpatterns = [
     path('api/', include('projects.urls', namespace='projects')),
     path('api/', include('dashboard.urls')),
     path('api/conversations/', include('messaging.urls', namespace='messaging')),
+    path(
+        'api/notifications/',
+        include('notifications.urls', namespace='notifications'),
+    ),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path(
         'api/docs/',

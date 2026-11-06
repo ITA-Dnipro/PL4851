@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'content.sections',
     'content.pages',
     'messaging',
+    'notifications',
 ]
 
 MIDDLEWARE = [
