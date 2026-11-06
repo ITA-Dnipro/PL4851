@@ -23,7 +23,7 @@ class SavedItemsTests(TestCase):
     def setUpTestData(cls):
         cls.user = make_user('inv@test.com', User.Role.INVESTOR)
         cls.other = make_user('other@test.com', User.Role.INVESTOR)
-        investor = InvestorProfile.objects.create(
+        cls.investor = InvestorProfile.objects.create(
             user=cls.user, investor_name='Inv', investor_type='private'
         )
         startup = StartupProfile.objects.create(
@@ -33,14 +33,21 @@ class SavedItemsTests(TestCase):
             startup_phone='380000000000',
             startup_email='st@test.com',
         )
-        project = Project.objects.create(
+        cls.project = Project.objects.create(
             startup=startup,
             project_title='P',
             project_description='d',
             investment_sum=100,
             project_stage='seed',
         )
-        SavedProject.objects.create(investor=investor, project=project)
+        cls.new_project = Project.objects.create(
+            startup=startup,
+            project_title='P2',
+            project_description='d',
+            investment_sum=100,
+            project_stage='seed',
+        )
+        SavedProject.objects.create(investor=cls.investor, project=cls.project)
         cls.url = f'/api/users/{cls.user.pk}/saved/'
 
     def setUp(self):
@@ -59,3 +66,54 @@ class SavedItemsTests(TestCase):
 
     def test_unauthenticated_returns_401(self):
         self.assertEqual(self.client.get(self.url).status_code, 401)
+
+    def _post(self, target_id, target_type='project'):
+        return self.client.post(
+            self.url,
+            {'target_type': target_type, 'target_id': target_id},
+            format='json',
+        )
+
+    def test_save_creates(self):
+        self.client.force_authenticate(self.user)
+        response = self._post(self.new_project.pk)
+        self.assertEqual(response.status_code, 201)
+        self.assertIn('saved_id', response.data)
+        self.assertIn('saved_at', response.data)
+
+    def test_save_duplicate_is_idempotent(self):
+        self.client.force_authenticate(self.user)
+        first = self._post(self.new_project.pk)
+        second = self._post(self.new_project.pk)
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(first.data['saved_id'], second.data['saved_id'])
+        self.assertEqual(SavedProject.objects.count(), 2)
+
+    def test_save_unknown_project_returns_404(self):
+        self.client.force_authenticate(self.user)
+        self.assertEqual(self._post(99999).status_code, 404)
+
+    def test_save_unsupported_type_returns_400(self):
+        self.client.force_authenticate(self.user)
+        self.assertEqual(self._post(1, 'company').status_code, 400)
+
+    def test_save_unauthenticated_returns_401(self):
+        self.assertEqual(self._post(self.new_project.pk).status_code, 401)
+
+    def test_save_other_user_returns_403(self):
+        self.client.force_authenticate(self.other)
+        self.assertEqual(self._post(self.new_project.pk).status_code, 403)
+
+    def test_delete(self):
+        self.client.force_authenticate(self.user)
+        saved = SavedProject.objects.get(investor=self.investor)
+        response = self.client.delete(f'{self.url}{saved.pk}/')
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(SavedProject.objects.filter(pk=saved.pk).exists())
+
+    def test_delete_unknown_returns_404(self):
+        self.client.force_authenticate(self.user)
+        self.assertEqual(self.client.delete(f'{self.url}99999/').status_code, 404)
+
+    def test_delete_unauthenticated_returns_401(self):
+        self.assertEqual(self.client.delete(f'{self.url}1/').status_code, 401)
