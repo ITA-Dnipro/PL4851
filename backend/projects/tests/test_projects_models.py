@@ -61,6 +61,17 @@ class ProjectModelTest(TestCase):
         self.assertEqual(project.visibility, Project.Visibility.PUBLIC)
         self.assertFalse(project.industries.exists())
 
+    def test_explicit_project_slug_is_preserved(self):
+        project = Project.objects.create(
+            startup=self.startup,
+            project_title='Custom title',
+            project_description='Description',
+            investment_sum=100,
+            slug='custom-project',
+        )
+
+        self.assertEqual(project.slug, 'custom-project')
+
     def test_project_industries_relation(self):
         self.project.industries.add(self.industry)
 
