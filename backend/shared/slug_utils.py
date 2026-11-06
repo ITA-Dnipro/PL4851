@@ -1,4 +1,4 @@
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connections, transaction
 from django.utils.text import slugify
 
 UKRAINIAN_TRANSLIT = {
@@ -86,9 +86,28 @@ def save_with_unique_slug(instance, save, value, queryset, max_length, fallback)
             with transaction.atomic():
                 save()
             return
-        except IntegrityError:
-            slug_exists = (
-                queryset.filter(slug=instance.slug).exclude(pk=instance.pk).exists()
-            )
-            if not slug_exists:
+        except IntegrityError as error:
+            cause = error.__cause__
+            diagnostic = getattr(cause, 'diag', None)
+            violated_constraint = getattr(diagnostic, 'constraint_name', None)
+            model = queryset.model
+            slug_field = model._meta.get_field('slug')
+            if violated_constraint:
+                connection = connections[queryset.db]
+                with connection.cursor() as cursor:
+                    constraints = connection.introspection.get_constraints(
+                        cursor, model._meta.db_table
+                    )
+                is_slug_conflict = (
+                    violated_constraint in constraints
+                    and constraints[violated_constraint]['unique']
+                    and constraints[violated_constraint]['columns']
+                    == [slug_field.column]
+                )
+            else:
+                is_slug_conflict = str(cause) == (
+                    f'UNIQUE constraint failed: {model._meta.db_table}.'
+                    f'{slug_field.column}'
+                )
+            if not is_slug_conflict:
                 raise

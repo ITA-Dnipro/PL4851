@@ -1,7 +1,15 @@
+from unittest.mock import patch
+
 import pytest
+from django.db import IntegrityError
 from django.test import TestCase
 
-from shared.slug_utils import custom_slugify, generate_unique_slug
+from projects.models import Project
+from shared.slug_utils import (
+    custom_slugify,
+    generate_unique_slug,
+    save_with_unique_slug,
+)
 from startups.models import Industry
 
 pytestmark = pytest.mark.models
@@ -43,3 +51,51 @@ class SlugUtilsTest(TestCase):
         )
 
         self.assertEqual(slug, 'existing')
+
+    def test_unrelated_integrity_error_does_not_retry_when_slug_exists(self):
+        startup = self._create_startup()
+        Project.objects.create(
+            startup=startup,
+            project_title='Existing project',
+            project_description='Description',
+            investment_sum=100,
+            slug='occupied',
+        )
+        project = Project(
+            startup=startup,
+            project_title='New project',
+            project_description='Description',
+            investment_sum=100,
+        )
+        save_calls = 0
+
+        def fail_once():
+            nonlocal save_calls
+            save_calls += 1
+            if save_calls == 1:
+                raise IntegrityError('unrelated integrity failure')
+
+        with patch(
+            'shared.slug_utils.generate_unique_slug',
+            side_effect=['occupied', 'available'],
+        ), self.assertRaises(IntegrityError):
+            save_with_unique_slug(
+                project,
+                fail_once,
+                project.project_title,
+                Project.objects.all(),
+                255,
+                'project',
+            )
+
+        self.assertEqual(save_calls, 1)
+
+    def _create_startup(self):
+        from django.contrib.auth import get_user_model
+
+        from startups.models import StartupProfile
+
+        user = get_user_model().objects.create_user(
+            email='slug-helper@test.com', role='startup'
+        )
+        return StartupProfile.objects.create(user=user, startup_name='Slug Helper')
