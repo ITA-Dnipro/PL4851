@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-from shared.slug_utils import generate_unique_slug
+from shared.slug_utils import save_with_unique_slug
 
 MAX_LENGTH_PROJECT_TITLE = 255
 MAX_LENGTH_PROJECT_STAGE = 100
@@ -98,15 +98,17 @@ class Project(models.Model):
         return self.project_title
 
     def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = generate_unique_slug(
-                self.project_title,
-                Project.objects.all(),
-                MAX_LENGTH_SLUG,
-                'project',
-                exclude_pk=self.pk,
-            )
-        super().save(*args, **kwargs)
+        def save_instance():
+            super(Project, self).save(*args, **kwargs)
+
+        save_with_unique_slug(
+            self,
+            save_instance,
+            self.project_title,
+            Project.objects.all(),
+            MAX_LENGTH_SLUG,
+            'project',
+        )
 
 
 class ProjectAttachment(models.Model):

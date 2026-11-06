@@ -1,3 +1,4 @@
+from django.db import IntegrityError, transaction
 from django.utils.text import slugify
 
 UKRAINIAN_TRANSLIT = {
@@ -66,3 +67,28 @@ def generate_unique_slug(value, queryset, max_length, fallback, exclude_pk=None)
             existing = existing.exclude(pk=exclude_pk)
 
     return unique_slug
+
+
+def save_with_unique_slug(instance, save, value, queryset, max_length, fallback):
+    if instance.slug:
+        save()
+        return
+
+    while True:
+        instance.slug = generate_unique_slug(
+            value,
+            queryset,
+            max_length,
+            fallback,
+            exclude_pk=instance.pk,
+        )
+        try:
+            with transaction.atomic():
+                save()
+            return
+        except IntegrityError:
+            slug_exists = (
+                queryset.filter(slug=instance.slug).exclude(pk=instance.pk).exists()
+            )
+            if not slug_exists:
+                raise

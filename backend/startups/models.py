@@ -3,7 +3,7 @@ import re
 from django.contrib.auth.models import BaseUserManager
 from django.db import models
 
-from shared.slug_utils import generate_unique_slug
+from shared.slug_utils import save_with_unique_slug
 from users.models import User
 
 MAX_LENGTH_STARTUP_NAME = 255
@@ -148,16 +148,17 @@ class StartupProfile(models.Model):
             clean_email = self.startup_email.strip()
             self.startup_email = BaseUserManager.normalize_email(clean_email)
 
-        if not self.slug:
-            self.slug = generate_unique_slug(
-                self.startup_name,
-                StartupProfile.objects.all(),
-                MAX_LENGTH_SLUG,
-                'startup',
-                exclude_pk=self.pk,
-            )
+        def save_instance():
+            super(StartupProfile, self).save(*args, **kwargs)
 
-        super().save(*args, **kwargs)
+        save_with_unique_slug(
+            self,
+            save_instance,
+            self.startup_name,
+            StartupProfile.objects.all(),
+            MAX_LENGTH_SLUG,
+            'startup',
+        )
 
     def __str__(self):
         return self.startup_name

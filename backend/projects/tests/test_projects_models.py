@@ -1,9 +1,12 @@
+from unittest.mock import patch
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.test import TestCase
 
 from projects.models import Project, ProjectAttachment, ProjectAudit
+from shared.slug_utils import generate_unique_slug
 from startups.models import Industry, LocationType, StartupProfile
 
 User = get_user_model()
@@ -71,6 +74,38 @@ class ProjectModelTest(TestCase):
         )
 
         self.assertEqual(project.slug, 'custom-project')
+
+    def test_retries_when_generated_slug_collides_during_save(self):
+        project = Project(
+            startup=self.startup,
+            project_title='Concurrent Project',
+            project_description='Description',
+            investment_sum=100,
+        )
+        generation_calls = 0
+
+        def generate_with_collision(value, queryset, max_length, fallback, **kwargs):
+            nonlocal generation_calls
+            generation_calls += 1
+            if generation_calls == 1:
+                Project.objects.create(
+                    startup=self.startup,
+                    project_title='Competing Project',
+                    project_description='Description',
+                    investment_sum=100,
+                    slug='concurrent-project',
+                )
+                return 'concurrent-project'
+            return generate_unique_slug(value, queryset, max_length, fallback, **kwargs)
+
+        with patch(
+            'shared.slug_utils.generate_unique_slug',
+            side_effect=generate_with_collision,
+        ):
+            project.save()
+
+        self.assertEqual(project.slug, 'concurrent-project-1')
+        self.assertEqual(generation_calls, 2)
 
     def test_project_industries_relation(self):
         self.project.industries.add(self.industry)
