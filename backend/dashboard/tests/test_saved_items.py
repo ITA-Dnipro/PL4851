@@ -39,10 +39,19 @@ class SavedItemsTests(TestCase):
             project_description='d',
             investment_sum=100,
             project_stage='seed',
+            status=Project.ProjectStatus.ACTIVE,
         )
         cls.new_project = Project.objects.create(
             startup=startup,
             project_title='P2',
+            project_description='d',
+            investment_sum=100,
+            project_stage='seed',
+            status=Project.ProjectStatus.ACTIVE,
+        )
+        cls.draft_project = Project.objects.create(
+            startup=startup,
+            project_title='Draft',
             project_description='d',
             investment_sum=100,
             project_stage='seed',
@@ -103,6 +112,11 @@ class SavedItemsTests(TestCase):
     def test_save_other_user_returns_403(self):
         self.client.force_authenticate(self.other)
         self.assertEqual(self._post(self.new_project.pk).status_code, 403)
+
+    def test_save_draft_returns_404(self):
+        self.client.force_authenticate(self.user)
+        self.assertEqual(self._post(self.draft_project.pk).status_code, 404)
+        self.assertEqual(SavedProject.objects.count(), 1)
 
     def test_delete(self):
         self.client.force_authenticate(self.user)

@@ -47,7 +47,10 @@ class SavedItemsListView(ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
 
         investor = get_object_or_404(InvestorProfile, user_id=self.kwargs['id'])
-        project = get_object_or_404(Project, pk=serializer.validated_data['target_id'])
+        project = get_object_or_404(
+            Project.objects.exclude(status=Project.ProjectStatus.DRAFT),
+            pk=serializer.validated_data['target_id'],
+        )
         saved, created = SavedProject.objects.get_or_create(
             investor=investor, project=project
         )
