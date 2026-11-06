@@ -2,57 +2,9 @@ import re
 
 from django.contrib.auth.models import BaseUserManager
 from django.db import models
-from django.utils.text import slugify
 
+from shared.slug_utils import generate_unique_slug
 from users.models import User
-
-UKRAINIAN_TRANSLIT = {
-    'а': 'a',
-    'б': 'b',
-    'в': 'v',
-    'г': 'h',
-    'ґ': 'g',
-    'д': 'd',
-    'е': 'e',
-    'є': 'ye',
-    'ж': 'zh',
-    'з': 'z',
-    'и': 'y',
-    'і': 'i',
-    'ї': 'yi',
-    'й': 'y',
-    'к': 'k',
-    'л': 'l',
-    'м': 'm',
-    'н': 'n',
-    'о': 'o',
-    'п': 'p',
-    'р': 'r',
-    'с': 's',
-    'т': 't',
-    'у': 'u',
-    'ф': 'f',
-    'х': 'kh',
-    'ц': 'ts',
-    'ч': 'ch',
-    'ш': 'sh',
-    'щ': 'shch',
-    'ь': '',
-    'ю': 'yu',
-    'я': 'ya',
-}
-
-
-def custom_slugify(text):
-    """Transliterates Ukrainian characters to Latin and then slugifies the result."""
-    if not text:
-        return ''
-
-    text = text.lower()
-    translit_text = ''.join(UKRAINIAN_TRANSLIT.get(char, char) for char in text)
-
-    return slugify(translit_text)
-
 
 MAX_LENGTH_STARTUP_NAME = 255
 MAX_LENGTH_EDRPOU_OR_IPN = 20
@@ -197,28 +149,13 @@ class StartupProfile(models.Model):
             self.startup_email = BaseUserManager.normalize_email(clean_email)
 
         if not self.slug:
-            base_slug = custom_slugify(self.startup_name)
-            if not base_slug:
-                base_slug = 'startup'
-            base_slug = base_slug[:MAX_LENGTH_SLUG].rstrip('-')
-            unique_slug = base_slug
-            counter = 1
-
-            queryset = StartupProfile.objects.filter(slug=unique_slug)
-            if self.pk:
-                queryset = queryset.exclude(pk=self.pk)
-
-            while queryset.exists():
-                suffix = f'-{counter}'
-                allowed_base_len = MAX_LENGTH_SLUG - len(suffix)
-                unique_slug = f"{base_slug[:allowed_base_len].rstrip('-')}{suffix}"
-                counter += 1
-
-                queryset = StartupProfile.objects.filter(slug=unique_slug)
-                if self.pk:
-                    queryset = queryset.exclude(pk=self.pk)
-
-            self.slug = unique_slug
+            self.slug = generate_unique_slug(
+                self.startup_name,
+                StartupProfile.objects.all(),
+                MAX_LENGTH_SLUG,
+                'startup',
+                exclude_pk=self.pk,
+            )
 
         super().save(*args, **kwargs)
 

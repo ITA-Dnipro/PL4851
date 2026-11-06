@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.test import TestCase
 
-from projects.models import Project
+from projects.models import Project, ProjectAttachment, ProjectAudit
 from startups.models import Industry, LocationType, StartupProfile
 
 User = get_user_model()
@@ -39,6 +39,49 @@ class ProjectModelTest(TestCase):
         """Verify ForeignKey relationship and related_name with StartupProfile."""
         self.assertEqual(self.project.startup, self.startup)
         self.assertIn(self.project, self.startup.projects.all())
+
+    def test_project_defaults_and_unique_slug(self):
+        project = Project.objects.create(
+            startup=self.startup,
+            project_title='Новий проєкт',
+            project_description='Description',
+            investment_sum=100,
+        )
+        duplicate = Project.objects.create(
+            startup=self.startup,
+            project_title='Новий проєкт',
+            project_description='Description',
+            investment_sum=100,
+        )
+
+        self.assertEqual(project.slug, 'novyy-proyekt')
+        self.assertEqual(duplicate.slug, 'novyy-proyekt-1')
+        self.assertEqual(project.project_stage, 'idea')
+        self.assertEqual(project.currency, 'UAH')
+        self.assertEqual(project.visibility, Project.Visibility.PUBLIC)
+        self.assertFalse(project.industries.exists())
+
+    def test_project_industries_relation(self):
+        self.project.industries.add(self.industry)
+
+        self.assertIn(self.project, self.industry.projects.all())
+
+    def test_project_attachment_and_audit_relations(self):
+        attachment = ProjectAttachment.objects.create(
+            project=self.project,
+            type=ProjectAttachment.AttachmentType.PDF,
+            caption='Pitch deck',
+        )
+        audit = ProjectAudit.objects.create(
+            project=self.project,
+            user=self.user,
+            changes={'status': ['draft', 'active']},
+        )
+
+        self.assertIn(attachment, self.project.attachments.all())
+        self.assertEqual(attachment.order, 0)
+        self.assertEqual(audit.changes, {'status': ['draft', 'active']})
+        self.assertIn(audit, self.project.audit_events.all())
 
     def test_investment_sum_must_be_positive(self):
         """Verify CheckConstraint blocks investment_sum <= 0."""
