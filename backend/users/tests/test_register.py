@@ -125,7 +125,8 @@ class RegisterSuccessTests(RegisterTestCase):
             LOGIN_URL, {'email': EMAIL, 'password': PASSWORD}, format='json'
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json()['code'], 'email_not_verified')
 
 
 class RegisterDuplicateEmailTests(RegisterTestCase):
