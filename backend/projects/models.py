@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, router
 
 from shared.slug_utils import save_with_unique_slug
 
@@ -98,6 +98,9 @@ class Project(models.Model):
         return self.project_title
 
     def save(self, *args, **kwargs):
+        using = kwargs.get('using') or router.db_for_write(type(self), instance=self)
+        kwargs['using'] = using
+
         def save_instance():
             super(Project, self).save(*args, **kwargs)
 
@@ -105,7 +108,7 @@ class Project(models.Model):
             self,
             save_instance,
             self.project_title,
-            Project.objects.all(),
+            Project.objects.using(using),
             MAX_LENGTH_SLUG,
             'project',
         )

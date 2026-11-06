@@ -1,7 +1,7 @@
 import re
 
 from django.contrib.auth.models import BaseUserManager
-from django.db import models
+from django.db import models, router
 
 from shared.slug_utils import save_with_unique_slug
 from users.models import User
@@ -141,6 +141,9 @@ class StartupProfile(models.Model):
         ]
 
     def save(self, *args, **kwargs):
+        using = kwargs.get('using') or router.db_for_write(type(self), instance=self)
+        kwargs['using'] = using
+
         if self.startup_phone:
             self.startup_phone = NON_DIGIT_PATTERN.sub('', self.startup_phone)
 
@@ -155,7 +158,7 @@ class StartupProfile(models.Model):
             self,
             save_instance,
             self.startup_name,
-            StartupProfile.objects.all(),
+            StartupProfile.objects.using(using),
             MAX_LENGTH_SLUG,
             'startup',
         )

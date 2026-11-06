@@ -75,10 +75,13 @@ class SlugUtilsTest(TestCase):
             if save_calls == 1:
                 raise IntegrityError('unrelated integrity failure')
 
-        with patch(
-            'shared.slug_utils.generate_unique_slug',
-            side_effect=['occupied', 'available'],
-        ), self.assertRaises(IntegrityError):
+        with (
+            patch(
+                'shared.slug_utils.generate_unique_slug',
+                side_effect=['occupied', 'available'],
+            ),
+            self.assertRaises(IntegrityError),
+        ):
             save_with_unique_slug(
                 project,
                 fail_once,
@@ -89,6 +92,53 @@ class SlugUtilsTest(TestCase):
             )
 
         self.assertEqual(save_calls, 1)
+
+    def test_slug_conflict_retries_are_limited(self):
+        startup = self._create_startup()
+        Project.objects.create(
+            startup=startup,
+            project_title='Existing project',
+            project_description='Description',
+            investment_sum=100,
+            slug='occupied',
+        )
+        project = Project(
+            startup=startup,
+            project_title='New project',
+            project_description='Description',
+            investment_sum=100,
+        )
+
+        with (
+            patch(
+                'shared.slug_utils.generate_unique_slug', return_value='occupied'
+            ) as generate_slug,
+            self.assertRaises(IntegrityError),
+        ):
+            project.save()
+
+        self.assertEqual(generate_slug.call_count, 4)
+
+    def test_uses_queryset_database_for_slug_lookup_and_savepoint(self):
+        project = Project(project_title='New project')
+        queryset = Project.objects.using('replica')
+        with (
+            patch('shared.slug_utils.transaction.atomic') as atomic,
+            patch(
+                'shared.slug_utils.generate_unique_slug', return_value='new-project'
+            ) as generate_slug,
+        ):
+            save_with_unique_slug(
+                project,
+                lambda: None,
+                project.project_title,
+                queryset,
+                255,
+                'project',
+            )
+
+        self.assertEqual(generate_slug.call_args.args[1].db, 'replica')
+        self.assertEqual(atomic.call_args.kwargs, {'using': 'replica'})
 
     def _create_startup(self):
         from django.contrib.auth import get_user_model

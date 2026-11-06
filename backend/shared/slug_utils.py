@@ -1,6 +1,8 @@
 from django.db import IntegrityError, connections, transaction
 from django.utils.text import slugify
 
+MAX_SLUG_SAVE_RETRIES = 3
+
 UKRAINIAN_TRANSLIT = {
     'а': 'a',
     'б': 'b',
@@ -74,7 +76,7 @@ def save_with_unique_slug(instance, save, value, queryset, max_length, fallback)
         save()
         return
 
-    while True:
+    for attempt in range(MAX_SLUG_SAVE_RETRIES + 1):
         instance.slug = generate_unique_slug(
             value,
             queryset,
@@ -83,7 +85,7 @@ def save_with_unique_slug(instance, save, value, queryset, max_length, fallback)
             exclude_pk=instance.pk,
         )
         try:
-            with transaction.atomic():
+            with transaction.atomic(using=queryset.db):
                 save()
             return
         except IntegrityError as error:
@@ -110,4 +112,7 @@ def save_with_unique_slug(instance, save, value, queryset, max_length, fallback)
                     f'{slug_field.column}'
                 )
             if not is_slug_conflict:
+                raise
+
+            if attempt == MAX_SLUG_SAVE_RETRIES:
                 raise

@@ -75,6 +75,24 @@ class ProjectModelTest(TestCase):
 
         self.assertEqual(project.slug, 'custom-project')
 
+    def test_save_uses_requested_database_for_slug_operations(self):
+        project = Project(
+            startup=self.startup,
+            project_title='Replica project',
+            project_description='Description',
+            investment_sum=100,
+        )
+
+        with (
+            patch('projects.models.save_with_unique_slug') as save_with_slug,
+            patch('django.db.models.Model.save') as base_save,
+        ):
+            project.save(using='replica')
+            save_with_slug.call_args.args[1]()
+
+        self.assertEqual(save_with_slug.call_args.args[3].db, 'replica')
+        self.assertEqual(base_save.call_args.kwargs['using'], 'replica')
+
     def test_retries_when_generated_slug_collides_during_save(self):
         project = Project(
             startup=self.startup,

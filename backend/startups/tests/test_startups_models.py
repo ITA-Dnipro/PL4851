@@ -109,6 +109,22 @@ class StartupProfileModelTest(TestCase):
         )
         self.assertEqual(duplicate_startup.slug, 'techagro-1')
 
+    def test_save_uses_requested_database_for_slug_operations(self):
+        startup = StartupProfile(
+            user=self.other_user,
+            startup_name='Replica startup',
+        )
+
+        with (
+            patch('startups.models.save_with_unique_slug') as save_with_slug,
+            patch('django.db.models.Model.save') as base_save,
+        ):
+            startup.save(using='replica')
+            save_with_slug.call_args.args[1]()
+
+        self.assertEqual(save_with_slug.call_args.args[3].db, 'replica')
+        self.assertEqual(base_save.call_args.kwargs['using'], 'replica')
+
     def test_retries_when_generated_slug_collides_during_save(self):
         startup = StartupProfile(
             user=self.other_user,
