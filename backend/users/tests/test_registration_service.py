@@ -6,6 +6,7 @@ from django.core import mail
 from django.db import IntegrityError
 from django.test import TestCase
 
+from shared.slug_utils import generate_unique_slug
 from startups.models import StartupProfile
 from users.exceptions import EmailAlreadyRegistered
 from users.services.registration import register_user
@@ -26,6 +27,38 @@ USER_DATA = {
 
 
 class RegisterUserTests(TestCase):
+    def test_startup_slug_collision_retries_inside_registration_transaction(self):
+        competing_user = User.objects.create_user(
+            email='competitor@example.com',
+            role=User.Role.STARTUP,
+        )
+        StartupProfile.objects.create(
+            user=competing_user,
+            startup_name='Concurrent Startup',
+            slug='concurrent-startup',
+        )
+        generate_calls = 0
+
+        def generate_with_collision(value, queryset, max_length, fallback, **kwargs):
+            nonlocal generate_calls
+            generate_calls += 1
+            if generate_calls == 1:
+                return 'concurrent-startup'
+            return generate_unique_slug(value, queryset, max_length, fallback, **kwargs)
+
+        with mock.patch(
+            'shared.slug_utils.generate_unique_slug',
+            side_effect=generate_with_collision,
+        ):
+            with self.captureOnCommitCallbacks(execute=True):
+                user = register_user(
+                    **{**USER_DATA, 'company_name': 'Concurrent Startup'}
+                )
+
+        profile = StartupProfile.objects.get(user=user)
+        self.assertEqual(profile.slug, 'concurrent-startup-1')
+        self.assertEqual(generate_calls, 2)
+
     def test_rolls_back_the_user_when_the_profile_fails(self):
         with mock.patch.object(
             StartupProfile.objects, 'create', side_effect=IntegrityError

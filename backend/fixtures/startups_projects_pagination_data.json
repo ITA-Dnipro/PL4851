@@ -463,6 +463,7 @@
     "fields": {
       "startup": 11,
       "project_title": "Крафтові стільці з дубу",
+      "slug": "kraftovi-stiltsi-z-dubu",
       "short_description": "Ергономічні стільці з дубу",
       "project_description": "Преміальні ергономічні стільці з екологічно чистого дубу та металевого каркаса.",
       "investment_sum": "50000.00",
@@ -480,6 +481,7 @@
     "fields": {
       "startup": 11,
       "project_title": "Набір глибоких тарілок",
+      "slug": "nabir-hlybokykh-tarilok",
       "short_description": "Набір глибоких тарілок",
       "project_description": "Набір автентичних глибоких тарілок із подвійним випалом для ресторанів етнічної кухні.",
       "investment_sum": "15000.00",
@@ -497,6 +499,7 @@
     "fields": {
       "startup": 11,
       "project_title": "Дубові кавові столики",
+      "slug": "dubovi-kavovi-stolyky",
       "short_description": "Журнальні столики з дубу",
       "project_description": "Мінімалістичні журнальні столики з масиву дуба з водостійким еко-покриттям.",
       "investment_sum": "35000.00",
@@ -514,6 +517,7 @@
     "fields": {
       "startup": 11,
       "project_title": "Глиняні чайні сервізи",
+      "slug": "hlynyani-chayni-servizy",
       "short_description": "Глиняні чайні сервізи",
       "project_description": "Чайні сервізи ручної роботи, створені за традиційними карпатськими технологіями.",
       "investment_sum": "20000.00",
@@ -531,6 +535,7 @@
     "fields": {
       "startup": 11,
       "project_title": "Дерев'яні кухонні приладдя",
+      "slug": "derevyani-kukhonni-pryladdya",
       "short_description": "Кухонне приладдя з горіха",
       "project_description": "Кухонне приладдя (лопатки, дошки для нарізки) з горіхового дерева з антибактеріальним захистом.",
       "investment_sum": "10000.00",
@@ -548,6 +553,7 @@
     "fields": {
       "startup": 11,
       "project_title": "Підставки для фруктів та випічки",
+      "slug": "pidstavky-dlya-fruktiv-ta-vypichky",
       "short_description": "Дерев'яні підставки для їжі",
       "project_description": "Дерев'яні підставки для фруктів та випічки, що трансформуються під будь-яку вітрину.",
       "investment_sum": "25000.00",
@@ -565,6 +571,7 @@
     "fields": {
       "startup": 11,
       "project_title": "Мінімалістичні вази з глини",
+      "slug": "minimalistychni-vazy-z-hlyny",
       "short_description": "Інтер'єрні мінімалістичні вази",
       "project_description": "Серія підлогових інтер'єрних ваз у скандинавському стилі з необпаленої фактурної глини.",
       "investment_sum": "18000.00",
@@ -582,6 +589,7 @@
     "fields": {
       "startup": 11,
       "project_title": "Крафтові винні полиці",
+      "slug": "kraftovi-vynni-polytsi",
       "short_description": "Ексклюзивні полиці для вина",
       "project_description": "Ексклюзивні полиці та стійки для зберігання винних пляшок із ясеня та шкіряних елементів.",
       "investment_sum": "40000.00",

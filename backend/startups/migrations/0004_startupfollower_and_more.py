@@ -7,7 +7,7 @@ from django.db import migrations, models
 
 def generate_slugs(apps, schema_editor):
     StartupProfile = apps.get_model('startups', 'StartupProfile')
-    from startups.models import custom_slugify
+    from shared.slug_utils import custom_slugify
     
     for startup in StartupProfile.objects.all():
         base_slug = custom_slugify(startup.startup_name)

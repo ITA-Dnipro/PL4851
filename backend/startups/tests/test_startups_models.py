@@ -1,9 +1,12 @@
+from unittest.mock import patch
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase
 
+from shared.slug_utils import generate_unique_slug
 from startups.models import Industry, LocationType, StartupFollower, StartupProfile
 
 User = get_user_model()
@@ -105,6 +108,53 @@ class StartupProfileModelTest(TestCase):
             startup_email='techagro2@test.com',
         )
         self.assertEqual(duplicate_startup.slug, 'techagro-1')
+
+    def test_save_uses_requested_database_for_slug_operations(self):
+        startup = StartupProfile(
+            user=self.other_user,
+            startup_name='Replica startup',
+        )
+
+        with (
+            patch('startups.models.save_with_unique_slug') as save_with_slug,
+            patch('django.db.models.Model.save') as base_save,
+        ):
+            startup.save(using='replica')
+            save_with_slug.call_args.args[1]()
+
+        self.assertEqual(save_with_slug.call_args.args[3].db, 'replica')
+        self.assertEqual(base_save.call_args.kwargs['using'], 'replica')
+
+    def test_retries_when_generated_slug_collides_during_save(self):
+        startup = StartupProfile(
+            user=self.other_user,
+            startup_name='Concurrent Startup',
+        )
+        generation_calls = 0
+
+        def generate_with_collision(value, queryset, max_length, fallback, **kwargs):
+            nonlocal generation_calls
+            generation_calls += 1
+            if generation_calls == 1:
+                competing_user = User.objects.create_user(
+                    email='competing@test.com', role='startup'
+                )
+                StartupProfile.objects.create(
+                    user=competing_user,
+                    startup_name='Competing Startup',
+                    slug='concurrent-startup',
+                )
+                return 'concurrent-startup'
+            return generate_unique_slug(value, queryset, max_length, fallback, **kwargs)
+
+        with patch(
+            'shared.slug_utils.generate_unique_slug',
+            side_effect=generate_with_collision,
+        ):
+            startup.save()
+
+        self.assertEqual(startup.slug, 'concurrent-startup-1')
+        self.assertEqual(generation_calls, 2)
 
     def test_slug_does_not_change_on_update(self):
         """Slug remains persistent, doesn't change when profile is updated."""

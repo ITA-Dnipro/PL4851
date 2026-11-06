@@ -14,6 +14,7 @@
     "fields": {
       "startup": 11,
       "project_title": "Leather Forge Online Shop",
+      "slug": "leather-forge-online-shop",
       "short_description": "Web platform for sales",
       "project_description": "Full description of development",
       "investment_sum": "10000.00",
@@ -30,6 +31,7 @@
     "fields": {
       "startup": 11,
       "project_title": "Secret Draft Project",
+      "slug": "secret-draft-project",
       "short_description": "Hidden",
       "project_description": "Hidden draft text",
       "investment_sum": "5000.00",
