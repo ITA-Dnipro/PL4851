@@ -242,7 +242,7 @@ HTTP 200 OK
 }
 
 Errors: 400 (unsupported type), 401, 403 ({id} is not the caller; staff may act for any user).
-```
+````
 
 `POST /api/users/{id}/saved/` - save a project for an investor.
 Owner {id} or admin.
@@ -250,7 +250,7 @@ Owner {id} or admin.
 Idempotent: saving the same project again returns the existing record.
 Draft projects cannot be saved (404), matching the public project list.
 
-```
+````
 Body: target_type (optional, only `project`, default `project`),
       target_id (required, project id)
 
@@ -269,33 +269,33 @@ HTTP 200 OK (already saved, same saved_id and saved_at)
 Errors: 400 (unsupported target_type / invalid body), 401,
         403 ({id} is not the caller; staff may act for any user),
         404 (investor profile not found, or project not found / draft).
-```
+````
 
 Example 400:
 
-```
+````
 {
     "target_type": [
         "\"company\" is not a valid choice."
     ]
 }
-```
+````
 
 Example 404:
 
-```
+````
 {
     "detail": "No Project matches the given query."
 }
-```
+````
 
 `DELETE /api/users/{id}/saved/{saved_id}/` - remove a saved project.
 Owner {id} or admin.
 
-```
+````
 HTTP 204 No Content
 
 Errors: 401,
         403 ({id} is not the caller; staff may act for any user),
         404 (saved item not found).
-```
+````
