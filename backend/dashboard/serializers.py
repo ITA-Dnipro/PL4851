@@ -43,3 +43,8 @@ class SavedProjectSerializer(serializers.ModelSerializer):
 
     def get_tags(self, obj):
         return [i.slug for i in obj.project.startup.industries.all()]
+
+
+class SaveItemSerializer(serializers.Serializer):
+    target_type = serializers.ChoiceField(choices=['project'], default='project')
+    target_id = serializers.IntegerField()
