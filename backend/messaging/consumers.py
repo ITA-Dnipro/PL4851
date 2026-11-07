@@ -8,7 +8,8 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import TokenError
 
-from messaging import services
+from messaging import presence, services
+from messaging.presence import PRESENCE_REFRESH_INTERVAL_SECONDS
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,13 @@ def _require_conversation_id(content):
     if not isinstance(conversation_id, str):
         raise ValueError('conversation_id must be a string')
     return conversation_id
+
+
+async def _track_presence(action, *args):
+    try:
+        await sync_to_async(action)(*args)
+    except Exception:
+        logger.exception('Presence update failed: %s%s', action.__name__, args)
 
 
 def _serialize_message(message):
@@ -49,9 +57,20 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         if handle is not None:
             handle.cancel()
 
+        refresh_task = getattr(self, '_presence_refresh_task', None)
+        if refresh_task is not None:
+            refresh_task.cancel()
+
         for group_name in list(self.joined_conversations):
+            conversation_id = group_name.removeprefix('conversation.')
             await self._broadcast_presence(group_name, 'offline')
             await self.channel_layer.group_discard(group_name, self.channel_name)
+            await _track_presence(
+                presence.mark_conversation_offline,
+                conversation_id,
+                self.user.pk,
+                self.channel_name,
+            )
 
         if self.authenticated:
             await self.channel_layer.group_discard(
@@ -107,7 +126,22 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             handle.cancel()
 
         await self.channel_layer.group_add(f'user.{user.pk}', self.channel_name)
+        self._presence_refresh_task = asyncio.ensure_future(
+            self._presence_refresh_loop()
+        )
         await self.send_json({'type': 'auth_ok'})
+
+    async def _presence_refresh_loop(self):
+        while True:
+            await asyncio.sleep(PRESENCE_REFRESH_INTERVAL_SECONDS)
+            for group_name in list(self.joined_conversations):
+                conversation_id = group_name.removeprefix('conversation.')
+                await _track_presence(
+                    presence.mark_conversation_online,
+                    conversation_id,
+                    self.user.pk,
+                    self.channel_name,
+                )
 
     @database_sync_to_async
     def _authenticate(self, token):
@@ -129,6 +163,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         group_name = f'conversation.{conversation_id}'
         await self.channel_layer.group_add(group_name, self.channel_name)
         self.joined_conversations.add(group_name)
+        await _track_presence(
+            presence.mark_conversation_online,
+            conversation_id,
+            self.user.pk,
+            self.channel_name,
+        )
         await self.send_json(
             {'type': 'joined_conversation', 'conversation_id': conversation_id}
         )
@@ -142,6 +182,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             await self._broadcast_presence(group_name, 'offline')
             await self.channel_layer.group_discard(group_name, self.channel_name)
             self.joined_conversations.discard(group_name)
+            await _track_presence(
+                presence.mark_conversation_offline,
+                conversation_id,
+                self.user.pk,
+                self.channel_name,
+            )
 
         await self.send_json(
             {'type': 'left_conversation', 'conversation_id': conversation_id}
