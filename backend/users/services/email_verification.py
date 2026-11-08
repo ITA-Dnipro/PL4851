@@ -1,15 +1,23 @@
+import copy
 import logging
 from urllib.parse import urlencode
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
 from django.db import transaction
 from django.template.loader import render_to_string
-from django.utils.encoding import force_bytes
-from django.utils.http import base36_to_int, urlsafe_base64_encode
+from django.utils import timezone
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import (
+    base36_to_int,
+    urlsafe_base64_decode,
+    urlsafe_base64_encode,
+)
 
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 EMAIL_SUBJECT = 'Підтвердження email'
 
@@ -33,6 +41,17 @@ class EmailVerificationTokenGenerator(PasswordResetTokenGenerator):
 
 
 email_verification_token = EmailVerificationTokenGenerator()
+
+
+def unverified_accounts(email):
+    """Accounts registered with this email that were never verified.
+
+    A verified account deactivated by an admin keeps its email_verified_at,
+    so it is not treated as a pending registration.
+    """
+    return User.objects.filter(
+        email__iexact=email, is_active=False, email_verified_at__isnull=True
+    )
 
 
 def build_verification_link(uid, token):
@@ -69,3 +88,47 @@ def send_verification(user):
             logger.exception('Failed to send the email verification link')
 
     transaction.on_commit(send)
+
+
+def user_from_uid(uid):
+    """The user from the link's uid, or None for a broken or unknown one."""
+    try:
+        pk = int(force_str(urlsafe_base64_decode(uid)))
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return User.objects.filter(pk=pk).first()
+
+
+def verify_email(uid, token):
+    """Activates the account from the verification link.
+
+    Returns the user, or None when the link is broken, expired or not this
+    user's. Opening a valid link again returns the verified user, so a second
+    click isn't an error.
+    """
+    user = user_from_uid(uid)
+    if user is None:
+        return None
+
+    # Links are signed while the account is inactive. Checking a verified
+    # account in that state still accepts its own link but no made-up token,
+    # so the answer doesn't tell which accounts are verified.
+    signed_state = copy.copy(user)
+    signed_state.is_active = False
+    if not email_verification_token.check_token(signed_state, token):
+        return None
+
+    # A conditional update: a request that lost the race, or an account an
+    # admin deactivated after verification, is left as it is
+    User.objects.filter(
+        pk=user.pk, is_active=False, email_verified_at__isnull=True
+    ).update(is_active=True, email_verified_at=timezone.now())
+    user.refresh_from_db()
+    return user
+
+
+def resend_verification(email):
+    """Sends a new link if the email has a pending registration, otherwise nothing."""
+    user = unverified_accounts(email).first()
+    if user is not None:
+        send_verification(user)

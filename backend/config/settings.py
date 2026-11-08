@@ -200,6 +200,8 @@ REST_FRAMEWORK = {
         'send_message': '30/min',
         'create_conversation': '10/min',
         'register': '10/hour',
+        'resend_verification_ip': '5/hour',
+        'resend_verification_email': '3/hour',
     },
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
