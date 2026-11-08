@@ -247,11 +247,12 @@ python manage.py loaddata investors
 `GET /api/users/{id}/saved/` - saved items.
 Owner {id} or admin.
 
+```
 Query: page (default 1), page_size (default 12, max 50),
        type (optional, only `project`)
 
 HTTP 200 OK
-`{
+{
     "count": 1,
     "next": null,
     "previous": null,
@@ -269,6 +270,63 @@ HTTP 200 OK
             "saved_at": "2026-11-03T15:44:42.362069Z"
         }
     ]
-}`
+}
 
-Errors: 400 (unsupported type), 401.
+Errors: 400 (unsupported type), 401, 403 ({id} is not the caller; staff may act for any user).
+````
+
+`POST /api/users/{id}/saved/` - save a project for an investor.
+Owner {id} or admin.
+
+Idempotent: saving the same project again returns the existing record.
+Draft projects cannot be saved (404), matching the public project list.
+
+````
+Body: target_type (optional, only `project`, default `project`),
+      target_id (required, project id)
+
+HTTP 201 Created (new record)
+{
+    "saved_id": 2,
+    "saved_at": "2026-11-06T15:42:57.466881Z"
+}
+
+HTTP 200 OK (already saved, same saved_id and saved_at)
+{
+    "saved_id": 2,
+    "saved_at": "2026-11-06T15:42:57.466881Z"
+}
+
+Errors: 400 (unsupported target_type / invalid body), 401,
+        403 ({id} is not the caller; staff may act for any user),
+        404 (investor profile not found, or project not found / draft).
+````
+
+Example 400:
+
+````
+{
+    "target_type": [
+        "\"company\" is not a valid choice."
+    ]
+}
+````
+
+Example 404:
+
+````
+{
+    "detail": "No Project matches the given query."
+}
+````
+
+`DELETE /api/users/{id}/saved/{saved_id}/` - remove a saved project.
+Owner {id} or admin.
+
+````
+HTTP 204 No Content
+
+Errors: 401,
+        403 ({id} is not the caller; staff may act for any user),
+        404 (saved item not found).
+````

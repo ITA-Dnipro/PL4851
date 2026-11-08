@@ -1,12 +1,17 @@
-# dashboard/views.py
+from django.shortcuts import get_object_or_404
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListCreateAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from dashboard.models import SavedProject
 from dashboard.permissions import IsOwnerOrAdmin
-from dashboard.serializers import SavedProjectSerializer
+from dashboard.serializers import SavedProjectSerializer, SaveItemSerializer
+from investors.models import InvestorProfile
+from projects.models import Project
 
 DEFAULT_PAGE_SIZE = 12
 MAX_PAGE_SIZE = 50
@@ -20,7 +25,7 @@ class SavedItemsPagination(PageNumberPagination):
     max_page_size = MAX_PAGE_SIZE
 
 
-class SavedItemsListView(ListAPIView):
+class SavedItemsListView(ListCreateAPIView):
     serializer_class = SavedProjectSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
     pagination_class = SavedItemsPagination
@@ -36,3 +41,29 @@ class SavedItemsListView(ListAPIView):
             .prefetch_related('project__startup__industries')
             .order_by('-saved_at')
         )
+
+    def create(self, request, *args, **kwargs):
+        serializer = SaveItemSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        investor = get_object_or_404(InvestorProfile, user_id=self.kwargs['id'])
+        project = get_object_or_404(
+            Project.objects.exclude(status=Project.ProjectStatus.DRAFT),
+            pk=serializer.validated_data['target_id'],
+        )
+        saved, created = SavedProject.objects.get_or_create(
+            investor=investor, project=project
+        )
+        return Response(
+            {'saved_id': saved.saved_project_id, 'saved_at': saved.saved_at},
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+
+class SavedItemDeleteView(APIView):
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
+
+    def delete(self, request, id, saved_id):
+        saved = get_object_or_404(SavedProject, pk=saved_id, investor__user_id=id)
+        saved.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
