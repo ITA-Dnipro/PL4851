@@ -55,6 +55,12 @@ describe('RestorePassword page', () => {
     expect(submitButton()).toBeDisabled()
   })
 
+  it('focuses the password field when uid and token are present', () => {
+    renderRestorePassword()
+
+    expect(screen.getByLabelText('Новий пароль')).toHaveFocus()
+  })
+
   it('shows an error and resend link when uid or token is missing', () => {
     renderRestorePassword('/reset-password?uid=test-uid')
 
@@ -147,6 +153,28 @@ describe('RestorePassword page', () => {
     ).toHaveAttribute('href', '/forgot-password')
   })
 
+  it('prefills email when requesting a new reset link', async () => {
+    vi.mocked(confirmPasswordReset).mockRejectedValue(
+      new ApiError(400, 'Invalid or expired token.'),
+    )
+
+    const user = renderRestorePassword(
+      '/reset-password?uid=test123&token=test456&email=test%40example.com',
+    )
+
+    await fillForm(user)
+    await user.click(submitButton())
+
+    expect(
+      await screen.findByRole('link', {
+        name: 'Запросити нове посилання',
+      }),
+    ).toHaveAttribute(
+      'href',
+      '/forgot-password?email=test%40example.com',
+    )
+  })
+
   it('shows password complexity errors returned by the backend', async () => {
     vi.mocked(confirmPasswordReset).mockRejectedValue(
       new ApiError(
@@ -184,4 +212,23 @@ describe('RestorePassword page', () => {
 
     expect(confirmPasswordReset).toHaveBeenCalledTimes(1)
   })
+
+  it('redirects to login 5 seconds after a successful password reset', async () => {
+    vi.mocked(confirmPasswordReset).mockResolvedValue({
+      detail: 'Password has been reset.',
+    })
+
+    const user = renderRestorePassword()
+
+    await fillForm(user)
+    await user.click(submitButton())
+
+    expect(
+      await screen.findByText('Пароль успішно змінено.'),
+    ).toBeInTheDocument()
+
+    expect(
+      await screen.findByText('Login page', {}, { timeout: 6500 }),
+    ).toBeInTheDocument()
+  }, 8000)
 })

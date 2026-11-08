@@ -1,7 +1,7 @@
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { SubmitEvent } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { confirmPasswordReset } from '../../api/auth'
 import { ApiError } from '../../api/client/errors'
@@ -19,14 +19,18 @@ function inputClassName(error: string | null, isChecked: boolean) {
   return isChecked ? `${styles.input} ${styles.inputValid}` : styles.input
 }
 
+const REDIRECT_DELAY_MS = 5000
+
 function RestorePassword() {
   const location = useLocation()
+  const navigate = useNavigate()
 
   const params = new URLSearchParams(location.search)
   const hashParams = new URLSearchParams(location.hash.replace(/^#\??/, ''))
 
   const uid = params.get('uid') || hashParams.get('uid') || ''
   const token = params.get('token') || hashParams.get('token') || ''
+  const email = params.get('email') || hashParams.get('email') || ''
 
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -40,6 +44,18 @@ function RestorePassword() {
   const [serverError, setServerError] = useState<string | null>(null)
   const [isSuccess, setIsSuccess] = useState(false)
   const [invalidToken, setInvalidToken] = useState(false)
+
+  useEffect(() => {
+    if (!isSuccess) {
+      return
+    }
+
+    const timer = window.setTimeout(() => {
+      navigate('/login', { replace: true })
+    }, REDIRECT_DELAY_MS)
+
+      return () => window.clearTimeout(timer)
+  }, [isSuccess, navigate])
 
   const passwordError = validateNewPassword(password)
   const confirmationError = validateConfirmPassword(password, confirmPassword)
@@ -114,7 +130,13 @@ function RestorePassword() {
             >
               Посилання для відновлення пароля відсутнє або недійсне.
             </p>
-            <Link to="/forgot-password" className={styles.footerLink}>
+            <Link
+              to={email
+                ? `/forgot-password?${new URLSearchParams({ email }).toString()}`
+                : '/forgot-password'
+              }
+              className={styles.footerLink}
+            >
               Запросити нове посилання
             </Link>
           </div>
@@ -134,6 +156,7 @@ function RestorePassword() {
                     id="restore-password"
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="new-password"
+                    autoFocus
                     className={`${inputClassName(shownPasswordError, touched.password)} ${styles.passwordInput}`}
                     value={password}
                     onChange={(event) => {
